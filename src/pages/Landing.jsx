@@ -66,40 +66,60 @@ export default function Landing() {
             </p>
 
             {/* --- PRIMARY ACTION: BRANCH-FIRST CATEGORY SELECTOR --- */}
-            <div className="mt-12 max-w-xl mx-auto">
-              <div className="text-[11px] font-mono uppercase tracking-widest text-slate-400 mb-3 flex items-center justify-center gap-2">
-                <Compass size={13} className="text-slate-400" />
-                <span>{t('Step 1: Select Your Academic Category', 'ಹಂತ 1: ನಿಮ್ಮ ಶೈಕ್ಷಣಿಕ ವರ್ಗವನ್ನು ಆಯ್ಕೆಮಾಡಿ')}</span>
+            <div className="mt-12 max-w-2xl mx-auto">
+              <div className="text-[11px] font-mono uppercase tracking-widest text-slate-500 mb-3.5 flex items-center justify-center gap-2">
+                <Compass size={13} className="text-slate-600" />
+                <span className="font-semibold">{t('Step 1: Select Your Academic Category', 'ಹಂತ 1: ನಿಮ್ಮ ಶೈಕ್ಷಣಿಕ ವರ್ಗವನ್ನು ಆಯ್ಕೆಮಾಡಿ')}</span>
               </div>
 
-              {/* Ultra-refined Segment Pill Control */}
-              <div className="p-1.5 bg-slate-100/90 backdrop-blur rounded-full border border-slate-200/90 flex items-center gap-1.5 shadow-2xs">
+              {/* High-Contrast Major Decision Segment Control */}
+              <div className="p-2 bg-slate-100/90 backdrop-blur-md rounded-2xl border border-slate-200/90 flex items-center gap-2 shadow-xs">
                 <button
                   onClick={() => setActiveCategory('puc')}
-                  className={`flex-1 py-3 px-5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2.5 ${
+                  className={`flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-3 relative overflow-hidden group ${
                     activeCategory === 'puc'
-                      ? 'bg-white text-slate-950 shadow-2xs border border-slate-200/90 font-bold'
-                      : 'text-slate-600 hover:text-slate-950 hover:bg-white/40'
+                      ? 'bg-slate-950 text-white shadow-md border border-slate-800 font-bold scale-[1.01]'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-white/60 font-medium'
                   }`}
                 >
-                  <span className="text-base">🏫</span>
-                  <span>PUC Science (+2)</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                  <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-base transition-colors ${
+                    activeCategory === 'puc' ? 'bg-white/10 border border-white/15' : 'bg-slate-200/70'
+                  }`}>
+                    🏫
+                  </span>
+
+                  <span className="tracking-tight">PUC Science (+2)</span>
+
+                  <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full transition-colors ${
+                    activeCategory === 'puc'
+                      ? 'bg-white/15 text-slate-200 border border-white/20 font-semibold'
+                      : 'bg-slate-200/80 text-slate-600 border border-slate-300/50'
+                  }`}>
                     4 Branches
                   </span>
                 </button>
 
                 <button
                   onClick={() => setActiveCategory('engineering')}
-                  className={`flex-1 py-3 px-5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2.5 ${
+                  className={`flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-3 relative overflow-hidden group ${
                     activeCategory === 'engineering'
-                      ? 'bg-white text-slate-950 shadow-2xs border border-slate-200/90 font-bold'
-                      : 'text-slate-600 hover:text-slate-950 hover:bg-white/40'
+                      ? 'bg-slate-950 text-white shadow-md border border-slate-800 font-bold scale-[1.01]'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-white/60 font-medium'
                   }`}
                 >
-                  <span className="text-base">⚡</span>
-                  <span>Engineering (B.Tech)</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                  <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-base transition-colors ${
+                    activeCategory === 'engineering' ? 'bg-white/10 border border-white/15' : 'bg-slate-200/70'
+                  }`}>
+                    ⚡
+                  </span>
+
+                  <span className="tracking-tight">Engineering (B.Tech)</span>
+
+                  <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full transition-colors ${
+                    activeCategory === 'engineering'
+                      ? 'bg-white/15 text-slate-200 border border-white/20 font-semibold'
+                      : 'bg-slate-200/80 text-slate-600 border border-slate-300/50'
+                  }`}>
                     7 Branches
                   </span>
                 </button>
