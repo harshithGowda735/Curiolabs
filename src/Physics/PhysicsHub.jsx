@@ -9,6 +9,8 @@ const experiments = [
   { title: 'Clipping & Clamping', description: 'Diode circuits that shape AC waveforms', path: '/physics/clipping-clamping', icon: '📊', difficulty: 'Medium', duration: '12 min' },
   { title: 'Simple Pendulum', description: 'Measure period vs length, verify T=2π√(L/g)', path: '/physics/pendulum', icon: '🔄', difficulty: 'Easy', duration: '10 min' },
   { title: 'Projectile Motion', description: 'Launch angle, velocity — track trajectory in real time', path: '/physics/projectile', icon: '🎯', difficulty: 'Easy', duration: '10 min' },
+  { title: "Young's Double Slit", description: 'Align an optical bench and measure live interference fringes', path: '/physics/double-slit', icon: '☀️', difficulty: 'Medium', duration: '15 min' },
+  { title: 'Vernier Caliper', description: 'Measure precision objects, record trials, and compare measurement consistency', path: '/physics/vernier-caliper', icon: '📏', difficulty: 'Medium', duration: '15 min' },
 ]
 
 export default function PhysicsHub() {

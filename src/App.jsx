@@ -171,3 +171,7 @@ export default function App() {
     </AuthProvider>
   )
 }
+import Hysteresis from './Physics/Hysteresis'
+import DoubleSlit from './Physics/DoubleSlit'
+            <Route path="/physics/hysteresis" element={<Hysteresis />} />
+            <Route path="/physics/double-slit" element={<DoubleSlit />} />
