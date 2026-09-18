@@ -401,17 +401,17 @@ export default function InteractiveBreadboard({
 
   return (
     <div className="w-full select-none space-y-3">
-      {/* ── Top Bar with Status and Quick Actions ── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-900 text-white p-3 rounded-2xl shadow-md border border-slate-800">
+      {/* ── Top Bar with Status and Quick Actions (Modern Clean Lab Theme) ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white text-slate-800 p-3.5 rounded-2xl shadow-xs border border-slate-200">
         <div className="flex items-center gap-2.5">
-          <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400/50" />
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-xs" />
           <div>
-            <h3 className="text-xs font-bold font-mono tracking-wide text-slate-100 uppercase">
+            <h3 className="text-xs font-display font-bold tracking-tight text-slate-900 uppercase">
               Solderless Hardware Breadboard Simulator (CD4051 Dual-IC)
             </h3>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-500">
               {activeWire ? (
-                <span className="text-amber-400 font-semibold animate-pulse">
+                <span className="text-amber-600 font-semibold animate-pulse">
                   ⚡ Selected {activeWire.label} — Click any hole to attach wire!
                 </span>
               ) : (
@@ -423,30 +423,30 @@ export default function InteractiveBreadboard({
 
         <div className="flex items-center gap-2">
           {justConnected && (
-            <span className="text-xs text-emerald-300 bg-emerald-950/80 border border-emerald-700/60 px-2.5 py-1 rounded-lg font-mono">
+            <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg font-mono font-semibold">
               ✓ {justConnected}
             </span>
           )}
-          <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full ${allConnected ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}`}>
+          <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full ${allConnected ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
             {connectedCount}/{LAB_CONNECTIONS.length} Wired
           </span>
           <button
             onClick={autoWireCircuit}
-            className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl shadow transition-all active:scale-95"
+            className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded-xl shadow-xs transition-all active:scale-95"
           >
             Auto-Wire (All Wires)
           </button>
           <button
             onClick={resetAll}
-            className="text-xs bg-slate-800 hover:bg-slate-700 hover:text-red-400 text-slate-300 font-medium px-2.5 py-1.5 rounded-xl border border-slate-700 transition-colors"
+            className="text-xs bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-medium px-2.5 py-1.5 rounded-xl border border-slate-200 transition-colors"
           >
             Clear Board
           </button>
         </div>
       </div>
 
-      {/* ── Realistic Breadboard SVG Workbench ── */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-300 shadow-2xl bg-gradient-to-b from-[#f2ece2] to-[#e4dbce]">
+      {/* ── Realistic Breadboard SVG Workbench (Light Laboratory Chassis) ── */}
+      <div className="relative overflow-hidden rounded-2xl border border-slate-300/80 shadow-md bg-slate-100">
         <svg
           ref={svgRef}
           viewBox={`0 0 ${SVG_W} ${SVG_H}`}
@@ -459,13 +459,22 @@ export default function InteractiveBreadboard({
           <defs>
             {/* Realistic drop shadows */}
             <filter id="shadowHeavy" x="-10%" y="-10%" width="120%" height="120%">
-              <feDropShadow dx="0" dy="4" stdDeviation="6" floodOpacity="0.22" />
+              <feDropShadow dx="0" dy="3" stdDeviation="5" floodOpacity="0.12" />
             </filter>
             <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
             {/* Plastic and metallic gradients */}
+            <linearGradient id="chassisCleanBench" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#f8fafc" />
+              <stop offset="50%" stopColor="#f1f5f9" />
+              <stop offset="100%" stopColor="#e2e8f0" />
+            </linearGradient>
+            <linearGradient id="dockCardGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="100%" stopColor="#f8fafc" />
+            </linearGradient>
             <linearGradient id="bbWhitePlastic" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#faf7f2" />
               <stop offset="50%" stopColor="#f4ede2" />
@@ -488,27 +497,27 @@ export default function InteractiveBreadboard({
             </linearGradient>
           </defs>
 
-          {/* ════════ WORKBENCH WOODEN SURFACE BACKGROUND ════════ */}
-          <rect x="0" y="0" width={SVG_W} height={SVG_H} fill="#23272e" />
-          <line x1="0" y1="0" x2={SVG_W} y2="0" stroke="#333842" strokeWidth="1" />
+          {/* ════════ WORKBENCH ANODIZED CASING SURFACE ════════ */}
+          <rect x="0" y="0" width={SVG_W} height={SVG_H} fill="url(#chassisCleanBench)" />
+          <rect x="0" y="0" width={SVG_W} height={SVG_H} fill="none" stroke="#cbd5e1" strokeWidth="2" />
 
-          {/* ════════ LEFT DOCK: POWER & FUNCTION GENERATORS ════════ */}
-          <rect x="15" y="25" width="95" height={SVG_H - 50} rx="12" fill="#181a1f" stroke="#2b313c" strokeWidth="1.5" />
-          <text x="62" y="48" textAnchor="middle" fontSize="7.5" fill="#94a3b8" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
+          {/* ════════ LEFT DOCK: POWER & FUNCTION GENERATORS (Light Panel) ════════ */}
+          <rect x="15" y="25" width="95" height={SVG_H - 50} rx="12" fill="url(#dockCardGrad)" stroke="#cbd5e1" strokeWidth="1.5" filter="url(#shadowHeavy)" />
+          <text x="62" y="48" textAnchor="middle" fontSize="7.5" fill="#334155" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
             SOURCES DOCK
           </text>
-          <line x1="25" y1="54" x2="100" y2="54" stroke="#2b313c" strokeWidth="1" />
+          <line x1="25" y1="54" x2="100" y2="54" stroke="#e2e8f0" strokeWidth="1" />
 
-          {/* ════════ RIGHT DOCK: OSCILLOSCOPE BNC PROBE HUB ════════ */}
-          <rect x={SVG_W - 110} y="25" width="95" height={SVG_H - 50} rx="12" fill="#181a1f" stroke="#2b313c" strokeWidth="1.5" />
-          <text x={SVG_W - 62} y="48" textAnchor="middle" fontSize="7.5" fill="#94a3b8" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
+          {/* ════════ RIGHT DOCK: OSCILLOSCOPE BNC PROBE HUB (Light Panel) ════════ */}
+          <rect x={SVG_W - 110} y="25" width="95" height={SVG_H - 50} rx="12" fill="url(#dockCardGrad)" stroke="#cbd5e1" strokeWidth="1.5" filter="url(#shadowHeavy)" />
+          <text x={SVG_W - 62} y="48" textAnchor="middle" fontSize="7.5" fill="#334155" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
             DSO PROBE HUB
           </text>
-          <line x1={SVG_W - 100} y1="54" x2={SVG_W - 25} y2="54" stroke="#2b313c" strokeWidth="1" />
+          <line x1={SVG_W - 100} y1="54" x2={SVG_W - 25} y2="54" stroke="#e2e8f0" strokeWidth="1" />
 
           {/* ════════ SOLDERLESS BREADBOARD CHASSIS ════════ */}
           <rect x="125" y="25" width={SVG_W - 250} height={SVG_H - 50} rx="14"
-            fill="url(#bbWhitePlastic)" stroke="#b8ab97" strokeWidth="2.5" filter="url(#shadowHeavy)" />
+            fill="url(#bbWhitePlastic)" stroke="#cbd5e1" strokeWidth="2" filter="url(#shadowHeavy)" />
 
           {/* Beveled Inset Border */}
           <rect x="130" y="30" width={SVG_W - 260} height={SVG_H - 60} rx="10"
@@ -745,35 +754,35 @@ export default function InteractiveBreadboard({
                   opacity="0.6"
                 />
 
-                {/* Outer bezel ring */}
+                {/* Outer bezel ring (Clean Light Bezel) */}
                 <circle
                   cx={t.x} cy={t.y} r="16"
-                  fill="#111317"
-                  stroke={isSelected || isTargeted ? '#fbbf24' : '#333842'}
+                  fill="#ffffff"
+                  stroke={isSelected || isTargeted ? '#f59e0b' : '#cbd5e1'}
                   strokeWidth={isSelected || isTargeted ? 2.5 : 1.5}
                 />
 
                 {/* Metallic connector core */}
                 <circle
                   cx={t.x} cy={t.y} r="11"
-                  fill={t.type === 'banana' ? (t.id === 'pwr' ? '#dc2626' : '#1e293b') : 'url(#nickelSilver)'}
-                  stroke="#475569" strokeWidth="1"
+                  fill={t.type === 'banana' ? (t.id === 'pwr' ? '#dc2626' : '#334155') : 'url(#nickelSilver)'}
+                  stroke="#94a3b8" strokeWidth="1"
                 />
 
                 {/* Connector jack hole / contact */}
                 <circle
                   cx={t.x} cy={t.y} r="4.5"
-                  fill="#000000"
+                  fill="#1e293b"
                   stroke={t.color} strokeWidth="1.5"
                 />
 
-                {/* Label text */}
+                {/* Label text (High Contrast Dark Slate) */}
                 <text
                   x={t.x}
                   y={t.y - 20}
                   textAnchor="middle"
                   fontSize="7.5"
-                  fill="#f1f5f9"
+                  fill="#0f172a"
                   fontWeight="bold"
                   fontFamily="monospace"
                 >
@@ -784,8 +793,9 @@ export default function InteractiveBreadboard({
                   y={t.y + 24}
                   textAnchor="middle"
                   fontSize="5.5"
-                  fill="#94a3b8"
+                  fill="#64748b"
                   fontFamily="sans-serif"
+                  fontWeight="medium"
                 >
                   {t.sub}
                 </text>
