@@ -12,10 +12,15 @@ export default defineConfig({
     tailwindcss(),
   ],
   resolve: {
-    dedupe: ['react', 'react-dom', 'react-router-dom'],
+    alias: {
+      react: path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      three: path.resolve(__dirname, 'node_modules/three'),
+    },
+    dedupe: ['react', 'react-dom', 'react-router-dom', 'three'],
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', 'lucide-react'],
+    include: ['react', 'react-dom', 'react-router-dom', 'lucide-react', 'three'],
     exclude: ['@google/model-viewer'],
   },
 })
