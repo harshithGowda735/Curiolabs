@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Users, Award, BarChart3, Search, Plus, Radio, CheckCircle, 
-  FileText, Download, Eye, Sparkles, Filter, ChevronRight
+  FileText, Download, Eye, Sparkles, Filter, ChevronRight, Inbox,
+  AlertCircle
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -12,14 +13,6 @@ import Breadcrumbs from '../components/Breadcrumbs'
 import { DOMAIN_REGISTRY } from '../data/domainRegistry'
 import { createExperiment, subscribeToFacultyRecords } from '../services/labService'
 
-const initialStudents = [
-  { id: 1, name: 'Aditi Sharma', class: 'ECE-301 (Engg)', lab: '2-DOF Robotic Arm (IK)', progress: 95, score: 96, status: 'Active In Lab', lastActive: '2 min ago' },
-  { id: 2, name: 'Rahul Kumar', class: 'PUC-12A', lab: 'Acid-Base Titration', progress: 80, score: 88, status: 'Active In Lab', lastActive: '5 min ago' },
-  { id: 3, name: 'Priya Deshpande', class: 'ECE-301 (Engg)', lab: 'RC Filter Tuning (+AR)', progress: 100, score: 98, status: 'Submitted', lastActive: '12 min ago' },
-  { id: 4, name: 'Arun Hegde', class: 'CSE-402 (Engg)', lab: 'DDoS Attack Mitigation', progress: 45, score: 72, status: 'Needs Guidance', lastActive: '15 min ago' },
-  { id: 5, name: 'Kavya Reddy', class: 'PUC-11B', lab: "Ohm's Law & Resistance", progress: 100, score: 94, status: 'Submitted', lastActive: '1 hour ago' },
-]
-
 export default function TeacherDashboard() {
   const { currentUser } = useAuth()
   const { t } = useLanguage()
@@ -27,18 +20,40 @@ export default function TeacherDashboard() {
   const [search, setSearch] = useState('')
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [showCert, setShowCert] = useState(false)
-  const [students, setStudents] = useState(initialStudents)
   const [publishError, setPublishError] = useState('')
+
+  // Real live student session telemetry (empty by default, no demo data)
+  const [students, setStudents] = useState(() => {
+    try {
+      const saved = localStorage.getItem('curiolabs_teacher_students')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
 
   useEffect(() => {
     if (!currentUser || currentUser.uid === 'demo-user') return
-    return subscribeToFacultyRecords((snapshot) => {
-      const liveStudents = snapshot.docs.map((item) => {
-        const record = item.data()
-        return { id: item.id, name: record.studentName || record.studentId?.slice(0, 8) || 'Student', class: record.branch || 'Unassigned', lab: record.experimentTitle || record.experimentId, progress: record.completionStatus === 'completed' ? 100 : 50, score: record.score || 0, status: record.completionStatus === 'completed' ? 'Submitted' : 'Active In Lab', lastActive: 'Live' }
+    try {
+      return subscribeToFacultyRecords((snapshot) => {
+        const liveStudents = snapshot.docs.map((item) => {
+          const record = item.data()
+          return {
+            id: item.id,
+            name: record.studentName || record.studentId?.slice(0, 8) || 'Student',
+            class: record.branch || 'Unassigned',
+            lab: record.experimentTitle || record.experimentId,
+            progress: record.completionStatus === 'completed' ? 100 : 50,
+            score: record.score || 0,
+            status: record.completionStatus === 'completed' ? 'Submitted' : 'Active In Lab',
+            lastActive: 'Live'
+          }
+        })
+        if (liveStudents.length) setStudents(liveStudents)
       })
-      if (liveStudents.length) setStudents(liveStudents)
-    })
+    } catch (err) {
+      console.warn('Faculty records subscription note:', err)
+    }
   }, [currentUser])
 
   // Lab creator form state
@@ -49,30 +64,87 @@ export default function TeacherDashboard() {
     instructions: '',
     minTolerance: '2.5%'
   })
-  const [createdLabs, setCreatedLabs] = useState([
-    { title: 'Custom RC Filter Bandwidth Test', domain: 'Electronics', assignedTo: 'ECE-301', due: 'Sep 25, 2026' },
-    { title: 'Acid-Base Indicator Calibration', domain: 'Chemistry', assignedTo: 'PUC-12A', due: 'Sep 28, 2026' }
-  ])
+
+  const [createdLabs, setCreatedLabs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('curiolabs_teacher_labs')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+
+  // Persist created labs to local storage
+  useEffect(() => {
+    try {
+      localStorage.setItem('curiolabs_teacher_labs', JSON.stringify(createdLabs))
+    } catch (e) {
+      console.error(e)
+    }
+  }, [createdLabs])
+
+  // Persist students to local storage
+  useEffect(() => {
+    try {
+      localStorage.setItem('curiolabs_teacher_students', JSON.stringify(students))
+    } catch (e) {
+      console.error(e)
+    }
+  }, [students])
 
   const filtered = students.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.class.toLowerCase().includes(search.toLowerCase()) ||
-    s.lab.toLowerCase().includes(search.toLowerCase())
+    s?.name?.toLowerCase().includes(search.toLowerCase()) ||
+    s?.class?.toLowerCase().includes(search.toLowerCase()) ||
+    s?.lab?.toLowerCase().includes(search.toLowerCase())
   )
+
+  // Dynamic telemetry calculations
+  const activeCount = students.filter(s => s.status === 'Active In Lab').length
+  const completedCount = students.filter(s => s.status === 'Submitted').length
+  const avgScore = students.length > 0 
+    ? (students.reduce((acc, s) => acc + (Number(s.score) || 0), 0) / students.length).toFixed(1) + '%'
+    : '0%'
+  const flaggedCount = students.filter(s => s.status === 'Needs Guidance').length
 
   const handleCreateLab = async (e) => {
     e.preventDefault()
     if (!newLab.title) return
+    const newEntry = {
+      id: Date.now(),
+      title: newLab.title,
+      domain: newLab.domain,
+      level: newLab.level,
+      assignedTo: 'Pending Assignment',
+      due: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+    }
     try {
       setPublishError('')
-      await createExperiment({ title: newLab.title, category: newLab.domain, branch: newLab.level, difficulty: 'intermediate', duration: 45, instructions: newLab.instructions, minTolerance: newLab.minTolerance, createdBy: currentUser?.uid })
-      setCreatedLabs(prev => [{ title: newLab.title, domain: newLab.domain, assignedTo: 'Pending Assignment', due: 'Draft — assign a cohort' }, ...prev])
-      setNewLab({ title: '', domain: 'robotics', level: 'engineering', instructions: '', minTolerance: '2.5%' })
-      setActiveTab('assign')
-    } catch (error) { setPublishError(error.message || 'Unable to publish the lab. Check your Firebase role and configuration.') }
+      if (currentUser && currentUser.uid !== 'demo-user') {
+        await createExperiment({
+          title: newLab.title,
+          category: newLab.domain,
+          branch: newLab.level,
+          difficulty: 'intermediate',
+          duration: 45,
+          instructions: newLab.instructions,
+          minTolerance: newLab.minTolerance,
+          createdBy: currentUser?.uid
+        })
+      }
+    } catch (error) {
+      console.warn('Firebase publish note:', error)
+      setPublishError(error.message || 'Unable to publish the lab to cloud registry.')
+    }
+    setCreatedLabs(prev => [newEntry, ...prev])
+    setNewLab({ title: '', domain: 'robotics', level: 'engineering', instructions: '', minTolerance: '2.5%' })
+    setActiveTab('assign')
   }
 
   const handleExportAccreditation = () => {
+    if (students.length === 0) {
+      alert('No active student telemetry data available yet to export.')
+      return
+    }
     alert('Generating NAAC / ABET Outcome Assessment Report (PDF)...')
   }
 
@@ -120,7 +192,7 @@ export default function TeacherDashboard() {
 
         {/* Main Section */}
         <div className="max-w-7xl mx-auto px-4 py-6">
-          {/* Navigation Tabs (Apple Style Segmented Control) */}
+          {/* Navigation Tabs */}
           <div className="flex bg-slate-200/70 p-1 rounded-xl mb-6 overflow-x-auto">
             {[
               { id: 'monitor', label: 'Live Student Monitor', icon: Radio },
@@ -150,13 +222,13 @@ export default function TeacherDashboard() {
           {/* TAB 1: LIVE MONITOR */}
           {activeTab === 'monitor' && (
             <div className="space-y-6">
-              {/* Stat Cards */}
+              {/* Stat Cards - Computed Dynamically */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'Active Students in Lab', val: '24', icon: Users, color: 'text-emerald-600 bg-emerald-50' },
-                  { label: 'Completed Today', val: '38', icon: CheckCircle, color: 'text-blue-600 bg-blue-50' },
-                  { label: 'Average AI Viva Score', val: '89.4%', icon: Award, color: 'text-indigo-600 bg-indigo-50' },
-                  { label: 'Flagged for Assistance', val: '2', icon: Radio, color: 'text-amber-600 bg-amber-50' },
+                  { label: 'Active Students in Lab', val: activeCount, icon: Users, color: 'text-emerald-600 bg-emerald-50' },
+                  { label: 'Completed Today', val: completedCount, icon: CheckCircle, color: 'text-blue-600 bg-blue-50' },
+                  { label: 'Average AI Viva Score', val: avgScore, icon: Award, color: 'text-indigo-600 bg-indigo-50' },
+                  { label: 'Flagged for Assistance', val: flaggedCount, icon: Radio, color: 'text-amber-600 bg-amber-50' },
                 ].map((st, i) => (
                   <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
                     <div className="flex items-center justify-between mb-2">
@@ -201,42 +273,56 @@ export default function TeacherDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {filtered.map(st => (
-                        <tr key={st.id} className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-3 px-4 font-semibold text-slate-900">{st.name}</td>
-                          <td className="py-3 px-4 text-slate-600 font-mono text-[11px]">{st.class}</td>
-                          <td className="py-3 px-4 text-slate-800 font-medium">{st.lab}</td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${st.progress}%` }} />
-                              </div>
-                              <span className="font-mono text-[10px] text-slate-500">{st.progress}%</span>
+                      {filtered.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" className="py-12 text-center text-slate-400">
+                            <div className="flex flex-col items-center justify-center gap-2">
+                              <Inbox className="w-8 h-8 text-slate-300" />
+                              <span className="font-semibold text-slate-600">No active student telemetry stream</span>
+                              <span className="text-[11px] text-slate-400">
+                                Real-time student progress will automatically appear here when learners launch virtual labs.
+                              </span>
                             </div>
                           </td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              st.status === 'Submitted' ? 'bg-emerald-100 text-emerald-800' :
-                              st.status === 'Active In Lab' ? 'bg-blue-100 text-blue-800 animate-pulse' :
-                              'bg-amber-100 text-amber-800'
-                            }`}>
-                              {st.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <button
-                              onClick={() => {
-                                setSelectedStudent(st)
-                                setShowCert(true)
-                              }}
-                              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 p-1 rounded hover:bg-indigo-50 flex items-center gap-1"
-                            >
-                              <Eye size={13} />
-                              <span>Audit</span>
-                            </button>
-                          </td>
                         </tr>
-                      ))}
+                      ) : (
+                        filtered.map(st => (
+                          <tr key={st.id} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="py-3 px-4 font-semibold text-slate-900">{st.name}</td>
+                            <td className="py-3 px-4 text-slate-600 font-mono text-[11px]">{st.class}</td>
+                            <td className="py-3 px-4 text-slate-800 font-medium">{st.lab}</td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                  <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${st.progress}%` }} />
+                                </div>
+                                <span className="font-mono text-[10px] text-slate-500">{st.progress}%</span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                st.status === 'Submitted' ? 'bg-emerald-100 text-emerald-800' :
+                                st.status === 'Active In Lab' ? 'bg-blue-100 text-blue-800 animate-pulse' :
+                                'bg-amber-100 text-amber-800'
+                              }`}>
+                                {st.status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <button
+                                onClick={() => {
+                                  setSelectedStudent(st)
+                                  setShowCert(true)
+                                }}
+                                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 p-1 rounded hover:bg-indigo-50 flex items-center gap-1"
+                              >
+                                <Eye size={13} />
+                                <span>Audit</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -318,25 +404,51 @@ export default function TeacherDashboard() {
           {activeTab === 'assign' && (
             <div className="space-y-4">
               <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
-                <h3 className="font-display font-bold text-slate-900 text-sm mb-4">
-                  Active Department Lab Assignments
-                </h3>
-                <div className="space-y-3">
-                  {createdLabs.map((lab, i) => (
-                    <div key={i} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
-                      <div>
-                        <span className="font-bold text-slate-900 text-sm block">{lab.title}</span>
-                        <span className="text-slate-500">{lab.domain} • Assigned Cohort: <span className="font-mono text-indigo-600 font-semibold">{lab.assignedTo}</span></span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-slate-400 text-[11px]">Due: {lab.due}</span>
-                        <button className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold rounded-lg transition-colors">
-                          Modify Rubric
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-display font-bold text-slate-900 text-sm">
+                    Active Department Lab Assignments
+                  </h3>
+                  <button
+                    onClick={() => setActiveTab('create')}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1 transition-colors"
+                  >
+                    <Plus size={13} />
+                    <span>New Assignment</span>
+                  </button>
                 </div>
+
+                {createdLabs.length === 0 ? (
+                  <div className="p-8 text-center text-slate-400 flex flex-col items-center justify-center gap-2 border border-dashed border-slate-200 rounded-xl">
+                    <FileText className="w-8 h-8 text-slate-300" />
+                    <span className="font-semibold text-slate-600">No custom lab assignments published yet</span>
+                    <p className="text-xs text-slate-400 max-w-sm">
+                      Use the "Create New Lab" wizard to configure custom experiment parameters and assign them to your student cohorts.
+                    </p>
+                    <button
+                      onClick={() => setActiveTab('create')}
+                      className="mt-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-xl transition-colors"
+                    >
+                      Open Authoring Wizard
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {createdLabs.map((lab, i) => (
+                      <div key={lab.id || i} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="font-bold text-slate-900 text-sm block">{lab.title}</span>
+                          <span className="text-slate-500">{lab.domain} • Assigned Cohort: <span className="font-mono text-indigo-600 font-semibold">{lab.assignedTo}</span></span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-slate-400 text-[11px]">Due: {lab.due}</span>
+                          <button className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold rounded-lg transition-colors">
+                            Modify Rubric
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -350,28 +462,39 @@ export default function TeacherDashboard() {
               <p className="text-xs text-slate-500">
                 Review automated student viva scores, accuracy curves, and telemetry logs before final institutional credential issuance.
               </p>
-              <div className="space-y-2 text-xs">
-                {students.map(st => (
-                  <div key={st.id} className="p-3 rounded-xl border border-slate-100 flex items-center justify-between">
-                    <div>
-                      <span className="font-semibold text-slate-900 block">{st.name} ({st.class})</span>
-                      <span className="text-slate-500">{st.lab}</span>
+
+              {students.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 flex flex-col items-center justify-center gap-2 border border-dashed border-slate-200 rounded-xl">
+                  <CheckCircle className="w-8 h-8 text-slate-300" />
+                  <span className="font-semibold text-slate-600">No evaluations pending audit</span>
+                  <span className="text-xs text-slate-400">
+                    Student evaluations and AI viva audit logs will appear here once learners submit their lab reports.
+                  </span>
+                </div>
+              ) : (
+                <div className="space-y-2 text-xs">
+                  {students.map(st => (
+                    <div key={st.id} className="p-3 rounded-xl border border-slate-100 flex items-center justify-between">
+                      <div>
+                        <span className="font-semibold text-slate-900 block">{st.name} ({st.class})</span>
+                        <span className="text-slate-500">{st.lab}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-emerald-600 text-sm font-display">Score: {st.score}/100</span>
+                        <button
+                          onClick={() => {
+                            setSelectedStudent(st)
+                            setShowCert(true)
+                          }}
+                          className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg"
+                        >
+                          Review Viva Telemetry
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-emerald-600 text-sm font-display">Score: {st.score}/100</span>
-                      <button
-                        onClick={() => {
-                          setSelectedStudent(st)
-                          setShowCert(true)
-                        }}
-                        className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg"
-                      >
-                        Review Viva Telemetry
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -394,23 +517,39 @@ export default function TeacherDashboard() {
               <p className="text-slate-500 leading-relaxed">
                 Automated generation of Course Outcomes (CO) and Program Outcomes (PO) attainment matrices directly from virtual lab student telemetry.
               </p>
-              <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2">
-                <div className="flex justify-between font-semibold text-indigo-950">
-                  <span>CO1: Application of Engineering Physics Fundamentals</span>
-                  <span>94.2% Attainment</span>
+
+              {students.length === 0 ? (
+                <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-1">
+                  <span className="font-semibold text-slate-700 block">No Student Telemetry Recorded Yet</span>
+                  <p className="text-[11px] text-slate-400">
+                    Attainment matrices will compute dynamically as students complete lab sessions and AI evaluations.
+                  </p>
                 </div>
-                <div className="flex justify-between font-semibold text-indigo-950">
-                  <span>CO2: Modern Tool Usage (WebAR Circuitry & Simulators)</span>
-                  <span>91.8% Attainment</span>
+              ) : (
+                <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2">
+                  <div className="flex justify-between font-semibold text-indigo-950">
+                    <span>CO1: Application of Engineering Physics Fundamentals</span>
+                    <span>{avgScore} Attainment</span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-indigo-950">
+                    <span>CO2: Modern Tool Usage (WebAR Circuitry & Simulators)</span>
+                    <span>{avgScore} Attainment</span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-indigo-950">
+                    <span>CO3: Conduct Experiments & Synthesize Valid Conclusions</span>
+                    <span>{avgScore} Attainment</span>
+                  </div>
                 </div>
-                <div className="flex justify-between font-semibold text-indigo-950">
-                  <span>CO3: Conduct Experiments & Synthesize Valid Conclusions</span>
-                  <span>88.5% Attainment</span>
-                </div>
-              </div>
+              )}
+
               <button
                 onClick={handleExportAccreditation}
-                className="w-full bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                disabled={students.length === 0}
+                className={`w-full py-3 rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2 ${
+                  students.length === 0
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    : 'bg-slate-900 hover:bg-black text-white'
+                }`}
               >
                 <Download size={15} />
                 <span>Export Accreditation Data (CSV + Signed PDF)</span>
