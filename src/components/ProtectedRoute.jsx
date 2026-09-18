@@ -26,7 +26,7 @@ export default function ProtectedRoute({ children, requiredRole = null, requireP
   }
 
   if (!userRole) {
-    return <Navigate to="/role-selection" replace />
+    return <Navigate to="/catalog" replace />
   }
 
   if (requiredRole && userRole !== requiredRole) {

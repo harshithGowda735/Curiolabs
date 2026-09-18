@@ -25,7 +25,7 @@ export default function Login() {
       } else {
         await signInWithEmail(email, password)
       }
-      navigate('/role-selection')
+      navigate('/catalog')
     } catch (err) {
       setError(err.message || 'Authentication failed')
     }
@@ -36,7 +36,7 @@ export default function Login() {
     setError('')
     try {
       await signInWithGoogle()
-      navigate('/role-selection')
+      navigate('/catalog')
     } catch (err) {
       setError(err.message || 'Google sign-in failed')
     }

@@ -8,7 +8,6 @@ import OfflineModeBanner from './components/OfflineModeBanner'
 // Pages
 import Landing from './pages/Landing'
 import Login from './pages/Login'
-import RoleSelection from './pages/RoleSelection'
 import LevelSelection from './pages/LevelSelection'
 import DomainCatalog from './pages/DomainCatalog'
 import NotFound from './pages/NotFound'
@@ -99,8 +98,8 @@ export default function App() {
             {/* Public Pages */}
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/role-selection" element={<RoleSelection />} />
-            <Route path="/roles" element={<Navigate to="/role-selection" replace />} />
+            <Route path="/role-selection" element={<Navigate to="/catalog" replace />} />
+            <Route path="/roles" element={<Navigate to="/catalog" replace />} />
 
             {/* Education Level & Domain Catalog Flow */}
             <Route path="/level-select" element={<LevelSelection />} />
