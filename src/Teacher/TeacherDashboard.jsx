@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { 
   Users, Award, BarChart3, Search, Plus, Radio, CheckCircle, 
   FileText, Download, Eye, Sparkles, Filter, ChevronRight
@@ -10,6 +10,7 @@ import CourseCertificateModal from '../components/CourseCertificateModal'
 import Footer from '../components/Footer'
 import Breadcrumbs from '../components/Breadcrumbs'
 import { DOMAIN_REGISTRY } from '../data/domainRegistry'
+import { createExperiment, subscribeToFacultyRecords } from '../services/labService'
 
 const initialStudents = [
   { id: 1, name: 'Aditi Sharma', class: 'ECE-301 (Engg)', lab: '2-DOF Robotic Arm (IK)', progress: 95, score: 96, status: 'Active In Lab', lastActive: '2 min ago' },
@@ -27,6 +28,18 @@ export default function TeacherDashboard() {
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [showCert, setShowCert] = useState(false)
   const [students, setStudents] = useState(initialStudents)
+  const [publishError, setPublishError] = useState('')
+
+  useEffect(() => {
+    if (!currentUser || currentUser.uid === 'demo-user') return
+    return subscribeToFacultyRecords((snapshot) => {
+      const liveStudents = snapshot.docs.map((item) => {
+        const record = item.data()
+        return { id: item.id, name: record.studentName || record.studentId?.slice(0, 8) || 'Student', class: record.branch || 'Unassigned', lab: record.experimentTitle || record.experimentId, progress: record.completionStatus === 'completed' ? 100 : 50, score: record.score || 0, status: record.completionStatus === 'completed' ? 'Submitted' : 'Active In Lab', lastActive: 'Live' }
+      })
+      if (liveStudents.length) setStudents(liveStudents)
+    })
+  }, [currentUser])
 
   // Lab creator form state
   const [newLab, setNewLab] = useState({
@@ -47,15 +60,16 @@ export default function TeacherDashboard() {
     s.lab.toLowerCase().includes(search.toLowerCase())
   )
 
-  const handleCreateLab = (e) => {
+  const handleCreateLab = async (e) => {
     e.preventDefault()
     if (!newLab.title) return
-    setCreatedLabs(prev => [
-      { title: newLab.title, domain: newLab.domain, assignedTo: 'Pending Assignment', due: 'Oct 02, 2026' },
-      ...prev
-    ])
-    setNewLab({ title: '', domain: 'robotics', level: 'engineering', instructions: '', minTolerance: '2.5%' })
-    setActiveTab('assign')
+    try {
+      setPublishError('')
+      await createExperiment({ title: newLab.title, category: newLab.domain, branch: newLab.level, difficulty: 'intermediate', duration: 45, instructions: newLab.instructions, minTolerance: newLab.minTolerance, createdBy: currentUser?.uid })
+      setCreatedLabs(prev => [{ title: newLab.title, domain: newLab.domain, assignedTo: 'Pending Assignment', due: 'Draft — assign a cohort' }, ...prev])
+      setNewLab({ title: '', domain: 'robotics', level: 'engineering', instructions: '', minTolerance: '2.5%' })
+      setActiveTab('assign')
+    } catch (error) { setPublishError(error.message || 'Unable to publish the lab. Check your Firebase role and configuration.') }
   }
 
   const handleExportAccreditation = () => {
@@ -113,6 +127,7 @@ export default function TeacherDashboard() {
               { id: 'create', label: 'Create New Lab', icon: Plus },
               { id: 'assign', label: 'Assign Experiments', icon: FileText },
               { id: 'evaluate', label: 'AI Evaluation Audit', icon: CheckCircle },
+              { id: 'attendance', label: 'Attendance', icon: Users },
               { id: 'reports', label: 'Accreditation Reports', icon: BarChart3 },
             ].map(tab => {
               const Icon = tab.icon
@@ -240,6 +255,7 @@ export default function TeacherDashboard() {
               </p>
 
               <form onSubmit={handleCreateLab} className="space-y-4 text-xs">
+                {publishError && <p className="rounded-lg bg-red-50 p-3 text-red-700">{publishError}</p>}
                 <div>
                   <label className="font-semibold text-slate-700 block mb-1">Experiment Title</label>
                   <input
@@ -355,6 +371,16 @@ export default function TeacherDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'attendance' && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
+              <h3 className="font-display font-bold text-slate-900 text-sm">Live laboratory attendance</h3>
+              <p className="text-xs text-slate-500 mt-1">Attendance is derived from authenticated lab-record activity and updates in real time.</p>
+              <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {students.map(student => <div key={student.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3 flex justify-between items-center text-xs"><div><b className="text-slate-900 block">{student.name}</b><span className="text-slate-500">{student.class}</span></div><span className={`rounded-full px-2 py-1 font-bold ${student.status === 'Submitted' || student.status === 'Active In Lab' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>{student.status === 'Submitted' || student.status === 'Active In Lab' ? 'Present' : 'Absent'}</span></div>)}
               </div>
             </div>
           )}

@@ -1,0 +1,1 @@
+{"indexes":[{"collectionGroup":"labRecords","queryScope":"COLLECTION","fields":[{"fieldPath":"studentId","order":"ASCENDING"},{"fieldPath":"timestamp","order":"DESCENDING"}]}],"fieldOverrides":[]}

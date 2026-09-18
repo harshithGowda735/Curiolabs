@@ -1,0 +1,6 @@
+import { addDoc, collection, doc, increment, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
+import { db } from '../firebase'
+export const subscribeToStudentRecords = (studentId, callback, onError = console.error) => onSnapshot(query(collection(db, 'labRecords'), where('studentId', '==', studentId), orderBy('timestamp', 'desc'), limit(25)), callback, onError)
+export const subscribeToFacultyRecords = (callback, onError = console.error) => onSnapshot(query(collection(db, 'labRecords'), orderBy('timestamp', 'desc'), limit(100)), callback, onError)
+export const createExperiment = data => addDoc(collection(db, 'experiments'), { ...data, duration: Number(data.duration), status: 'published', createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
+export async function saveLabRecord({ studentId, experimentId, score, vivaMarks, completionStatus }) { const record = await addDoc(collection(db, 'labRecords'), { studentId, experimentId, score: Number(score), vivaMarks: Number(vivaMarks), completionStatus, timestamp: serverTimestamp() }); if (completionStatus === 'completed') await setDoc(doc(db, 'students', studentId), { completedExperiments: increment(1), updatedAt: serverTimestamp() }, { merge: true }); return record }

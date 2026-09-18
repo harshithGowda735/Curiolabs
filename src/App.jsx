@@ -25,6 +25,10 @@ import MagneticHysteresis from './Physics/MagneticHysteresis'
 import ClippingClamping from './Physics/ClippingClamping'
 import Pendulum from './Physics/Pendulum'
 import ProjectileMotion from './Physics/ProjectileMotion'
+import DoubleSlit from './Physics/DoubleSlit'
+import PrismSpectrometer from './Physics/PrismSpectrometer'
+import DiodeBias from './Physics/DiodeBias'
+import VernierCaliper from './Physics/VernierCaliper'
 
 // Chemistry
 import ChemistryHub from './Chemistry/ChemistryHub'
@@ -101,18 +105,18 @@ export default function App() {
 
             {/* Dashboards */}
             <Route path="/student" element={
-              <ProtectedRoute requiredRole="student">
+              <ProtectedRoute allowedRoles={['student']}>
                 <StudentDashboard />
               </ProtectedRoute>
             } />
             <Route path="/student/offline" element={<OfflineStudentHome />} />
             <Route path="/teacher" element={
-              <ProtectedRoute requiredRole="teacher">
+              <ProtectedRoute allowedRoles={['faculty', 'admin']}>
                 <TeacherDashboard />
               </ProtectedRoute>
             } />
-            <Route path="/faculty" element={<TeacherDashboard />} />
-            <Route path="/faculty/*" element={<TeacherDashboard />} />
+            <Route path="/faculty" element={<ProtectedRoute allowedRoles={['faculty', 'admin']}><TeacherDashboard /></ProtectedRoute>} />
+            <Route path="/faculty/*" element={<ProtectedRoute allowedRoles={['faculty', 'admin']}><TeacherDashboard /></ProtectedRoute>} />
 
             {/* Physics Domain */}
             <Route path="/physics" element={<PhysicsHub />} />
@@ -121,6 +125,10 @@ export default function App() {
             <Route path="/physics/clipping-clamping" element={<ClippingClamping />} />
             <Route path="/physics/pendulum" element={<Pendulum />} />
             <Route path="/physics/projectile" element={<ProjectileMotion />} />
+            <Route path="/physics/double-slit" element={<DoubleSlit />} />
+            <Route path="/physics/prism-spectrometer" element={<PrismSpectrometer />} />
+            <Route path="/physics/diode-bias" element={<DiodeBias />} />
+            <Route path="/physics/vernier-caliper" element={<VernierCaliper />} />
 
             {/* Chemistry Domain */}
             <Route path="/chemistry" element={<ChemistryHub />} />

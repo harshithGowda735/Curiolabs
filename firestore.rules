@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function user() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function hasRole(role) { return signedIn() && user().role == role; }
+    function facultyOrAdmin() { return hasRole('faculty') || hasRole('admin'); }
+    function owns(id) { return signedIn() && request.auth.uid == id; }
+    match /users/{uid} {
+      allow read: if owns(uid) || facultyOrAdmin();
+      allow create: if owns(uid) && request.resource.data.role in ['student', 'faculty'];
+      allow update: if owns(uid) && request.resource.data.role == resource.data.role;
+      allow delete: if false;
+    }
+    match /students/{uid} { allow read: if owns(uid) || facultyOrAdmin(); allow create, update: if owns(uid) || hasRole('admin'); allow delete: if hasRole('admin'); }
+    match /faculty/{uid} { allow read: if owns(uid) || hasRole('admin'); allow create, update: if owns(uid) || hasRole('admin'); allow delete: if hasRole('admin'); }
+    match /experiments/{id} { allow read: if signedIn(); allow create, update: if facultyOrAdmin(); allow delete: if hasRole('admin'); }
+    match /labRecords/{id} { allow read: if signedIn() && (resource.data.studentId == request.auth.uid || facultyOrAdmin()); allow create: if signedIn() && request.resource.data.studentId == request.auth.uid; allow update, delete: if hasRole('admin'); }
+  }
+}

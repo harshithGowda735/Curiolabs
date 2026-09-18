@@ -1,132 +1,38 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-import { auth, googleProvider, db } from '../firebase'
-import { 
-  onAuthStateChanged, 
-  signInWithPopup, 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut 
-} from 'firebase/auth'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { auth, db, googleProvider, firebaseIsConfigured } from '../firebase'
+import { onAuthStateChanged, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut, updateProfile } from 'firebase/auth'
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 
 const AuthContext = createContext(null)
+const ROLES = ['student', 'faculty', 'admin']
+const makeProfile = (user, role, details = {}) => ({ name: details.name || user.displayName || user.email?.split('@')[0] || 'CurioLabs User', email: user.email || '', role, branch: details.branch || '', profilePhoto: user.photoURL || '', createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null)
-  const [userRole, setUserRole] = useState(null) // 'student' | 'teacher'
-  const [profileComplete, setProfileComplete] = useState(false)
+  const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user)
-      if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid))
-          if (userDoc.exists()) {
-            const data = userDoc.data()
-            setUserRole(data.role || null)
-            setProfileComplete(data.profileComplete || false)
-          } else {
-            setUserRole(null)
-            setProfileComplete(false)
-          }
-        } catch (err) {
-          // Offline or Firebase not configured — use demo mode
-          console.log('Firebase read failed, using demo mode:', err.message)
-          setUserRole(localStorage.getItem('curiolabs_role') || null)
-          setProfileComplete(localStorage.getItem('curiolabs_profile') === 'true')
-        }
-      } else {
-        setUserRole(null)
-        setProfileComplete(false)
-      }
-      setLoading(false)
-    })
-    return unsub
-  }, [])
-
-  const signInWithGoogle = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider)
-    } catch (err) {
-      console.error('Google sign-in failed:', err)
-      throw err
-    }
-  }
-
-  const signInWithEmail = async (email, password) => {
-    return signInWithEmailAndPassword(auth, email, password)
-  }
-
-  const signUpWithEmail = async (email, password) => {
-    return createUserWithEmailAndPassword(auth, email, password)
-  }
-
-  const signOut = async () => {
-    localStorage.removeItem('curiolabs_role')
-    localStorage.removeItem('curiolabs_profile')
-    setUserRole(null)
-    setProfileComplete(false)
-    return firebaseSignOut(auth)
-  }
-
-  const setRole = async (role) => {
-    setUserRole(role)
-    localStorage.setItem('curiolabs_role', role)
-    if (currentUser) {
-      try {
-        await setDoc(doc(db, 'users', currentUser.uid), { role }, { merge: true })
-      } catch (err) {
-        console.log('Offline — role saved locally')
-      }
-    }
-  }
-
-  const completeProfile = async (profileData) => {
-    setProfileComplete(true)
-    localStorage.setItem('curiolabs_profile', 'true')
-    if (currentUser) {
-      try {
-        await setDoc(doc(db, 'users', currentUser.uid), { 
-          ...profileData, 
-          profileComplete: true 
-        }, { merge: true })
-      } catch (err) {
-        console.log('Offline — profile saved locally')
-      }
-    }
-  }
-
-  // Demo mode for when Firebase is not configured
-  const demoSignIn = (role) => {
-    setCurrentUser({ uid: 'demo-user', displayName: 'Demo Student', email: 'demo@curiolabs.app' })
-    setUserRole(role)
-    setProfileComplete(true)
-    localStorage.setItem('curiolabs_role', role)
-    localStorage.setItem('curiolabs_profile', 'true')
+  useEffect(() => onAuthStateChanged(auth, async (user) => {
+    setCurrentUser(user)
+    if (!user || !firebaseIsConfigured) { setProfile(null); setLoading(false); return }
+    try { const snapshot = await getDoc(doc(db, 'users', user.uid)); setProfile(snapshot.exists() ? snapshot.data() : null) }
+    catch (error) { console.error('Unable to load account profile', error); setProfile(null) }
     setLoading(false)
-  }
+  }), [])
 
-  const value = {
-    currentUser,
-    userRole,
-    profileComplete,
-    loading,
-    signInWithGoogle,
-    signInWithEmail,
-    signUpWithEmail,
-    signOut,
-    setRole,
-    completeProfile,
-    demoSignIn,
+  const createProfile = async (user, role, details = {}) => {
+    if (!['student', 'faculty'].includes(role)) throw new Error('Only Student and Faculty roles can be self-registered.')
+    await Promise.all([
+      setDoc(doc(db, 'users', user.uid), makeProfile(user, role, details), { merge: true }),
+      setDoc(doc(db, role === 'student' ? 'students' : 'faculty', user.uid), role === 'student'
+        ? { academicLevel: details.academicLevel || '', branch: details.branch || '', completedExperiments: 0, certificates: 0, scores: { average: 0, vivaAverage: 0 }, updatedAt: serverTimestamp() }
+        : { department: details.department || details.branch || '', createdLabs: 0, studentsManaged: 0, updatedAt: serverTimestamp() }, { merge: true }),
+    ])
+    setProfile(await getDoc(doc(db, 'users', user.uid)).then(item => item.data()))
   }
-
+  const register = async (details) => { const credential = await createUserWithEmailAndPassword(auth, details.email, details.password); await updateProfile(credential.user, { displayName: details.name }); await createProfile(credential.user, details.role, details); return credential }
+  const demoSignIn = role => { const normalized = role === 'teacher' ? 'faculty' : role; setCurrentUser({ uid: 'demo-user', displayName: normalized === 'faculty' ? 'Demo Faculty' : 'Demo Student', email: 'demo@curiolabs.app' }); setProfile({ role: normalized, name: 'Demo User', branch: 'Engineering' }); setLoading(false) }
+  const userRole = profile?.role || null
+  const value = useMemo(() => ({ currentUser, profile, userRole, loading, roles: ROLES, signInWithGoogle: () => signInWithPopup(auth, googleProvider), signInWithEmail: (email, password) => signInWithEmailAndPassword(auth, email, password), register, signOut: () => firebaseSignOut(auth), createProfile, demoSignIn, isAdmin: userRole === 'admin', isFaculty: ['faculty', 'admin'].includes(userRole) }), [currentUser, profile, userRole, loading])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
-
-export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
-}
+export function useAuth() { const context = useContext(AuthContext); if (!context) throw new Error('useAuth must be used within AuthProvider'); return context }

@@ -5,19 +5,19 @@ import { useAuth } from '../contexts/AuthContext'
 import { useLanguage } from '../contexts/LanguageContext'
 
 export default function RoleSelection() {
-  const { setRole } = useAuth()
+  const { createProfile, currentUser } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
   const [studentMode, setStudentMode] = useState(false)
 
   const handleSelectStudentLevel = async (levelId) => {
-    await setRole('student')
+    await createProfile(currentUser, 'student', { academicLevel: levelId, branch: levelId })
     localStorage.setItem('curiolabs_selected_level', levelId)
     navigate(`/catalog/${levelId}`)
   }
 
   const handleSelectTeacher = async () => {
-    await setRole('teacher')
+    await createProfile(currentUser, 'faculty')
     navigate('/faculty')
   }
 

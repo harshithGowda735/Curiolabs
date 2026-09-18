@@ -16,7 +16,7 @@ export default function Navbar() {
     navigate('/')
   }
 
-  const dashboardPath = userRole === 'teacher' ? '/faculty' : '/student'
+  const dashboardPath = ['faculty', 'admin', 'teacher'].includes(userRole) ? '/faculty' : '/student'
 
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-40 safe-top">
@@ -54,7 +54,7 @@ export default function Navbar() {
                     : 'text-slate-600 hover:text-slate-950'
                 }`}
               >
-                <span>{userRole === 'teacher' ? t('Faculty Console', 'ಶಿಕ್ಷಕರ ಕನ್ಸೋಲ್') : t('Student Dashboard', 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್')}</span>
+                  <span>{['faculty', 'admin', 'teacher'].includes(userRole) ? t('Faculty Console', 'ಶಿಕ್ಷಕರ ಕನ್ಸೋಲ್') : t('Student Dashboard', 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್')}</span>
               </Link>
             )}
           </div>
@@ -125,7 +125,7 @@ export default function Navbar() {
                 onClick={() => setIsOpen(false)}
                 className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-950 bg-slate-100"
               >
-                📊 {userRole === 'teacher' ? 'Faculty Console' : 'Student Dashboard'}
+                📊 {['faculty', 'admin', 'teacher'].includes(userRole) ? 'Faculty Console' : 'Student Dashboard'}
               </Link>
             ) : (
               <Link
