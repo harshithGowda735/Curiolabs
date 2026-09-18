@@ -1,4 +1,4 @@
-const CACHE_NAME = 'curiolabs-v2'
+const CACHE_NAME = 'curiolabs-v3'
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -27,36 +27,37 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
-  // Cache-first for static assets, network-first with fallback for pages
   if (event.request.method !== 'GET') return
+  const url = new URL(event.request.url)
+
+  // Never intercept dev server scripts, vite internals, browser extensions, or websockets
+  if (
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/@') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    event.request.url.includes('hot-update')
+  ) {
+    return
+  }
+
+  // Only handle navigation requests or explicitly cached static assets
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/index.html')
+      })
+    )
+    return
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Return cache and update in background
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse))
-          }
-        }).catch(() => {})
         return cachedResponse
       }
-
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200) {
-          return networkResponse
-        }
-        const responseToCache = networkResponse.clone()
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache)
-        })
-        return networkResponse
-      }).catch(() => {
-        // Offline fallback for HTML navigation
-        if (event.request.headers.get('accept')?.includes('text/html')) {
-          return caches.match('/index.html')
-        }
-      })
+      return fetch(event.request)
     })
   )
 })
