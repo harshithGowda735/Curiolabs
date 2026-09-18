@@ -74,7 +74,7 @@ export default function OpticalNumericalAperture() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="font-display font-bold text-gray-800 mb-3">📐 {t('Numerical Aperture Parameters', 'ನ್ಯೂಮೆರಿಕಲ್ ಅಪರ್ಚರ್')}</h3>
+        <h3 className="font-display font-bold text-gray-800 mb-3">{t('Numerical Aperture Parameters', 'ನ್ಯೂಮೆರಿಕಲ್ ಅಪರ್ಚರ್')}</h3>
         <LabeledSlider label="Screen Distance (L)" value={screenDistMm} onChange={setScreenDistMm} min={10} max={45} step={1} unit=" mm" accentColor="#3b82f6" />
         <div className="mt-3">
           <LabeledSlider label="Core Refractive Index (n₁)" value={n1} onChange={setN1} min={1.46} max={1.52} step={0.005} unit="" accentColor="#10b981" />
@@ -85,7 +85,7 @@ export default function OpticalNumericalAperture() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="font-display font-bold text-gray-800 mb-3">⚡ {t('Attenuation Loss Measurement', 'ಕ್ಷೀಣತೆ ನಷ್ಟ ಅಳತೆ')}</h3>
+        <h3 className="font-display font-bold text-gray-800 mb-3">{t('Attenuation Loss Measurement', 'ಕ್ಷೀಣತೆ ನಷ್ಟ ಅಳತೆ')}</h3>
         <LabeledSlider label="Fiber Cable Length" value={cableLengthM} onChange={setCableLengthM} min={50} max={2000} step={50} unit=" m" accentColor="#ef4444" />
 
         <div className="grid grid-cols-2 gap-2 mt-4 text-center text-xs">
@@ -111,7 +111,7 @@ export default function OpticalNumericalAperture() {
           onClick={() => setShowAR(!showAR)}
           className="w-full mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-sm"
         >
-          📱 {showAR ? t('Hide AR Hardware View', 'AR ಮರೆಮಾಡಿ') : t('View NA Measurement Jig in 3D WebAR', 'AR ನಲ್ಲಿ NA ಜಿಗ್ ನೋಡಿ')}
+          {showAR ? t('Hide AR Hardware View', 'AR ಮರೆಮಾಡಿ') : t('View NA Measurement Jig in 3D WebAR', 'AR ನಲ್ಲಿ NA ಜಿಗ್ ನೋಡಿ')}
         </button>
       </div>
     </div>
@@ -122,7 +122,7 @@ export default function OpticalNumericalAperture() {
       {showAR && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-display font-bold text-gray-800">📱 {t('WebAR Numerical Aperture Test Bench', 'NA ಪರೀಕ್ಷಾ ಬೆಂಚ್')}</h3>
+            <h3 className="font-display font-bold text-gray-800">{t('WebAR Numerical Aperture Test Bench', 'NA ಪರೀಕ್ಷಾ ಬೆಂಚ್')}</h3>
             <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md font-medium">Measurement Jig</span>
           </div>
           <div className="relative rounded-xl overflow-hidden bg-gray-900 min-h-[300px]">
@@ -140,7 +140,7 @@ export default function OpticalNumericalAperture() {
                 slot="ar-button"
                 className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-xs"
               >
-                <span>📱</span> Place Test Jig on Bench (AR)
+                Place Test Jig on Bench (AR)
               </button>
             </model-viewer>
           </div>
@@ -150,7 +150,7 @@ export default function OpticalNumericalAperture() {
       {/* Optical Divergence Cone Projection */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="font-display font-bold text-gray-800">💡 {t('Acceptance Cone & Spot Projection', 'ಕೋನ್ ಪ್ರೊಜೆಕ್ಷನ್')}</h3>
+          <h3 className="font-display font-bold text-gray-800">{t('Acceptance Cone & Spot Projection', 'ಕೋನ್ ಪ್ರೊಜೆಕ್ಷನ್')}</h3>
           <span className="text-xs font-mono text-gray-500">L = {screenDistMm} mm • W = {results.spotDiameterMm} mm</span>
         </div>
 

@@ -83,9 +83,7 @@ export default function MissionShell({
               <ArrowLeft size={20} />
             </button>
             <h1 className="text-lg md:text-xl font-display font-bold flex items-center gap-2">
-              <span>{titleEmoji}</span>
               <span>{title}</span>
-              <span>🧪</span>
             </h1>
           </div>
           <div className="flex items-center gap-2 flex-wrap">

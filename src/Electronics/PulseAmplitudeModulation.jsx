@@ -92,7 +92,7 @@ export default function PulseAmplitudeModulation() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="font-display font-bold text-gray-800 mb-3">🎛️ {t('Baseband Message Parameters', 'ಬೇಸ್‌ಬ್ಯಾಂಡ್ ಸಂದೇಶ')}</h3>
+        <h3 className="font-display font-bold text-gray-800 mb-3">{t('Baseband Message Parameters', 'ಬೇಸ್‌ಬ್ಯಾಂಡ್ ಸಂದೇಶ')}</h3>
         <LabeledSlider label="Message Frequency (fm)" value={fm} onChange={setFm} min={0.5} max={3.0} step={0.1} unit=" kHz" accentColor="#3b82f6" />
         <div className="mt-3">
           <LabeledSlider label="Message Amplitude (Am)" value={am} onChange={setAm} min={1.0} max={2.5} step={0.1} unit=" V" accentColor="#ef4444" />
@@ -100,7 +100,7 @@ export default function PulseAmplitudeModulation() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="font-display font-bold text-gray-800 mb-3">⚡ {t('Sampling Pulse Carrier (fs)', 'ಮಾದರಿ ಪಲ್ಸ್ ಕ್ಯಾರಿಯರ್')}</h3>
+        <h3 className="font-display font-bold text-gray-800 mb-3">{t('Sampling Pulse Carrier (fs)', 'ಮಾದರಿ ಪಲ್ಸ್ ಕ್ಯಾರಿಯರ್')}</h3>
         <LabeledSlider label="Sampling Rate (fs)" value={fs} onChange={setFs} min={1.5} max={20.0} step={0.5} unit=" kHz" accentColor="#f59e0b" />
         <div className="mt-3">
           <LabeledSlider label="Pulse Duty Cycle (τ / Ts)" value={dutyCycle} onChange={setDutyCycle} min={10} max={50} step={5} unit=" %" accentColor="#8b5cf6" />
@@ -114,7 +114,7 @@ export default function PulseAmplitudeModulation() {
               samplingType === 'natural' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            〰️ Natural PAM
+            Natural PAM
           </button>
           <button
             onClick={() => setSamplingType('flattop')}
@@ -122,7 +122,7 @@ export default function PulseAmplitudeModulation() {
               samplingType === 'flattop' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            📊 Flat-Top PAM (S&H)
+            Flat-Top PAM (S&H)
           </button>
         </div>
 
@@ -135,7 +135,7 @@ export default function PulseAmplitudeModulation() {
             fs: {fs} kHz {isAliasing ? '<' : '≥'} Nyquist: {nyquistRate.toFixed(1)} kHz
           </span>
           <span className="text-[11px] block mt-0.5">
-            {isAliasing ? '🚨 ALIASING DETECTED — Spectral Foldover Distortion' : '✅ NYQUIST SATISFIED — Error-free Recovery'}
+            {isAliasing ? '[ALIASING DETECTED: Spectral Foldover Distortion]' : '[NYQUIST SATISFIED: Error-free Recovery]'}
           </span>
         </div>
 
@@ -143,7 +143,7 @@ export default function PulseAmplitudeModulation() {
           onClick={() => setShowAR(!showAR)}
           className="w-full mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-sm"
         >
-          📱 {showAR ? t('Hide AR Hardware View', 'AR ಮರೆಮಾಡಿ') : t('View PAM Trainer Kit in 3D WebAR', 'AR ನಲ್ಲಿ PAM ಕಿಟ್ ನೋಡಿ')}
+          {showAR ? t('Hide AR Hardware View', 'AR ಮರೆಮಾಡಿ') : t('View PAM Trainer Kit in 3D WebAR', 'AR ನಲ್ಲಿ PAM ಕಿಟ್ ನೋಡಿ')}
         </button>
       </div>
     </div>
@@ -154,7 +154,7 @@ export default function PulseAmplitudeModulation() {
       {showAR && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-display font-bold text-gray-800">📱 {t('WebAR PAM Modulation Trainer Hardware', 'PAM ಹಾರ್ಡ್‌ವೇರ್')}</h3>
+            <h3 className="font-display font-bold text-gray-800">{t('WebAR PAM Modulation Trainer Hardware', 'PAM ಹಾರ್ಡ್‌ವೇರ್')}</h3>
             <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md font-medium">Trainer Bench View</span>
           </div>
           <div className="relative rounded-xl overflow-hidden bg-gray-900 min-h-[300px]">
@@ -172,7 +172,7 @@ export default function PulseAmplitudeModulation() {
                 slot="ar-button"
                 className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-xs"
               >
-                <span>📱</span> Place PAM Kit on Bench (AR)
+                Place PAM Kit on Bench (AR)
               </button>
             </model-viewer>
           </div>
@@ -181,7 +181,7 @@ export default function PulseAmplitudeModulation() {
 
       {/* DSO Oscilloscope Waveforms */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="font-display font-bold text-gray-800 mb-2">📊 {t('PAM Waveforms (Digital Oscilloscope)', 'DSO ತರಂಗಗಳು')}</h3>
+        <h3 className="font-display font-bold text-gray-800 mb-2">{t('PAM Waveforms (Digital Oscilloscope)', 'DSO ತರಂಗಗಳು')}</h3>
 
         <div className="space-y-3">
           {/* Baseband Modulating Signal */}
@@ -270,7 +270,7 @@ export default function PulseAmplitudeModulation() {
 
       {/* Hardware Block Diagram */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-xs">
-        <h3 className="font-display font-bold text-gray-800 mb-2">🔌 {t('PAM Generation & Demodulation Topology', 'PAM ವಿನ್ಯಾಸ')}</h3>
+        <h3 className="font-display font-bold text-gray-800 mb-2">{t('PAM Generation & Demodulation Topology', 'PAM ವಿನ್ಯಾಸ')}</h3>
         <div className="p-3 bg-slate-900 rounded-xl text-slate-300 font-mono text-[11px] flex items-center justify-between">
           <div className="p-2 bg-slate-800 rounded border border-slate-700">
             <span className="text-blue-400 block font-bold">m(t) Baseband</span>

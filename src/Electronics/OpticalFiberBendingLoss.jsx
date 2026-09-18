@@ -92,7 +92,7 @@ export default function OpticalFiberBendingLoss() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="font-display font-bold text-gray-800 mb-3">🧬 {t('Fiber Optic Specification', 'ಫೈಬರ್ ವಿವರಣೆ')}</h3>
+        <h3 className="font-display font-bold text-gray-800 mb-3">{t('Fiber Optic Specification', 'ಫೈಬರ್ ವಿವರಣೆ')}</h3>
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setFiberType('multimode')}
@@ -119,7 +119,7 @@ export default function OpticalFiberBendingLoss() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="font-display font-bold text-gray-800 mb-3">🔌 {t('Connector Coupling Alignment', 'ಕಪ್ಲಿಂಗ್ ಜೋಡಣೆ')}</h3>
+        <h3 className="font-display font-bold text-gray-800 mb-3">{t('Connector Coupling Alignment', 'ಕಪ್ಲಿಂಗ್ ಜೋಡಣೆ')}</h3>
         <LabeledSlider label="Lateral Core Offset (d)" value={lateralOffsetUm} onChange={setLateralOffsetUm} min={0} max={25} step={1} unit=" μm" accentColor="#3b82f6" />
 
         {/* Optical Telemetry Gauge */}
@@ -146,7 +146,7 @@ export default function OpticalFiberBendingLoss() {
           onClick={() => setShowAR(!showAR)}
           className="w-full mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-sm"
         >
-          📱 {showAR ? t('Hide AR Hardware View', 'AR ಮರೆಮಾಡಿ') : t('View Fiber Test Kit in 3D WebAR', 'AR ನಲ್ಲಿ ಆಪ್ಟಿಕಲ್ ಕಿಟ್ ನೋಡಿ')}
+          {showAR ? t('Hide AR Hardware View', 'AR ಮರೆಮಾಡಿ') : t('View Fiber Test Kit in 3D WebAR', 'AR ನಲ್ಲಿ ಆಪ್ಟಿಕಲ್ ಕಿಟ್ ನೋಡಿ')}
         </button>
       </div>
     </div>
@@ -157,7 +157,7 @@ export default function OpticalFiberBendingLoss() {
       {showAR && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-display font-bold text-gray-800">📱 {t('WebAR Fiber Optic Trainer Kit', 'ಆಪ್ಟಿಕಲ್ ಫೈಬರ್ ಕಿಟ್')}</h3>
+            <h3 className="font-display font-bold text-gray-800">{t('WebAR Fiber Optic Trainer Kit', 'ಆಪ್ಟಿಕಲ್ ಫೈಬರ್ ಕಿಟ್')}</h3>
             <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md font-medium">Optical Bench</span>
           </div>
           <div className="relative rounded-xl overflow-hidden bg-gray-900 min-h-[300px]">
@@ -175,7 +175,7 @@ export default function OpticalFiberBendingLoss() {
                 slot="ar-button"
                 className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-xs"
               >
-                <span>📱</span> Place Optical Bench (AR)
+                Place Optical Bench (AR)
               </button>
             </model-viewer>
           </div>
@@ -184,7 +184,7 @@ export default function OpticalFiberBendingLoss() {
 
       {/* Optical Mandrel & Radiation Leakage Raytrace */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="font-display font-bold text-gray-800 mb-2">💡 {t('Fiber Curvature & Cladding Radiation Leakage', 'ಬಾಗುವಿಕೆ ವಿಕಿರಣ ಸೋರಿಕೆ')}</h3>
+        <h3 className="font-display font-bold text-gray-800 mb-2">{t('Fiber Curvature & Cladding Radiation Leakage', 'ಬಾಗುವಿಕೆ ವಿಕಿರಣ ಸೋರಿಕೆ')}</h3>
         <svg viewBox="0 0 360 170" className="w-full bg-slate-950 rounded-xl">
           {/* Mandrel Cylinder */}
           <circle cx="180" cy="85" r={bendRadiusMm * 1.8} fill="#1e293b" stroke="#475569" strokeWidth="2" />
@@ -228,7 +228,7 @@ export default function OpticalFiberBendingLoss() {
 
       {/* Bending Loss Curve Graph */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="font-display font-bold text-gray-800 mb-2">📉 {t('Macro-Bending Loss vs Bend Radius', 'ನಷ್ಟದ ಗ್ರಾಫ್')}</h3>
+        <h3 className="font-display font-bold text-gray-800 mb-2">{t('Macro-Bending Loss vs Bend Radius', 'ನಷ್ಟದ ಗ್ರಾಫ್')}</h3>
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full bg-slate-950 rounded-xl p-1">
           {/* Axes */}
           <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke="#475569" strokeWidth="1.5" />

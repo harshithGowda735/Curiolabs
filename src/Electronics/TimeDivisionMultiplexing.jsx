@@ -228,8 +228,8 @@ export default function TimeDivisionMultiplexing() {
           </span>
         </div>
         <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-          <span>⏱️ Duration: 2 Hours</span>
-          <span>🎯 Bloom's: L1, L2, L3 (Apply)</span>
+          <span>Duration: 2 Hours</span>
+          <span>Bloom's: L1, L2, L3 (Apply)</span>
         </div>
       </div>
 
@@ -273,7 +273,7 @@ export default function TimeDivisionMultiplexing() {
 
       {/* Signal Generator Controls */}
       <div className="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-4">
-        <h3 className="font-bold text-slate-900 text-xs mb-3">🎛️ Dual Function Generators</h3>
+        <h3 className="font-bold text-slate-900 text-xs mb-3">Dual Function Generators</h3>
         <LabeledSlider
           label="Signal Gen 1 (CH0 Input)"
           value={f1}
@@ -300,7 +300,7 @@ export default function TimeDivisionMultiplexing() {
 
       {/* Clock Switching Generator */}
       <div className="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-4">
-        <h3 className="font-bold text-slate-900 text-xs mb-3">⚡ TTL Clock Generator (f_clk)</h3>
+        <h3 className="font-bold text-slate-900 text-xs mb-3">TTL Clock Generator (f_clk)</h3>
         <LabeledSlider
           label="Clock Frequency (Pin 11)"
           value={clkFreq}
@@ -327,7 +327,7 @@ export default function TimeDivisionMultiplexing() {
 
       {/* IC 4051 Hardware Pin Reference Card */}
       <div className="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-4 text-xs">
-        <h3 className="font-bold text-slate-900 mb-2">📋 IC 4051 CMOS 16-Pin DIP Reference</h3>
+        <h3 className="font-bold text-slate-900 mb-2">IC 4051 CMOS 16-Pin DIP Reference</h3>
         <div className="grid grid-cols-2 gap-1.5 font-mono text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
           <div>• Pin 16: VDD (+5V)</div>
           <div>• Pin 8: VSS (GND)</div>
@@ -353,7 +353,7 @@ export default function TimeDivisionMultiplexing() {
             activeTab === 'breadboard' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          🔌 Real Breadboard Hardware Setup
+          Real Breadboard Hardware Setup
         </button>
         <button
           onClick={() => setActiveTab('dso')}
@@ -361,7 +361,7 @@ export default function TimeDivisionMultiplexing() {
             activeTab === 'dso' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          📊 Oscilloscope Waveforms (DSO)
+          Oscilloscope Waveforms (DSO)
         </button>
         <button
           onClick={() => setActiveTab('ar')}
@@ -369,7 +369,7 @@ export default function TimeDivisionMultiplexing() {
             activeTab === 'ar' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          📱 3D WebAR Physical Inspection
+          3D WebAR Physical Inspection
         </button>
       </div>
 
@@ -411,7 +411,7 @@ export default function TimeDivisionMultiplexing() {
                 <div>
                   <span className="font-bold text-rose-800 block">{err.title}</span>
                   <p className="text-[11px] text-rose-700 mt-0.5 leading-relaxed font-sans">
-                    💡 <span className="font-semibold">Suggestion:</span> {err.suggestion}
+                    <span className="font-semibold">Suggestion:</span> {err.suggestion}
                   </p>
                 </div>
               </div>
@@ -435,7 +435,7 @@ export default function TimeDivisionMultiplexing() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <span>⚡ Real Hardware Breadboard Connection Setup</span>
+                <span>Real Hardware Breadboard Connection Setup</span>
                 <span className="text-[11px] font-normal px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
                   Interactive Tie-Points
                 </span>
@@ -610,7 +610,7 @@ export default function TimeDivisionMultiplexing() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="font-bold text-slate-900 text-sm">📊 Real-Time Digital Storage Oscilloscope (DSO)</h3>
+              <h3 className="font-bold text-slate-900 text-sm">Real-Time Digital Storage Oscilloscope (DSO)</h3>
               <p className="text-xs text-slate-500">Live hardware signal output reflecting breadboard wiring state.</p>
             </div>
             <div className="flex items-center gap-2 text-xs font-mono">
@@ -623,10 +623,10 @@ export default function TimeDivisionMultiplexing() {
             <div>
               <div className="flex justify-between text-xs mb-1">
                 <span className="font-semibold text-sky-600">
-                  CH0 (Pin 13): {diagnostics.hasCh0 ? `${f1} kHz Sine` : '⚠️ Disconnected'}
+                  CH0 (Pin 13): {diagnostics.hasCh0 ? `${f1} kHz Sine` : 'Disconnected'}
                 </span>
                 <span className="font-semibold text-emerald-600">
-                  CH1 (Pin 14): {diagnostics.hasCh1 ? `${f2} kHz Sine` : '⚠️ Disconnected'}
+                  CH1 (Pin 14): {diagnostics.hasCh1 ? `${f2} kHz Sine` : 'Disconnected'}
                 </span>
               </div>
               <svg viewBox={`0 0 ${W} ${H}`} className="w-full bg-slate-950 rounded-xl shadow-inner">
@@ -652,7 +652,7 @@ export default function TimeDivisionMultiplexing() {
             <div>
               <div className="flex justify-between text-xs mb-1">
                 <span className="font-semibold text-pink-600">
-                  TDM Composite Output (Pin 3 Bus): {connectedWires.has('tdm_bus') ? 'Active Interleaved' : '⚠️ Open Circuit'}
+                  TDM Composite Output (Pin 3 Bus): {connectedWires.has('tdm_bus') ? 'Active Interleaved' : 'Open Circuit'}
                 </span>
                 <span className="font-mono text-slate-500 text-[11px]">f_clk = {clkFreq} kHz</span>
               </div>
@@ -674,7 +674,7 @@ export default function TimeDivisionMultiplexing() {
                   Demultiplexed Channel 0 (Recovered via Low-Pass Filter)
                 </span>
                 <span className="font-mono text-slate-500 text-[11px]">
-                  {diagnostics.hasDso ? 'Lock: Synchronous' : '⚠️ Probe Disconnected'}
+                  {diagnostics.hasDso ? 'Lock: Synchronous' : 'Probe Disconnected'}
                 </span>
               </div>
               <svg viewBox={`0 0 ${W} ${H}`} className="w-full bg-slate-950 rounded-xl shadow-inner">
@@ -696,7 +696,7 @@ export default function TimeDivisionMultiplexing() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="font-bold text-slate-900 text-sm">📱 WebAR 3D Circuit Hardware Inspection</h3>
+              <h3 className="font-bold text-slate-900 text-sm">WebAR 3D Circuit Hardware Inspection</h3>
               <p className="text-xs text-slate-500">View physical breadboard layout and wire jumpers in interactive 3D / AR.</p>
             </div>
             <span className="text-xs px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 font-semibold">
@@ -719,7 +719,7 @@ export default function TimeDivisionMultiplexing() {
                 slot="ar-button"
                 className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-xs transition-colors"
               >
-                <span>📱</span> Place Circuit on Table (AR)
+                Place Circuit on Table (AR)
               </button>
             </model-viewer>
           </div>
@@ -731,7 +731,6 @@ export default function TimeDivisionMultiplexing() {
   return (
     <MissionShell
       title={t('TDM & Demultiplexing using IC 4051', 'IC 4051 ಬಳಸಿ TDM ಮತ್ತು ಡಿ-ಮಲ್ಟಿಪ್ಲೆಕ್ಸಿಂಗ್')}
-      titleEmoji="🔀"
       subject="Electronics"
       accentColor="emerald"
       gradientFrom="from-emerald-600"
