@@ -297,22 +297,61 @@ export default function DeskCameraAR({ onClose, clkFreq = 2.0, isCircuitPowered 
     cap.position.set(2.8, 0.28, 1.05)
     bbGroup.add(cap)
 
-    // Curved 3D Jumper Wires
-    const makeWire = (p1, p2, color) => {
-      const mid = new THREE.Vector3((p1.x + p2.x) / 2, Math.max(p1.y, p2.y) + 0.55, (p1.z + p2.z) / 2)
+    // ── High-Visibility 3D Jumper Wires with Gold Terminal Pins ──
+    const pinGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.2, 12)
+    const pinMat = new THREE.MeshStandardMaterial({ color: '#facc15', metalness: 0.85, roughness: 0.2 })
+
+    const makeWire = (p1, p2, color, arc = 0.55) => {
+      const wireGroup = new THREE.Group()
+
+      // Metallic insertion pins at both breadboard tie points
+      const t1 = new THREE.Mesh(pinGeo, pinMat)
+      t1.position.copy(p1)
+      t1.position.y += 0.05
+      wireGroup.add(t1)
+
+      const t2 = new THREE.Mesh(pinGeo, pinMat)
+      t2.position.copy(p2)
+      t2.position.y += 0.05
+      wireGroup.add(t2)
+
+      // Thickened bold wire tube with vibrant emissive glow (tripled radius: 0.09)
+      const mid = new THREE.Vector3((p1.x + p2.x) / 2, Math.max(p1.y, p2.y) + arc + Math.hypot(p2.x - p1.x, p2.z - p1.z) * 0.12, (p1.z + p2.z) / 2)
       const curve = new THREE.CatmullRomCurve3([p1, mid, p2])
-      return new THREE.Mesh(
-        new THREE.TubeGeometry(curve, 16, 0.03, 8, false),
-        new THREE.MeshStandardMaterial({ color, roughness: 0.4 })
+      const tube = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 22, 0.09, 10, false),
+        new THREE.MeshStandardMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: 0.35,
+          roughness: 0.25,
+          metalness: 0.15
+        })
       )
+      wireGroup.add(tube)
+      return wireGroup
     }
 
-    bbGroup.add(makeWire(new THREE.Vector3(-2.1, 0.2, -1.4), new THREE.Vector3(-2.1, 0.2, 0.3), '#ef4444'))
-    bbGroup.add(makeWire(new THREE.Vector3(0.9, 0.2, -1.4), new THREE.Vector3(0.9, 0.2, 0.3), '#ef4444'))
-    bbGroup.add(makeWire(new THREE.Vector3(-0.9, 0.2, -1.25), new THREE.Vector3(-0.9, 0.2, -0.3), '#1e293b'))
-    bbGroup.add(makeWire(new THREE.Vector3(2.1, 0.2, -1.25), new THREE.Vector3(2.1, 0.2, -0.3), '#1e293b'))
-    bbGroup.add(makeWire(new THREE.Vector3(-1.7, 0.2, -0.3), new THREE.Vector3(1.3, 0.2, -0.3), '#9333ea'))
-    bbGroup.add(makeWire(new THREE.Vector3(-1.3, 0.2, 0.3), new THREE.Vector3(1.7, 0.2, 0.3), '#2563eb'))
+    // High-Contrast Laboratory Jumper Wiring:
+    // +5V Rail to CD4051 VDD (Pin 16) - Radiant Red
+    bbGroup.add(makeWire(new THREE.Vector3(-2.1, 0.2, -1.4), new THREE.Vector3(-2.1, 0.2, 0.3), '#ff2d55', 0.5))
+    bbGroup.add(makeWire(new THREE.Vector3(0.9, 0.2, -1.4), new THREE.Vector3(0.9, 0.2, 0.3), '#ff2d55', 0.5))
+
+    // GND Rail to CD4051 VEE/VSS/INH (Pin 8) - Neon Cyan (Highly visible on desks!)
+    bbGroup.add(makeWire(new THREE.Vector3(-0.9, 0.2, -1.25), new THREE.Vector3(-0.9, 0.2, -0.3), '#00e5ff', 0.55))
+    bbGroup.add(makeWire(new THREE.Vector3(2.1, 0.2, -1.25), new THREE.Vector3(2.1, 0.2, -0.3), '#00e5ff', 0.55))
+
+    // TDM Bus Wire (MUX Pin 3 to DEMUX Pin 3) - Hot Neon Magenta
+    bbGroup.add(makeWire(new THREE.Vector3(-1.7, 0.2, -0.3), new THREE.Vector3(1.3, 0.2, -0.3), '#d946ef', 0.8))
+
+    // Clock Sync Wire (MUX Pin 11 to DEMUX Pin 11) - Electric Royal Blue
+    bbGroup.add(makeWire(new THREE.Vector3(-1.3, 0.2, 0.3), new THREE.Vector3(1.7, 0.2, 0.3), '#3b82f6', 0.8))
+
+    // Signal Input CH0 (Sine) to Pin 13 - Bright Sky Cyan
+    bbGroup.add(makeWire(new THREE.Vector3(-2.7, 0.2, 1.2), new THREE.Vector3(-1.9, 0.2, 0.3), '#38bdf8', 0.6))
+
+    // Signal Input CH1 (Triangle) to Pin 14 - Vivid Emerald
+    bbGroup.add(makeWire(new THREE.Vector3(-2.7, 0.2, -1.2), new THREE.Vector3(-1.5, 0.2, -0.3), '#10b981', 0.6))
 
     scene.add(bbGroup)
 
@@ -540,6 +579,38 @@ export default function DeskCameraAR({ onClose, clkFreq = 2.0, isCircuitPowered 
           </button>
         </div>
       </div>
+
+      {/* ── HIGH-VISIBILITY AR CONNECTION HUD OVERLAY ── */}
+      {(arMode === 'granted' || arMode === 'virtualDesk') && (
+        <div className="absolute top-20 left-4 right-4 z-20 pointer-events-none flex justify-center">
+          <div className="bg-slate-950/85 backdrop-blur-md border border-slate-700/80 rounded-2xl px-3.5 py-1.5 shadow-xl flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[10px] sm:text-xs font-mono text-white pointer-events-auto">
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ff2d55] ring-2 ring-red-400" />
+              <span>+5V VDD (Pin 16)</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#00e5ff] ring-2 ring-cyan-400" />
+              <span>GND (Pin 8)</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#38bdf8] ring-2 ring-sky-400" />
+              <span>CH0 (Pin 13)</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] ring-2 ring-emerald-400" />
+              <span>CH1 (Pin 14)</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#d946ef] ring-2 ring-fuchsia-400" />
+              <span>TDM Bus (Pin 3)</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6] ring-2 ring-blue-400" />
+              <span>Clock (Pin 11)</span>
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* ── PERMISSION REQUEST SCREEN (Before Camera is Granted) ── */}
       {arMode === 'prompt' && (

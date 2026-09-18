@@ -53,6 +53,46 @@ const observations = [
   'The RC low-pass filter with cutoff fc = 1 / (2π × 5.6kΩ × 0.1μF) ≈ 284 Hz suppresses the high-frequency sampling carrier and smoothly reproduces the original 100Hz Sine and 300Hz Triangle waveforms.'
 ]
 
+// Helper Component: Live SVG Sparkline for parameter card feedback
+function WaveSparkline({ type = 'sine', freq = 100, amp = 1.0, color = '#38bdf8', duty = 50 }) {
+  const points = useMemo(() => {
+    const pts = []
+    const count = 70
+    // Dynamic cycle scaling
+    const cycles = Math.max(1, Math.min(8, type === 'clock' ? (freq / 1.5) : (freq / 65)))
+    for (let i = 0; i <= count; i++) {
+      const x = (i / count) * 160
+      const t = (i / count) * cycles
+      let yNorm = 0
+      if (type === 'sine') {
+        yNorm = Math.sin(2 * Math.PI * t)
+      } else if (type === 'triangle') {
+        const ph = t % 1
+        yNorm = ph < 0.5 ? 4 * ph - 1 : 3 - 4 * ph
+      } else if (type === 'clock') {
+        const ph = t % 1
+        yNorm = ph < (duty / 100) ? 0.85 : -0.85
+      }
+      const y = 17 - yNorm * 11 * Math.min(1.3, Math.max(0.35, amp / (type === 'clock' ? 5 : 1.0)))
+      pts.push(`${x.toFixed(1)},${y.toFixed(1)}`)
+    }
+    return pts.join(' ')
+  }, [type, freq, amp, duty])
+
+  return (
+    <div className="mt-3 p-1.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between overflow-hidden">
+      <div className="flex flex-col text-[10px] font-mono text-slate-400 pl-1 leading-tight shrink-0">
+        <span className="text-white font-bold">{freq} {type === 'clock' ? 'kHz' : 'Hz'}</span>
+        <span>{amp} V</span>
+      </div>
+      <svg viewBox="0 0 160 34" className="w-36 h-7 shrink-0">
+        <line x1="0" y1="17" x2="160" y2="17" stroke="#334155" strokeWidth="0.75" strokeDasharray="2,2" />
+        <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  )
+}
+
 export default function TimeDivisionMultiplexing() {
   const { t } = useLanguage()
 
@@ -168,7 +208,7 @@ export default function TimeDivisionMultiplexing() {
   const activeStep = circuitState.calculatedStep
 
   // Real-Time Waveform Math Engine strictly bound to actual physical wiring!
-  const { ch0Pts, ch1Pts, clkPts, tdmPts, demux0Pts, demux1Pts, recon0Pts, recon1Pts } = useMemo(() => {
+  const { ch0Pts, ch1Pts, clkPts, tdmPts, demux0Pts, demux1Pts, recon0Pts, recon1Pts, rawCh0Pts, rawCh1Pts, rawClkPts } = useMemo(() => {
     const numPoints = 250
     const tSpan = 0.02 // 20 ms window to clearly see full 100Hz (10ms) and 300Hz cycles
 
@@ -180,25 +220,28 @@ export default function TimeDivisionMultiplexing() {
     const pDemux1 = []
     const pRec0 = []
     const pRec1 = []
+    const pRawCh0 = []
+    const pRawCh1 = []
+    const pRawClk = []
 
     for (let i = 0; i <= numPoints; i++) {
       const t = (i / numPoints) * tSpan
 
       // ── Step 3: Message Signal 1 (1V, 100Hz Sinusoidal Wave at Pin 13) ──
-      // If wire is open -> 0V flatline
-      const y1 = circuitState.hasCh0 ? amp1 * Math.sin(2 * Math.PI * f1 * t) : 0
+      const rawY1 = amp1 * Math.sin(2 * Math.PI * f1 * t)
+      const y1 = circuitState.hasCh0 ? rawY1 : 0
 
       // ── Step 3: Message Signal 2 (1V, 300Hz Triangular Wave at Pin 14) ──
       const triPhase = (t * f2) % 1
-      const y2 = circuitState.hasCh1
-        ? amp2 * (triPhase < 0.5 ? 4 * triPhase - 1 : 3 - 4 * triPhase)
-        : 0
+      const rawY2 = amp2 * (triPhase < 0.5 ? 4 * triPhase - 1 : 3 - 4 * triPhase)
+      const y2 = circuitState.hasCh1 ? rawY2 : 0
 
       // ── Step 4: Control Signal (5V Square Wave at Pin 11) ──
       const fClockHz = clkFreq * 1000
       const clkPhase = (t * fClockHz) % 1
       const isHigh = clkPhase < (dutyCycle / 100)
-      const yClk = circuitState.hasClkMux ? (isHigh ? 5 : 0) : 0
+      const rawYClk = isHigh ? 5 : 0
+      const yClk = circuitState.hasClkMux ? rawYClk : 0
 
       // ── Step 5 & 6: TDM Output at Pin 3 (Composite Pulse Train) ──
       let yTdm = 0
@@ -242,6 +285,10 @@ export default function TimeDivisionMultiplexing() {
       pDemux1.push({ x: i, y: yDemux1 })
       pRec0.push({ x: i, y: yRec0 })
       pRec1.push({ x: i, y: yRec1 })
+
+      pRawCh0.push({ x: i, y: rawY1 })
+      pRawCh1.push({ x: i, y: rawY2 })
+      pRawClk.push({ x: i, y: rawYClk })
     }
 
     return {
@@ -327,6 +374,7 @@ export default function TimeDivisionMultiplexing() {
             accentColor="#0284c7"
           />
         </div>
+        <WaveSparkline type="sine" freq={f1} amp={amp1} color="#38bdf8" />
       </div>
 
       {/* Function Generator 2: Triangular Message Waveform (Step 3) */}
@@ -364,6 +412,7 @@ export default function TimeDivisionMultiplexing() {
             accentColor="#059669"
           />
         </div>
+        <WaveSparkline type="triangle" freq={f2} amp={amp2} color="#34d399" />
       </div>
 
       {/* Control Switching Clock (Step 4) */}
@@ -401,6 +450,7 @@ export default function TimeDivisionMultiplexing() {
             accentColor="#2563eb"
           />
         </div>
+        <WaveSparkline type="clock" freq={clkFreq} amp={5.0} duty={dutyCycle} color="#60a5fa" />
       </div>
     </div>
   )
@@ -519,10 +569,14 @@ export default function TimeDivisionMultiplexing() {
               <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
                 <div className="flex justify-between text-xs mb-1.5">
                   <span className="font-semibold text-sky-400 font-mono flex items-center gap-2">
-                    <span>x₁(t) — Procedure Step 3: 1V, {f1}Hz Sinusoidal Wave (Pin 13 X0)</span>
-                    {!circuitState.hasCh0 && (
-                      <span className="text-[10px] bg-rose-950 text-rose-400 px-2 py-0.5 rounded border border-rose-800 font-bold">
-                        OPEN WIRE (0.0V)
+                    <span>x₁(t) — Procedure Step 3: {amp1}V, {f1}Hz Sinusoidal Wave (Pin 13 X0)</span>
+                    {!circuitState.hasCh0 ? (
+                      <span className="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-700 font-bold">
+                        FG OUTPUT (Connect wire to Pin 13)
+                      </span>
+                    ) : (
+                      <span className="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-700 font-bold">
+                        INJECTED TO IC
                       </span>
                     )}
                   </span>
@@ -531,9 +585,10 @@ export default function TimeDivisionMultiplexing() {
                 <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24 bg-slate-900 rounded-lg">
                   <line x1={pad} y1={H / 2} x2={W - pad} y2={H / 2} stroke="#334155" strokeDasharray="3,3" />
                   <polyline
-                    points={ch0Pts.map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
+                    points={(circuitState.hasCh0 ? ch0Pts : rawCh0Pts).map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
                     fill="none" stroke="#38bdf8" strokeWidth="2"
-                    opacity={circuitState.hasCh0 ? 1 : 0.25}
+                    strokeDasharray={circuitState.hasCh0 ? 'none' : '4,3'}
+                    opacity={circuitState.hasCh0 ? 1 : 0.75}
                   />
                 </svg>
               </div>
@@ -544,10 +599,14 @@ export default function TimeDivisionMultiplexing() {
               <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
                 <div className="flex justify-between text-xs mb-1.5">
                   <span className="font-semibold text-emerald-400 font-mono flex items-center gap-2">
-                    <span>x₂(t) — Procedure Step 3: 1V, {f2}Hz Triangular Wave (Pin 14 X1)</span>
-                    {!circuitState.hasCh1 && (
-                      <span className="text-[10px] bg-rose-950 text-rose-400 px-2 py-0.5 rounded border border-rose-800 font-bold">
-                        OPEN WIRE (0.0V)
+                    <span>x₂(t) — Procedure Step 3: {amp2}V, {f2}Hz Triangular Wave (Pin 14 X1)</span>
+                    {!circuitState.hasCh1 ? (
+                      <span className="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-700 font-bold">
+                        FG OUTPUT (Connect wire to Pin 14)
+                      </span>
+                    ) : (
+                      <span className="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-700 font-bold">
+                        INJECTED TO IC
                       </span>
                     )}
                   </span>
@@ -556,9 +615,10 @@ export default function TimeDivisionMultiplexing() {
                 <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24 bg-slate-900 rounded-lg">
                   <line x1={pad} y1={H / 2} x2={W - pad} y2={H / 2} stroke="#334155" strokeDasharray="3,3" />
                   <polyline
-                    points={ch1Pts.map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
+                    points={(circuitState.hasCh1 ? ch1Pts : rawCh1Pts).map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
                     fill="none" stroke="#34d399" strokeWidth="2"
-                    opacity={circuitState.hasCh1 ? 1 : 0.25}
+                    strokeDasharray={circuitState.hasCh1 ? 'none' : '4,3'}
+                    opacity={circuitState.hasCh1 ? 1 : 0.75}
                   />
                 </svg>
               </div>
@@ -570,20 +630,25 @@ export default function TimeDivisionMultiplexing() {
                 <div className="flex justify-between text-xs mb-1.5">
                   <span className="font-semibold text-blue-400 font-mono flex items-center gap-2">
                     <span>x₃(t) — Procedure Step 4: 5V, {clkFreq}kHz Square Wave (Pin 11 Select A)</span>
-                    {!circuitState.hasClkMux && (
-                      <span className="text-[10px] bg-rose-950 text-rose-400 px-2 py-0.5 rounded border border-rose-800 font-bold">
-                        CLOCK OPEN (0.0V)
+                    {!circuitState.hasClkMux ? (
+                      <span className="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-700 font-bold">
+                        CLOCK ACTIVE (Connect wire to Pin 11)
+                      </span>
+                    ) : (
+                      <span className="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-700 font-bold">
+                        CLOCK COUPLED
                       </span>
                     )}
                   </span>
                   <span className="text-[11px] font-mono text-slate-400">CLK • 2.5 V/div</span>
                 </div>
                 <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24 bg-slate-900 rounded-lg">
-                  <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke="#334155" strokeDasharray="3,3" />
+                  <line x1={pad} y1={H / 2} x2={W - pad} y2={H / 2} stroke="#334155" strokeDasharray="3,3" />
                   <polyline
-                    points={clkPts.map(p => `${scaleX(p.x)},${scaleYClock(p.y)}`).join(' ')}
+                    points={(circuitState.hasClkMux ? clkPts : rawClkPts).map(p => `${scaleX(p.x)},${scaleY(p.y, 8)}`).join(' ')}
                     fill="none" stroke="#60a5fa" strokeWidth="2"
-                    opacity={circuitState.hasClkMux ? 1 : 0.25}
+                    strokeDasharray={circuitState.hasClkMux ? 'none' : '4,3'}
+                    opacity={circuitState.hasClkMux ? 1 : 0.75}
                   />
                 </svg>
               </div>

@@ -289,6 +289,8 @@ export default function MissionShell({
         experimentTitle={title}
         domainName={subject}
         studentData={studentInfo}
+        observations={observations}
+        steps={steps}
       />
     </div>
   )
