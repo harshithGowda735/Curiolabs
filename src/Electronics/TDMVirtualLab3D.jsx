@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
-import { Maximize2, RotateCcw, Eye, Zap, Sparkles, Smartphone, Volume2, Power } from 'lucide-react'
+import { Maximize2, RotateCcw, Eye, Zap, Sparkles, Smartphone, Volume2, Power, Camera } from 'lucide-react'
+import DeskCameraAR from './DeskCameraAR'
 
 export default function TDMVirtualLab3D({
   f1 = 100,
@@ -21,6 +22,7 @@ export default function TDMVirtualLab3D({
   const [hoveredObject, setHoveredObject] = useState(null)
   const [arModelUrl, setArModelUrl] = useState(null)
   const [showARCard, setShowARCard] = useState(false)
+  const [showDeskCameraAR, setShowDeskCameraAR] = useState(false)
   const [activeF1, setActiveF1] = useState(f1)
   const [activeF2, setActiveF2] = useState(f2)
 
@@ -751,48 +753,99 @@ export default function TDMVirtualLab3D({
         </div>
       </div>
 
-      {/* ════════ MOBILE AR DESK VIEW CARD (WebXR & SceneViewer) ════════ */}
+      {/* ── LIVE FULLSCREEN CAMERA DESK AR (Asks Camera Permission) ── */}
+      {showDeskCameraAR && (
+        <DeskCameraAR
+          onClose={() => setShowDeskCameraAR(false)}
+          clkFreq={clkFreq}
+          isCircuitPowered={isPowered}
+        />
+      )}
+
+      {/* ── MOBILE AR DESK SELECTION CARD ── */}
       {showARCard && (
-        <div className="bg-white rounded-2xl p-5 border border-purple-200 shadow-xl space-y-3">
+        <div className="bg-white rounded-2xl p-5 border border-purple-200 shadow-xl space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="p-2 bg-purple-100 text-purple-700 rounded-xl text-lg">📱</span>
+            <div className="flex items-center gap-2.5">
+              <span className="p-2.5 bg-purple-100 text-purple-700 rounded-2xl text-xl">📱</span>
               <div>
                 <h4 className="font-bold text-sm text-slate-900">Mobile Augmented Reality (AR) Tabletop Projection</h4>
-                <p className="text-xs text-slate-500">Place the dual-IC TDM circuit directly onto your physical desk in real-world scale</p>
+                <p className="text-xs text-slate-500">Project the dual-IC TDM circuit directly onto your physical desk in 1:1 scale</p>
               </div>
             </div>
-            <span className="text-xs font-mono font-semibold bg-purple-50 text-purple-700 px-3 py-1 rounded-full border border-purple-200">
-              WebXR • QuickLook • SceneViewer
-            </span>
-          </div>
-
-          {/* Model-Viewer Component for Mobile AR */}
-          <div className="relative rounded-2xl overflow-hidden bg-slate-950 min-h-[340px] border border-slate-800 shadow-inner">
-            <model-viewer
-              src={arModelUrl || "https://modelviewer.dev/shared-assets/models/Astronaut.glb"}
-              alt="Dual-IC Solderless Breadboard Setup"
-              ar
-              ar-modes="webxr scene-viewer quick-look"
-              ar-scale="auto"
-              camera-controls
-              auto-rotate
-              shadow-intensity="1.5"
-              environment-image="neutral"
-              style={{ width: '100%', height: '340px' }}
+            <button
+              onClick={() => setShowARCard(false)}
+              className="text-xs text-slate-400 hover:text-slate-600 font-bold px-2 py-1"
             >
-              <button
-                slot="ar-button"
-                className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-xs px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 transition-all active:scale-95"
-              >
-                <span>📱</span>
-                <span>Place Circuit on Desk in AR</span>
-              </button>
-            </model-viewer>
+              ✕
+            </button>
           </div>
 
-          <div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl text-xs text-purple-950 flex items-center justify-between">
-            <span>💡 Open this page on your smartphone or iPad camera and tap <strong>"Place Circuit on Desk in AR"</strong> to walk around the breadboard on your desk!</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Option A: Live Camera WebAR (100% device compatibility with camera permission prompt) */}
+            <div className="p-4 rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-b from-emerald-50/50 to-emerald-50/10 flex flex-col justify-between space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                    <Camera className="w-4 h-4 text-emerald-600" />
+                    <span>Live Camera AR (Desk Passthrough)</span>
+                  </span>
+                  <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-mono">
+                    Recommended
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Prompts for camera permission and streams your real physical desk behind the 3D breadboard. Touch and drag to position on your desk!
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowDeskCameraAR(true)}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"
+              >
+                <Camera className="w-4 h-4" />
+                <span>Grant Permission & Start Live AR</span>
+              </button>
+            </div>
+
+            {/* Option B: Native Device QuickLook / SceneViewer */}
+            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col justify-between space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Smartphone className="w-4 h-4 text-purple-600" />
+                    <span>Native WebXR / QuickLook</span>
+                  </span>
+                  <span className="text-[10px] bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full font-mono">
+                    Apple / Android
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Uses Google Play Services for AR (Android) or Apple Quick Look (iOS) to place the 3D model into your space.
+                </p>
+              </div>
+
+              <div className="relative rounded-xl overflow-hidden bg-slate-950 h-28 border border-slate-800">
+                <model-viewer
+                  src={arModelUrl || "https://modelviewer.dev/shared-assets/models/Astronaut.glb"}
+                  alt="Dual-IC Solderless Breadboard Setup"
+                  ar
+                  ar-modes="webxr scene-viewer quick-look"
+                  ar-scale="auto"
+                  camera-controls
+                  auto-rotate
+                  style={{ width: '100%', height: '100%' }}
+                >
+                  <button
+                    slot="ar-button"
+                    className="absolute inset-x-3 bottom-3 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-lg shadow-lg flex items-center justify-center gap-1.5"
+                  >
+                    <span>📱</span>
+                    <span>Launch Native AR</span>
+                  </button>
+                </model-viewer>
+              </div>
+            </div>
           </div>
         </div>
       )}

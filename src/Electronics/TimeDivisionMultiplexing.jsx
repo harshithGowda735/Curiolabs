@@ -3,8 +3,9 @@ import MissionShell from '../components/MissionShell'
 import LabeledSlider from '../components/LabeledSlider'
 import InteractiveBreadboard, { LAB_CONNECTIONS } from '../components/Hardware/InteractiveBreadboard'
 import TDMVirtualLab3D from './TDMVirtualLab3D'
+import DeskCameraAR from './DeskCameraAR'
 import { useLanguage } from '../contexts/LanguageContext'
-import { CheckCircle2, AlertTriangle, XCircle, Zap, RefreshCw, Sparkles, Box, Activity, Layers, Power, ArrowRight } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, XCircle, Zap, RefreshCw, Sparkles, Box, Activity, Layers, Power, ArrowRight, Camera, Smartphone } from 'lucide-react'
 
 /* ════════════════════════════════════════════════════════════
    EXACT 8 PROCEDURE STEPS FROM COLLEGE LAB MANUAL
@@ -67,6 +68,7 @@ export default function TimeDivisionMultiplexing() {
   const [activeTab, setActiveTab] = useState('breadboard') // 'breadboard' | 'dso' | '3d'
   const [dsoChannel, setDsoChannel] = useState('all')     // 'all' | 'tdm' | 'recon' | 'inputs'
   const [currentStep, setCurrentStep] = useState(0)
+  const [showDirectDeskAR, setShowDirectDeskAR] = useState(false)
 
   // Wires connected on breadboard
   const [placedWires, setPlacedWires] = useState([])
@@ -436,6 +438,14 @@ export default function TimeDivisionMultiplexing() {
             <Box size={13} className="text-emerald-600" />
             <span>3D Virtual Lab Bench</span>
           </button>
+          <button
+            onClick={() => setShowDirectDeskAR(true)}
+            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-xs transition-all active:scale-95"
+            title="Open camera to project circuit on your physical desk"
+          >
+            <Camera size={13} />
+            <span>Desk AR (Camera)</span>
+          </button>
         </div>
 
         {/* Live Status Pill */}
@@ -659,6 +669,15 @@ export default function TimeDivisionMultiplexing() {
       {/* ── TAB 3: 3D INTERACTIVE VIRTUAL LAB BENCH ── */}
       {activeTab === '3d' && (
         <TDMVirtualLab3D
+          clkFreq={clkFreq}
+          isCircuitPowered={circuitState.isEnergized}
+        />
+      )}
+
+      {/* ── FULLSCREEN CAMERA DESK AR MODAL ── */}
+      {showDirectDeskAR && (
+        <DeskCameraAR
+          onClose={() => setShowDirectDeskAR(false)}
           clkFreq={clkFreq}
           isCircuitPowered={circuitState.isEnergized}
         />
