@@ -50,6 +50,14 @@ import AMFMModulation from './Electronics/AMFMModulation'
 import OpAmpGain from './Electronics/OpAmpGain'
 import AntennaRadiation from './Electronics/AntennaRadiation'
 
+// Electronics: Part - A Discrete Hardware Experiments
+import TimeDivisionMultiplexing from './Electronics/TimeDivisionMultiplexing'
+import AmplitudeModulationDetection from './Electronics/AmplitudeModulationDetection'
+import PulseAmplitudeModulation from './Electronics/PulseAmplitudeModulation'
+import PreEmphasisDeEmphasis from './Electronics/PreEmphasisDeEmphasis'
+import OpticalFiberBendingLoss from './Electronics/OpticalFiberBendingLoss'
+import OpticalNumericalAperture from './Electronics/OpticalNumericalAperture'
+
 // Computer Science
 import CSHub from './CS/CSHub'
 import SortingRace from './CS/SortingRace'
@@ -140,6 +148,14 @@ export default function App() {
 
             {/* Electronics Domain */}
             <Route path="/electronics" element={<ElectronicsHub />} />
+            {/* Part - A Discrete Hardware Experiments */}
+            <Route path="/electronics/tdm" element={<TimeDivisionMultiplexing />} />
+            <Route path="/electronics/am-detection" element={<AmplitudeModulationDetection />} />
+            <Route path="/electronics/pam" element={<PulseAmplitudeModulation />} />
+            <Route path="/electronics/pre-emphasis" element={<PreEmphasisDeEmphasis />} />
+            <Route path="/electronics/fiber-bending-loss" element={<OpticalFiberBendingLoss />} />
+            <Route path="/electronics/numerical-aperture" element={<OpticalNumericalAperture />} />
+            {/* Supplemental Simulations */}
             <Route path="/electronics/rc-filter" element={<RCFilterTuning />} />
             <Route path="/electronics/logic-gates" element={<DigitalLogicGates />} />
             <Route path="/electronics/modulation" element={<AMFMModulation />} />
