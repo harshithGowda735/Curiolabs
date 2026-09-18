@@ -4,15 +4,29 @@ import { getFirestore, initializeFirestore, persistentLocalCache, persistentMult
 import { getStorage } from 'firebase/storage'
 import { getAnalytics, isSupported } from 'firebase/analytics'
 
-// Read environment variables directly configured in Vercel or .env
+const env = import.meta.env || {}
+
+// Support different environment variable naming conventions configured in Vercel or .env
+const parsedConfig = (() => {
+  const rawConfig = env.VITE_FIREBASE_CONFIG || env.FIREBASE_CONFIG
+  if (rawConfig) {
+    try {
+      return typeof rawConfig === 'string' ? JSON.parse(rawConfig) : rawConfig
+    } catch {
+      // fallback to individual vars
+    }
+  }
+  return {}
+})()
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
+  apiKey: parsedConfig.apiKey || env.VITE_FIREBASE_API_KEY || env.FIREBASE_API_KEY || env.VITE_FIREBASE_KEY || env.FIREBASE_KEY || env.VITE_API_KEY || '',
+  authDomain: parsedConfig.authDomain || env.VITE_FIREBASE_AUTH_DOMAIN || env.FIREBASE_AUTH_DOMAIN || env.VITE_AUTH_DOMAIN || '',
+  projectId: parsedConfig.projectId || env.VITE_FIREBASE_PROJECT_ID || env.FIREBASE_PROJECT_ID || env.VITE_PROJECT_ID || '',
+  storageBucket: parsedConfig.storageBucket || env.VITE_FIREBASE_STORAGE_BUCKET || env.FIREBASE_STORAGE_BUCKET || env.VITE_STORAGE_BUCKET || '',
+  messagingSenderId: parsedConfig.messagingSenderId || env.VITE_FIREBASE_MESSAGING_SENDER_ID || env.FIREBASE_MESSAGING_SENDER_ID || env.VITE_MESSAGING_SENDER_ID || '',
+  appId: parsedConfig.appId || env.VITE_FIREBASE_APP_ID || env.FIREBASE_APP_ID || env.VITE_APP_ID || '',
+  measurementId: parsedConfig.measurementId || env.VITE_FIREBASE_MEASUREMENT_ID || env.FIREBASE_MEASUREMENT_ID || env.VITE_MEASUREMENT_ID || '',
 }
 
 export const firebaseIsConfigured = Boolean(
