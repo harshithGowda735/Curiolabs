@@ -175,3 +175,9 @@ import Hysteresis from './Physics/Hysteresis'
 import DoubleSlit from './Physics/DoubleSlit'
             <Route path="/physics/hysteresis" element={<Hysteresis />} />
             <Route path="/physics/double-slit" element={<DoubleSlit />} />
+import VernierCaliper from './Physics/VernierCaliper'
+import Hysteresis from './Physics/Hysteresis'
+import DoubleSlit from './Physics/DoubleSlit'
+            <Route path="/physics/vernier-caliper" element={<VernierCaliper />} />
+            <Route path="/physics/hysteresis" element={<Hysteresis />} />
+            <Route path="/physics/double-slit" element={<DoubleSlit />} />
