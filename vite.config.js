@@ -21,7 +21,19 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', 'react-router-dom', 'three'],
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', 'lucide-react', 'three'],
+    include: [
+      'react',
+      'react-dom',
+      'react-dom/client',
+      'react-router-dom',
+      'lucide-react',
+      'three',
+      'firebase/app',
+      'firebase/auth',
+      'firebase/firestore',
+      'firebase/storage',
+      'firebase/analytics'
+    ],
     exclude: ['@google/model-viewer'],
   },
 })
