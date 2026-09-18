@@ -48,13 +48,6 @@ export default function Landing() {
           </svg>
 
           <div className="max-w-5xl mx-auto text-center relative z-10">
-            {/* Minimal Technical Badge */}
-            <div className="inline-flex items-center gap-2.5 bg-slate-100/80 backdrop-blur border border-slate-200/90 rounded-full px-4 py-1.5 text-xs font-medium text-slate-700 mb-8 shadow-2xs">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="font-mono text-[11px] tracking-wider uppercase text-slate-800 font-semibold">CurioLabs v2.0</span>
-              <span className="text-slate-300">•</span>
-              <span className="text-slate-600 font-normal">{t('Virtual Engineering & Science Operating System', 'ವರ್ಚುವಲ್ ಲ್ಯಾಬೊರೇಟರಿ ಆಪರೇಟಿಂಗ್ ಸಿಸ್ಟಮ್')}</span>
-            </div>
 
             {/* Main Headline */}
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-display font-extrabold tracking-tight text-slate-950 max-w-4xl mx-auto leading-[1.06]">
