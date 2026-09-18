@@ -12,9 +12,7 @@ import LevelSelection from './pages/LevelSelection'
 import DomainCatalog from './pages/DomainCatalog'
 import NotFound from './pages/NotFound'
 
-// Student & Teacher
-import StudentDashboard from './Student/StudentDashboard'
-import OfflineStudentHome from './Student/OfflineStudentHome'
+// Teacher
 import TeacherDashboard from './Teacher/TeacherDashboard'
 
 // Physics
@@ -106,13 +104,8 @@ export default function App() {
             <Route path="/catalog" element={<DomainCatalog />} />
             <Route path="/catalog/:level" element={<DomainCatalog />} />
 
-            {/* Dashboards */}
-            <Route path="/student" element={
-              <ProtectedRoute requiredRole="student">
-                <StudentDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/student/offline" element={<OfflineStudentHome />} />
+            {/* Teacher Dashboard */}
+            <Route path="/student" element={<Navigate to="/catalog" replace />} />
             <Route path="/teacher" element={
               <ProtectedRoute requiredRole="teacher">
                 <TeacherDashboard />

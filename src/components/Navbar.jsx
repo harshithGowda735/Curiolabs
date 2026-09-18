@@ -16,7 +16,7 @@ export default function Navbar() {
     navigate('/')
   }
 
-  const dashboardPath = userRole === 'teacher' ? '/faculty' : '/student'
+  const isTeacher = userRole === 'teacher'
 
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-40 safe-top">
@@ -45,16 +45,16 @@ export default function Navbar() {
               <span>{t('Academic Tracks', 'ಶೈಕ್ಷಣಿಕ ಹಂತಗಳು')}</span>
             </Link>
 
-            {currentUser && (
+            {currentUser && isTeacher && (
               <Link
-                to={dashboardPath}
+                to="/faculty"
                 className={`px-3.5 py-1 rounded-full transition-all ${
-                  location.pathname === dashboardPath
+                  location.pathname === '/faculty'
                     ? 'bg-white text-slate-950 shadow-2xs font-semibold'
                     : 'text-slate-600 hover:text-slate-950'
                 }`}
               >
-                <span>{userRole === 'teacher' ? t('Faculty Console', 'ಶಿಕ್ಷಕರ ಕನ್ಸೋಲ್') : t('Student Dashboard', 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್')}</span>
+                <span>{t('Faculty Console', 'ಶಿಕ್ಷಕರ ಕನ್ಸೋಲ್')}</span>
               </Link>
             )}
           </div>
@@ -72,13 +72,20 @@ export default function Navbar() {
 
             {currentUser ? (
               <div className="flex items-center gap-2">
-                <Link
-                  to={dashboardPath}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200/80 rounded-full transition-colors text-xs font-mono text-slate-700"
-                >
-                  <User size={12} className="text-slate-500" />
-                  <span className="max-w-[100px] truncate">{currentUser.displayName || currentUser.email?.split('@')[0] || 'User'}</span>
-                </Link>
+                {isTeacher ? (
+                  <Link
+                    to="/faculty"
+                    className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200/80 rounded-full transition-colors text-xs font-mono text-slate-700"
+                  >
+                    <User size={12} className="text-slate-500" />
+                    <span className="max-w-[100px] truncate">{currentUser.displayName || currentUser.email?.split('@')[0] || 'Faculty'}</span>
+                  </Link>
+                ) : (
+                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-700">
+                    <User size={12} className="text-slate-500" />
+                    <span className="max-w-[100px] truncate">{currentUser.displayName || currentUser.email?.split('@')[0] || 'Student'}</span>
+                  </div>
+                )}
 
                 <button
                   onClick={handleSignOut}
@@ -120,13 +127,17 @@ export default function Navbar() {
               🎓 {t('Academic Tracks (PUC & Engineering)', 'ಶೈಕ್ಷಣಿಕ ಹಂತಗಳು')}
             </Link>
             {currentUser ? (
-              <Link
-                to={dashboardPath}
-                onClick={() => setIsOpen(false)}
-                className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-950 bg-slate-100"
-              >
-                📊 {userRole === 'teacher' ? 'Faculty Console' : 'Student Dashboard'}
-              </Link>
+              <>
+                {isTeacher && (
+                  <Link
+                    to="/faculty"
+                    onClick={() => setIsOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-950 bg-slate-100"
+                  >
+                    📊 Faculty Console
+                  </Link>
+                )}
+              </>
             ) : (
               <Link
                 to="/login"

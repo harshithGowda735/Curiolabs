@@ -30,7 +30,7 @@ export default function ProtectedRoute({ children, requiredRole = null, requireP
   }
 
   if (requiredRole && userRole !== requiredRole) {
-    return <Navigate to={userRole === 'teacher' ? '/teacher' : '/student'} replace />
+    return <Navigate to={userRole === 'teacher' ? '/faculty' : '/catalog'} replace />
   }
 
   if (requireProfile && !profileComplete) {
