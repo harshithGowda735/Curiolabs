@@ -118,19 +118,20 @@ export const DOMAIN_REGISTRY = [
     level: 'engineering',
     title: 'Electronics Engineering',
     titleKn: 'ಎಲೆಕ್ಟ್ರಾನಿಕ್ಸ್ ಎಂಜಿನಿಯರಿಂಗ್',
-    description: 'RC filter tuning, op-amp gains, and WebAR 3D breadboard circuits',
+    description: 'Part-A Discrete Hardware: TDM (IC 4051), AM/PAM detection, Pre/De-Emphasis & Fiber Optics with WebAR 3D',
     icon: '📡',
     gradient: 'from-emerald-500 to-teal-600',
     path: '/electronics',
     hasAR: true,
-    experimentsCount: 5,
-    tags: ['Analog Circuits', 'Filters', 'WebAR'],
+    experimentsCount: 6,
+    tags: ['Discrete Hardware', 'WebAR', 'IC 4051', 'Fiber Optics', 'Modulation'],
     experiments: [
-      { slug: 'rc-filter', title: 'RC Active Filter Tuning (+AR)', path: '/electronics/rc-filter', icon: '📡', hasAR: true },
-      { slug: 'logic-gates', title: 'Digital Logic Gates Design (+AR)', path: '/electronics/logic-gates', icon: '🔌', hasAR: true },
-      { slug: 'opamp', title: 'Operational Amplifier Gain Stages (+AR)', path: '/electronics/opamp', icon: '🔊', hasAR: true },
-      { slug: 'modulation', title: 'AM/FM Carrier Modulation', path: '/electronics/modulation', icon: '📻' },
-      { slug: 'antenna', title: 'Antenna Radiation Polar Patterns', path: '/electronics/antenna', icon: '📶' }
+      { slug: 'tdm', title: 'TDM & De-Multiplexing using IC 4051', path: '/electronics/tdm', icon: '🔀', hasAR: true, hours: '2h', blooms: 'L1, L2, L3' },
+      { slug: 'am-detection', title: 'Standard AM Generation & Detection', path: '/electronics/am-detection', icon: '📻', hasAR: true, hours: '2h', blooms: 'L1, L2, L3' },
+      { slug: 'pam', title: 'Pulse Amplitude Modulation & Detection', path: '/electronics/pam', icon: '📊', hasAR: true, hours: '2h', blooms: 'L1, L2, L3' },
+      { slug: 'pre-emphasis', title: 'Pre-Emphasis & De-Emphasis Circuits', path: '/electronics/pre-emphasis', icon: '⚡', hasAR: true, hours: '2h', blooms: 'L1, L2, L3' },
+      { slug: 'fiber-bending-loss', title: 'Coupling & Bending Loss in Optical Fiber', path: '/electronics/fiber-bending-loss', icon: '💡', hasAR: true, hours: '2h', blooms: 'L1, L2, L3' },
+      { slug: 'numerical-aperture', title: 'Attenuation Loss & Numerical Aperture', path: '/electronics/numerical-aperture', icon: '🔦', hasAR: true, hours: '2h', blooms: 'L1, L2, L3' }
     ]
   },
   {
@@ -139,18 +140,20 @@ export const DOMAIN_REGISTRY = [
     level: 'engineering',
     title: 'Communication Systems',
     titleKn: 'ಸಂವಹನ ವ್ಯವಸ್ಥೆಗಳು',
-    description: 'RF propagation, antenna radiation directivity, and frequency modulation',
+    description: 'Analog & digital carrier transmission, PAM, optical fiber loss, and numerical aperture',
     icon: '📶',
     gradient: 'from-blue-600 to-cyan-600',
     path: '/electronics',
-    experimentsCount: 5,
-    tags: ['RF Engineering', 'Modulation', 'Waveguides'],
+    hasAR: true,
+    experimentsCount: 6,
+    tags: ['RF & Optical', 'Multiplexing', 'Fiber Optics'],
     experiments: [
-      { slug: 'modulation', title: 'AM/FM Carrier Modulation', path: '/electronics/modulation', icon: '📻' },
-      { slug: 'antenna', title: 'Antenna Radiation Polar Patterns', path: '/electronics/antenna', icon: '📶' },
-      { slug: 'rc-filter', title: 'Bandpass Filter Shaping', path: '/electronics/rc-filter', icon: '📡' },
-      { slug: 'logic-gates', title: 'Digital Multiplexing', path: '/electronics/logic-gates', icon: '🔌' },
-      { slug: 'opamp', title: 'RF Preamplifier Conditioning', path: '/electronics/opamp', icon: '🔊' }
+      { slug: 'tdm', title: 'TDM Multiplexing / Demultiplexing', path: '/electronics/tdm', icon: '🔀', hasAR: true },
+      { slug: 'am-detection', title: 'Standard AM Generation & Detection', path: '/electronics/am-detection', icon: '📻', hasAR: true },
+      { slug: 'pam', title: 'Pulse Amplitude Modulation', path: '/electronics/pam', icon: '📊', hasAR: true },
+      { slug: 'pre-emphasis', title: 'Pre-Emphasis & De-Emphasis', path: '/electronics/pre-emphasis', icon: '⚡', hasAR: true },
+      { slug: 'fiber-bending-loss', title: 'Optical Fiber Coupling & Bending Loss', path: '/electronics/fiber-bending-loss', icon: '💡', hasAR: true },
+      { slug: 'numerical-aperture', title: 'Attenuation Loss & Numerical Aperture', path: '/electronics/numerical-aperture', icon: '🔦', hasAR: true }
     ]
   },
   {

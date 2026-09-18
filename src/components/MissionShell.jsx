@@ -70,11 +70,9 @@ export default function MissionShell({
   ]
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50">
-      <Breadcrumbs items={breadcrumbItems} />
-
+    <div className="min-h-[100dvh] bg-gray-50 flex flex-col">
       {/* Gradient Header Bar */}
-      <header className={`bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white px-4 py-3 safe-top`}>
+      <header className={`bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white px-4 py-3 safe-top shadow-xs relative z-20`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <button 
@@ -85,9 +83,7 @@ export default function MissionShell({
               <ArrowLeft size={20} />
             </button>
             <h1 className="text-lg md:text-xl font-display font-bold flex items-center gap-2">
-              <span>{titleEmoji}</span>
               <span>{title}</span>
-              <span>🧪</span>
             </h1>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -130,6 +126,7 @@ export default function MissionShell({
           </div>
         </div>
       </header>
+      <Breadcrumbs items={breadcrumbItems} />
 
       {/* Student Info Bar */}
       <div className="bg-white border-b border-gray-100 px-4 py-2">
