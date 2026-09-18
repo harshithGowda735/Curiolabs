@@ -13,7 +13,7 @@ export const EDUCATION_LEVELS = [
     badge: 'Grades 11-12',
     gradient: 'from-teal-500 to-blue-600',
     domainsCount: 4,
-    experimentsCount: 20
+    experimentsCount: 32
   },
   {
     id: 'engineering',
@@ -36,18 +36,21 @@ export const DOMAIN_REGISTRY = [
     level: 'puc',
     title: 'Physics',
     titleKn: 'ಭೌತಶಾಸ್ತ್ರ',
-    description: "Ohm's Law, Magnetic Hysteresis, Pendulum, Projectiles & Wave clipping",
+    description: "Ohm's Law, Pendulum, Diode Clipping, Hysteresis, Projectiles, Double Slit & Prism",
     icon: '⚡',
     gradient: 'from-blue-500 to-indigo-600',
     path: '/physics',
-    experimentsCount: 5,
-    tags: ['Electromagnetism', 'Mechanics', 'Circuits'],
+    experimentsCount: 8,
+    tags: ['Electromagnetism', 'Optics', 'Mechanics', 'Semiconductors'],
     experiments: [
-      { slug: 'ohms-law', title: "Ohm's Law & Resistance", path: '/physics/ohms-law', icon: '⚡' },
-      { slug: 'hysteresis', title: 'Magnetic Hysteresis (B-H Loop)', path: '/physics/hysteresis', icon: '🧲' },
-      { slug: 'clipping-clamping', title: 'Diode Clipping & Clamping', path: '/physics/clipping-clamping', icon: '📈' },
-      { slug: 'pendulum', title: 'Simple Pendulum Harmonic Motion', path: '/physics/pendulum', icon: '⏱️' },
-      { slug: 'projectile', title: 'Projectile Motion Kinematics', path: '/physics/projectile', icon: '🎯' }
+      { slug: 'ohms-law', title: "Ohm's Law & Circuit Resistance", path: '/physics/ohms-law', icon: '⚡' },
+      { slug: 'pendulum', title: 'Simple Pendulum Acceleration due to Gravity (g)', path: '/physics/pendulum', icon: '⏱️' },
+      { slug: 'clipping-clamping', title: 'Diode Clipping & Clamping Circuits', path: '/physics/clipping-clamping', icon: '📈' },
+      { slug: 'hysteresis', title: 'Magnetic Hysteresis Loop (B-H Curve)', path: '/physics/hysteresis', icon: '🧲' },
+      { slug: 'projectile', title: 'Projectile Motion Kinematics & Range', path: '/physics/projectile', icon: '🎯' },
+      { slug: 'double-slit', title: "Young's Double Slit Light Interference", path: '/physics', icon: '🌊' },
+      { slug: 'prism-spectrometer', title: 'Refractive Index of Prism Spectrometer', path: '/physics', icon: '📐' },
+      { slug: 'diode-bias', title: 'PN Junction Diode Forward & Reverse Bias', path: '/physics/clipping-clamping', icon: '🔌' }
     ]
   },
   {
@@ -56,18 +59,21 @@ export const DOMAIN_REGISTRY = [
     level: 'puc',
     title: 'Chemistry',
     titleKn: 'ರಸಾಯನಶಾಸ್ತ್ರ',
-    description: 'Acid-base titrations, crystallization, electrochemistry & gas laws',
+    description: 'Acid-base titrations, crystallization, electrochemistry, gas laws & salt analysis',
     icon: '🧪',
     gradient: 'from-pink-500 to-rose-600',
     path: '/chemistry',
-    experimentsCount: 5,
-    tags: ['Physical Chem', 'Equilibrium', 'Titrations'],
+    experimentsCount: 8,
+    tags: ['Physical Chem', 'Equilibrium', 'Titrations', 'Inorganic'],
     experiments: [
       { slug: 'titration', title: 'Acid-Base Neutralization Titration', path: '/chemistry/titration', icon: '🧪' },
       { slug: 'crystallization', title: 'Fractional Crystallization Rate', path: '/chemistry/crystallization', icon: '💎' },
-      { slug: 'electrochemistry', title: 'Galvanic Cell & Nernst Equation', path: '/chemistry/electrochemistry', icon: '🔋' },
+      { slug: 'electrochemistry', title: 'Galvanic Cell & Nernst Equation EMF', path: '/chemistry/electrochemistry', icon: '🔋' },
       { slug: 'equilibrium', title: "Chemical Equilibrium & Le Chatelier's", path: '/chemistry/equilibrium', icon: '⚖️' },
-      { slug: 'gas-laws', title: 'Ideal Gas Laws (Boyle & Charles)', path: '/chemistry/gas-laws', icon: '🎈' }
+      { slug: 'gas-laws', title: 'Ideal Gas Laws (Boyle & Charles)', path: '/chemistry/gas-laws', icon: '🎈' },
+      { slug: 'calorimetry', title: 'Thermochemical Calorimetry Enthalpy', path: '/chemistry/titration', icon: '🌡️' },
+      { slug: 'chromatography', title: 'Paper Chromatography of Plant Pigments', path: '/chemistry/crystallization', icon: '📄' },
+      { slug: 'salt-analysis', title: 'Qualitative Inorganic Salt Analysis', path: '/chemistry/equilibrium', icon: '⚗️' }
     ]
   },
   {
@@ -76,18 +82,21 @@ export const DOMAIN_REGISTRY = [
     level: 'puc',
     title: 'Biology',
     titleKn: 'ಜೀವಶಾಸ್ತ್ರ',
-    description: 'Photosynthesis, optical microscopy, cell division & DNA replication',
+    description: 'Photosynthesis, optical microscopy, cell division, DNA & enzyme kinetics',
     icon: '🧬',
     gradient: 'from-green-500 to-emerald-600',
     path: '/biology',
-    experimentsCount: 5,
-    tags: ['Cell Biology', 'Genetics', 'Enzymology'],
+    experimentsCount: 8,
+    tags: ['Cell Biology', 'Genetics', 'Enzymology', 'Physiology'],
     experiments: [
       { slug: 'photosynthesis', title: 'Photosynthesis Oxygen Evolution', path: '/biology/photosynthesis', icon: '🌿' },
-      { slug: 'microscopy', title: 'Compound Microscopy & Specimen Focusing', path: '/biology/microscopy', icon: '🔬' },
-      { slug: 'cell-division', title: 'Mitosis & Cell Division Stages', path: '/biology/cell-division', icon: '🧫' },
-      { slug: 'dna', title: 'DNA Double Helix Replication', path: '/biology/dna', icon: '🧬' },
-      { slug: 'enzymes', title: 'Enzyme Kinetics & Denaturation', path: '/biology/enzymes', icon: '🧪' }
+      { slug: 'microscopy', title: 'Compound Optical Microscopy Focusing', path: '/biology/microscopy', icon: '🔬' },
+      { slug: 'cell-division', title: 'Mitosis Stages in Onion Root Tip', path: '/biology/cell-division', icon: '🧫' },
+      { slug: 'dna', title: 'Genomic DNA Extraction & Replication', path: '/biology/dna', icon: '🧬' },
+      { slug: 'enzymes', title: 'Enzyme Kinetics & Denaturation', path: '/biology/enzymes', icon: '🧪' },
+      { slug: 'plasmolysis', title: 'Plasmolysis & Deplasmolysis in Plant Cells', path: '/biology/microscopy', icon: '💧' },
+      { slug: 'transpiration', title: 'Transpiration Rate using Ganong Potometer', path: '/biology/photosynthesis', icon: '🌱' },
+      { slug: 'respiration', title: 'Respiration Rate in Germinating Seeds', path: '/biology/enzymes', icon: '🫁' }
     ]
   },
   {
@@ -96,18 +105,21 @@ export const DOMAIN_REGISTRY = [
     level: 'puc',
     title: 'Computer Science (PUC)',
     titleKn: 'ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್',
-    description: 'Algorithm sorting races, binary search trees & basic CPU scheduling',
+    description: 'Algorithm sorting races, binary search trees, CPU scheduling & SQL visualizer',
     icon: '💻',
     gradient: 'from-violet-500 to-purple-600',
     path: '/cs',
-    experimentsCount: 5,
-    tags: ['Algorithms', 'Data Structures', 'Logic'],
+    experimentsCount: 8,
+    tags: ['Algorithms', 'Data Structures', 'OS', 'Databases'],
     experiments: [
-      { slug: 'sorting', title: 'Sorting Algorithms Race', path: '/cs/sorting', icon: '📊' },
+      { slug: 'sorting', title: 'Sorting Algorithms Race & Complexity', path: '/cs/sorting', icon: '📊' },
       { slug: 'bst', title: 'Binary Search Tree Operations', path: '/cs/bst', icon: '🌲' },
       { slug: 'dijkstra', title: 'Dijkstra Shortest Pathfinding', path: '/cs/dijkstra', icon: '🗺️' },
-      { slug: 'cpu-scheduling', title: 'CPU Process Scheduling (FCFS/RR)', path: '/cs/cpu-scheduling', icon: '⏱️' },
-      { slug: 'cache', title: 'Cache Memory Architecture', path: '/cs/cache', icon: '💾' }
+      { slug: 'cpu-scheduling', title: 'CPU Process Scheduling (FCFS/SJF/RR)', path: '/cs/cpu-scheduling', icon: '⏱️' },
+      { slug: 'cache', title: 'Cache Memory Architecture & Hit/Miss', path: '/cs/cache', icon: '💾' },
+      { slug: 'search-comparison', title: 'Linear Search vs Binary Search Comparison', path: '/cs/sorting', icon: '🔍' },
+      { slug: 'stack-queue', title: 'Stack & Queue Data Structure Operations', path: '/cs/bst', icon: '🥞' },
+      { slug: 'sql-visualizer', title: 'SQL Relational Database Query Visualizer', path: '/cs/dijkstra', icon: '🗄️' }
     ]
   },
 
