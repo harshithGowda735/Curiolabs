@@ -21,6 +21,9 @@ import OhmsLaw from './Physics/OhmsLaw'
 import ClippingClamping from './Physics/ClippingClamping'
 import Pendulum from './Physics/Pendulum'
 import ProjectileMotion from './Physics/ProjectileMotion'
+import Hysteresis from './Physics/Hysteresis'
+import DoubleSlit from './Physics/DoubleSlit'
+import VernierCaliper from './Physics/VernierCaliper'
 
 // Chemistry
 import ChemistryHub from './Chemistry/ChemistryHub'
@@ -103,6 +106,9 @@ export default function App() {
             <Route path="/physics/clipping-clamping" element={<ClippingClamping />} />
             <Route path="/physics/pendulum" element={<Pendulum />} />
             <Route path="/physics/projectile" element={<ProjectileMotion />} />
+            <Route path="/physics/hysteresis" element={<Hysteresis />} />
+            <Route path="/physics/double-slit" element={<DoubleSlit />} />
+            <Route path="/physics/vernier-caliper" element={<VernierCaliper />} />
 
             {/* Chemistry Domain */}
             <Route path="/chemistry" element={<ChemistryHub />} />
@@ -171,13 +177,3 @@ export default function App() {
     </AuthProvider>
   )
 }
-import Hysteresis from './Physics/Hysteresis'
-import DoubleSlit from './Physics/DoubleSlit'
-            <Route path="/physics/hysteresis" element={<Hysteresis />} />
-            <Route path="/physics/double-slit" element={<DoubleSlit />} />
-import VernierCaliper from './Physics/VernierCaliper'
-import Hysteresis from './Physics/Hysteresis'
-import DoubleSlit from './Physics/DoubleSlit'
-            <Route path="/physics/vernier-caliper" element={<VernierCaliper />} />
-            <Route path="/physics/hysteresis" element={<Hysteresis />} />
-            <Route path="/physics/double-slit" element={<DoubleSlit />} />
