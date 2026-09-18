@@ -1,39 +1,38 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Printer, Download, Volume2, VolumeX, ChevronDown, ChevronUp, Lightbulb, Sparkles } from 'lucide-react'
+import { 
+  ArrowLeft, 
+  Printer, 
+  Download, 
+  Volume2, 
+  VolumeX, 
+  ChevronDown, 
+  ChevronUp, 
+  Lightbulb, 
+  Sparkles,
+  ClipboardList,
+  CheckCircle2,
+  AlertCircle,
+  User,
+  GraduationCap,
+  Building2
+} from 'lucide-react'
 import { useTTS } from '../hooks/useTTS'
 import { useLanguage } from '../contexts/LanguageContext'
 import Breadcrumbs from './Breadcrumbs'
 import AIEvaluationModal from './AIEvaluationModal'
 
 /**
- * MissionShell — reusable layout for every lab experiment.
- * Matches the screenshot UI: gradient header, two-column body, step instructions, data panel.
- * 
- * Props:
- * - title: string (experiment name)
- * - titleEmoji: string (emoji for header)
- * - subject: string (e.g. "Physics", "Chemistry")
- * - accentColor: string (tailwind color like "emerald", "violet")
- * - gradientFrom/gradientTo: tailwind gradient colors
- * - steps: array of { title, description }
- * - currentStep: number
- * - controls: ReactNode (left panel content — sliders, buttons, apparatus)
- * - visualization: ReactNode (right panel content — charts, data tables)
- * - observations: array of strings (key takeaways)
- * - onPrint: function
- * - onExport: function
- * - studentInfo: { name, class, school }
- * - setupStatus: 'incomplete' | 'complete' | null
- * - setupMessage: string
+ * MissionShell — Standardized 12-Column Laboratory Workstation Layout.
+ * Ensures consistent alignment, 12-column grid hierarchy, standardized card spacing, and precision headers.
  */
 export default function MissionShell({
   title = 'Experiment',
   titleEmoji = '🔬',
   subject = 'Lab',
   accentColor = 'emerald',
-  gradientFrom = 'from-teal-500',
-  gradientTo = 'to-blue-600',
+  gradientFrom = 'from-slate-900',
+  gradientTo = 'to-slate-800',
   steps = [],
   currentStep = 0,
   controls,
@@ -52,7 +51,7 @@ export default function MissionShell({
   const [showObservations, setShowObservations] = useState(true)
   const [showAIEval, setShowAIEval] = useState(false)
 
-  const stepText = steps.map((s, i) => `Step ${i + 1}: ${s.title}. ${s.description}`).join('. ')
+  const stepText = steps.map((s, i) => `Step ${i + 1}: ${s.title || ''}. ${s.description || ''}`).join('. ')
 
   const handlePrint = () => {
     if (onPrint) onPrint()
@@ -64,207 +63,257 @@ export default function MissionShell({
   }
 
   const breadcrumbItems = [
-    { label: 'Catalog', path: '/level-select' },
+    { label: t('Catalog', 'ಕ್ಯಾಟಲಾಗ್'), path: '/level-select' },
     { label: subject, path: '/catalog' },
     { label: title }
   ]
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50">
-      <Breadcrumbs items={breadcrumbItems} />
+    <div className="min-h-[100dvh] bg-slate-50/60 text-slate-900 font-sans antialiased flex flex-col justify-between selection:bg-slate-950 selection:text-white">
+      <div>
+        <Breadcrumbs items={breadcrumbItems} />
 
-      {/* Gradient Header Bar */}
-      <header className={`bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white px-4 py-3 safe-top`}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => navigate(-1)}
-              className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
-              title={t('Go back', 'ಹಿಂದೆ ಹೋಗಿ')}
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <h1 className="text-lg md:text-xl font-display font-bold flex items-center gap-2">
-              <span>{titleEmoji}</span>
-              <span>{title}</span>
-              <span>🧪</span>
-            </h1>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* AI Evaluation Button */}
-            <button
-              onClick={() => setShowAIEval(true)}
-              className="flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-slate-950 text-sm font-bold px-3 py-1.5 rounded-lg shadow-sm transition-all"
-            >
-              <Sparkles size={14} className="text-slate-950" />
-              <span>{t('AI Evaluation', 'AI ಮೌಲ್ಯಮಾಪನ')}</span>
-            </button>
-            {/* Language Selector */}
-            <div className="flex items-center gap-1.5 bg-white/10 rounded-lg px-2 py-1">
-              <span className="text-xs font-medium">{t('Language', 'ಭಾಷೆ')}</span>
-              <select 
-                value={lang} 
-                onChange={toggleLanguage}
-                className="bg-white text-gray-800 text-sm rounded px-2 py-0.5 font-medium cursor-pointer"
+        {/* --- STANDARDIZED WORKSTATION HEADER BAR --- */}
+        <header className="bg-slate-950 text-white px-4 sm:px-6 py-3.5 sticky top-0 z-30 shadow-xs">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            {/* Title & Navigation */}
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => navigate(-1)}
+                className="p-1.5 hover:bg-white/10 rounded-xl transition-colors text-slate-300 hover:text-white"
+                title={t('Go back', 'ಹಿಂದೆ ಹೋಗಿ')}
               >
-                <option value="en">English</option>
-                <option value="kn">ಕನ್ನಡ</option>
-              </select>
+                <ArrowLeft size={18} />
+              </button>
+
+              <div className="h-4 w-px bg-slate-800 hidden sm:block" />
+
+              <h1 className="text-base sm:text-lg font-display font-bold tracking-tight text-white flex items-center gap-2.5">
+                <span className="text-xl leading-none">{titleEmoji}</span>
+                <span>{title}</span>
+                <span className="text-xs font-mono font-normal text-slate-400 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
+                  {subject}
+                </span>
+              </h1>
             </div>
-            {/* Print Button */}
-            <button 
-              onClick={handlePrint}
-              className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors"
-            >
-              <Printer size={14} />
-              <span className="hidden sm:inline">{t('Print Report', 'ವರದಿ ಮುದ್ರಿಸಿ')}</span>
-            </button>
-            {/* Export CSV */}
-            <button 
-              onClick={handleExport}
-              className="flex items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors"
-            >
-              <Download size={14} />
-              <span className="hidden sm:inline">{t('Export CSV', 'CSV ರಫ್ತು')}</span>
-            </button>
+
+            {/* Action Controls */}
+            <div className="flex items-center gap-2">
+              {/* AI Evaluation Button */}
+              <button
+                onClick={() => setShowAIEval(true)}
+                className="flex items-center gap-1.5 bg-white text-slate-950 hover:bg-slate-100 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all shadow-2xs"
+              >
+                <Sparkles size={13} className="text-amber-500 fill-amber-400" />
+                <span>{t('AI Viva Audit', 'AI ಮೌಲ್ಯಮಾಪನ')}</span>
+              </button>
+
+              {/* Language Switcher */}
+              <button
+                onClick={toggleLanguage}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors border border-slate-800"
+              >
+                <span>{lang === 'en' ? 'KN' : 'EN'}</span>
+              </button>
+
+              {/* Print Report */}
+              <button 
+                onClick={handlePrint}
+                className="hidden sm:flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3 py-1.5 rounded-xl transition-colors border border-slate-700/60"
+              >
+                <Printer size={13} />
+                <span>{t('Print Report', 'ವರದಿ')}</span>
+              </button>
+
+              {/* Export CSV */}
+              <button 
+                onClick={handleExport}
+                className="hidden sm:flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3 py-1.5 rounded-xl transition-colors border border-slate-700/60"
+              >
+                <Download size={13} />
+                <span>CSV</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* --- STANDARDIZED TELEMETRY & USER METADATA BAR --- */}
+        <div className="bg-white border-b border-slate-200/60 px-4 sm:px-6 py-2">
+          <div className="max-w-7xl mx-auto flex items-center justify-between text-xs font-mono text-slate-500">
+            <div className="flex items-center gap-4 flex-wrap">
+              <span className="flex items-center gap-1.5 text-slate-700">
+                <User size={12} className="text-slate-400" />
+                <span className="font-semibold text-slate-900">{studentInfo.name}</span>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="flex items-center gap-1.5">
+                <GraduationCap size={12} className="text-slate-400" />
+                <span>{studentInfo.class}</span>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="flex items-center gap-1.5">
+                <Building2 size={12} className="text-slate-400" />
+                <span>{studentInfo.school}</span>
+              </span>
+            </div>
+
+            <div className="hidden md:flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[10px] font-semibold">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Engine Active
+              </span>
+            </div>
           </div>
         </div>
-      </header>
 
-      {/* Student Info Bar */}
-      <div className="bg-white border-b border-gray-100 px-4 py-2">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-sm text-gray-600">
-            <span className="font-semibold text-gray-800">{t('Student', 'ವಿದ್ಯಾರ್ಥಿ')}:</span> {studentInfo.name} 
-            <span className="mx-2">|</span>
-            <span className="font-semibold text-gray-800">{t('Class', 'ತರಗತಿ')}:</span> {studentInfo.class}
-            <span className="mx-2">|</span>
-            <span className="font-semibold text-gray-800">{t('School', 'ಶಾಲೆ')}:</span> {studentInfo.school}
-          </p>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-4 md:py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-          {/* LEFT COLUMN — Instructions & Controls */}
-          <div className="space-y-4">
-            {/* Setup Status Banner */}
-            {setupStatus && (
-              <div className={`rounded-xl px-4 py-3 flex items-start gap-2 ${
-                setupStatus === 'incomplete' 
-                  ? 'bg-red-50 border border-red-200' 
-                  : 'bg-green-50 border border-green-200'
-              }`}>
-                <span className="text-lg mt-0.5">
-                  {setupStatus === 'incomplete' ? '⚠️' : '✅'}
-                </span>
-                <div>
-                  <p className={`font-semibold text-sm ${
-                    setupStatus === 'incomplete' ? 'text-red-700' : 'text-green-700'
-                  }`}>
-                    {t('Setup Status', 'ಸೆಟಪ್ ಸ್ಥಿತಿ')}: {setupStatus === 'incomplete' 
-                      ? t('INCOMPLETE', 'ಅಪೂರ್ಣ') 
-                      : t('COMPLETE', 'ಪೂರ್ಣ')} 
-                    {setupStatus === 'incomplete' ? ' ❌' : ' ✅'}
-                  </p>
-                  {setupMessage && (
-                    <p className={`text-xs mt-0.5 ${
-                      setupStatus === 'incomplete' ? 'text-red-600' : 'text-green-600'
-                    }`}>
-                      {setupMessage}
+        {/* --- MAIN WORKSTATION 12-COLUMN GRID SYSTEM --- */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="grid grid-cols-12 gap-6 items-start">
+            
+            {/* --- LEFT COLUMN: CONTROLS & INSTRUCTIONS (Span 5 of 12) --- */}
+            <div className="col-span-12 lg:col-span-5 flex flex-col gap-6">
+              
+              {/* Setup Status Indicator Banner */}
+              {setupStatus && (
+                <div className={`apple-card rounded-2xl p-4 flex items-start gap-3 ${
+                  setupStatus === 'incomplete' 
+                    ? 'border-amber-200 bg-amber-50/50 text-amber-900' 
+                    : 'border-emerald-200 bg-emerald-50/50 text-emerald-900'
+                }`}>
+                  <div className="mt-0.5 shrink-0">
+                    {setupStatus === 'incomplete' ? (
+                      <AlertCircle size={18} className="text-amber-600" />
+                    ) : (
+                      <CheckCircle2 size={18} className="text-emerald-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-display font-bold text-xs uppercase tracking-wider">
+                      {t('Setup Status', 'ಸೆಟಪ್ ಸ್ಥಿತಿ')}: {setupStatus === 'incomplete' ? t('INCOMPLETE', 'ಅಪೂರ್ಣ') : t('COMPLETE', 'ಪೂರ್ಣ')}
                     </p>
+                    {setupMessage && (
+                      <p className="text-xs mt-1 leading-relaxed opacity-90">
+                        {setupMessage}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Setup Instructions Standardized Card */}
+              {steps.length > 0 && (
+                <div className="apple-card rounded-2xl p-6">
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                    <h2 className="text-base font-display font-bold text-slate-950 flex items-center gap-2">
+                      <ClipboardList size={16} className="text-slate-600" />
+                      <span>{t('Lab Instructions', 'ಸೆಟಪ್ ಸೂಚನೆಗಳು')}</span>
+                    </h2>
+
+                    <button 
+                      onClick={() => toggle(stepText)}
+                      className={`p-1.5 rounded-xl transition-colors ${
+                        isSpeaking 
+                          ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' 
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                      title={isSpeaking ? t('Stop reading', 'ಓದುವುದನ್ನು ನಿಲ್ಲಿಸಿ') : t('Read aloud', 'ಜೋರಾಗಿ ಓದಿ')}
+                    >
+                      {isSpeaking ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                    </button>
+                  </div>
+
+                  <ol className="space-y-3">
+                    {steps.map((step, i) => {
+                      const isActive = i === currentStep
+                      const isDone = i < currentStep
+
+                      return (
+                        <li 
+                          key={i} 
+                          className={`flex items-start gap-3 text-xs transition-colors p-2.5 rounded-xl ${
+                            isActive 
+                              ? 'bg-slate-100 text-slate-950 font-semibold border border-slate-200/80 shadow-2xs' 
+                              : isDone 
+                                ? 'text-slate-400 line-through' 
+                                : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className={`inline-flex items-center justify-center w-5 h-5 rounded-lg text-[10px] font-mono font-bold shrink-0 mt-0.5 ${
+                            isActive 
+                              ? 'bg-slate-950 text-white' 
+                              : isDone 
+                                ? 'bg-slate-200 text-slate-500' 
+                                : 'bg-slate-100 text-slate-600 border border-slate-200'
+                          }`}>
+                            {i + 1}
+                          </span>
+                          <span className="leading-relaxed">
+                            {step.description || step.title}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ol>
+                </div>
+              )}
+
+              {/* Lab Controls Panel */}
+              <div className="w-full">
+                {controls}
+              </div>
+            </div>
+
+            {/* --- RIGHT COLUMN: VISUALIZATION, CHARTS & TELEMETRY (Span 7 of 12) --- */}
+            <div className="col-span-12 lg:col-span-7 flex flex-col gap-6">
+              <div className="w-full">
+                {visualization}
+              </div>
+            </div>
+
+            {/* --- FULL-WIDTH CHILDREN OR ADDITIONAL WORKSPACE PANELS --- */}
+            {children && (
+              <div className="col-span-12">
+                {children}
+              </div>
+            )}
+
+            {/* --- FULL-WIDTH KEY OBSERVATIONS & TAKEAWAY PANEL --- */}
+            {observations.length > 0 && (
+              <div className="col-span-12">
+                <div className="apple-card rounded-2xl p-6 bg-white border border-slate-200/80">
+                  <button 
+                    onClick={() => setShowObservations(!showObservations)}
+                    className="w-full flex items-center justify-between text-left"
+                  >
+                    <h2 className="text-base font-display font-bold text-slate-950 flex items-center gap-2">
+                      <Lightbulb size={16} className="text-amber-500 fill-amber-400" />
+                      <span>{t('Key Learning Observations', 'ಪ್ರಮುಖ ಅವಲೋಕನಗಳು')}</span>
+                    </h2>
+                    {showObservations ? (
+                      <ChevronUp size={18} className="text-slate-400" />
+                    ) : (
+                      <ChevronDown size={18} className="text-slate-400" />
+                    )}
+                  </button>
+
+                  {showObservations && (
+                    <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {observations.map((obs, i) => (
+                        <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 leading-relaxed font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-950 mt-1.5 shrink-0" />
+                          <span>{obs}</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
             )}
-
-            {/* Setup Instructions Card */}
-            {steps.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-display font-bold text-gray-800 flex items-center gap-2">
-                    <span>📋</span>
-                    {t('Setup Instructions', 'ಸೆಟಪ್ ಸೂಚನೆಗಳು')}
-                  </h2>
-                  <button 
-                    onClick={() => toggle(stepText)}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                      isSpeaking 
-                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                        : 'bg-green-100 text-green-600 hover:bg-green-200'
-                    }`}
-                    title={isSpeaking ? t('Stop reading', 'ಓದುವುದನ್ನು ನಿಲ್ಲಿಸಿ') : t('Read aloud', 'ಜೋರಾಗಿ ಓದಿ')}
-                  >
-                    {isSpeaking ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                  </button>
-                </div>
-                <ol className="space-y-2">
-                  {steps.map((step, i) => (
-                    <li 
-                      key={i} 
-                      className={`flex items-start gap-2 text-sm transition-colors ${
-                        i === currentStep ? 'text-gray-900 font-medium' : 
-                        i < currentStep ? 'text-gray-400 line-through' : 'text-gray-600'
-                      }`}
-                    >
-                      <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold shrink-0 mt-0.5 ${
-                        i === currentStep ? `bg-${accentColor}-100 text-${accentColor}-700` :
-                        i < currentStep ? 'bg-gray-100 text-gray-400' : 'bg-gray-100 text-gray-500'
-                      }`}>
-                        {i + 1}
-                      </span>
-                      <span>
-                        {step.description}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
-
-            {/* Controls Panel — lab-specific content */}
-            {controls}
           </div>
+        </main>
+      </div>
 
-          {/* RIGHT COLUMN — Visualization & Data */}
-          <div className="space-y-4">
-            {visualization}
-          </div>
-        </div>
-
-        {/* Additional children content */}
-        {children}
-
-        {/* Key Observations / Learning Takeaway */}
-        {observations.length > 0 && (
-          <div className="mt-6 animate-fade-in">
-            <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-fuchsia-50 rounded-xl border border-purple-100 p-4 md:p-5">
-              <button 
-                onClick={() => setShowObservations(!showObservations)}
-                className="w-full flex items-center justify-between"
-              >
-                <h2 className="text-lg font-display font-bold text-purple-800 flex items-center gap-2">
-                  <span>📝</span>
-                  {t('Key Observations', 'ಪ್ರಮುಖ ಅವಲೋಕನಗಳು')}
-                </h2>
-                {showObservations ? <ChevronUp size={20} className="text-purple-600" /> : <ChevronDown size={20} className="text-purple-600" />}
-              </button>
-              {showObservations && (
-                <ul className="mt-3 space-y-2">
-                  {observations.map((obs, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-purple-700">
-                      <Lightbulb size={14} className="mt-0.5 shrink-0 text-purple-500" />
-                      <span>{obs}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
-      </main>
-
+      {/* AI Viva Evaluation Modal */}
       <AIEvaluationModal
         isOpen={showAIEval}
         onClose={() => setShowAIEval(false)}
