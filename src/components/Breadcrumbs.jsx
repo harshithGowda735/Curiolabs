@@ -10,7 +10,7 @@ export default function Breadcrumbs({ items = [] }) {
   if (!items || items.length === 0) return null
 
   return (
-    <nav className="flex items-center gap-1.5 text-xs text-gray-500 py-2.5 px-4 bg-white/70 backdrop-blur-md border-b border-gray-100 sticky top-14 z-30 overflow-x-auto whitespace-nowrap">
+    <nav className="flex items-center gap-1.5 text-xs text-gray-500 py-2 px-4 bg-white/95 border-b border-gray-200/80 overflow-x-auto whitespace-nowrap z-10">
       <Link
         to="/"
         className="flex items-center gap-1 text-gray-400 hover:text-gray-700 transition-colors"
