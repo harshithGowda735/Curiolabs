@@ -1,219 +1,399 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FlaskConical, Zap, Globe, Smartphone, ArrowRight, Sparkles, GraduationCap, Users, Cpu, ShieldCheck } from 'lucide-react'
+import { 
+  ArrowRight, 
+  Smartphone, 
+  Zap, 
+  Activity, 
+  Users, 
+  CheckCircle2, 
+  Layers, 
+  ChevronRight,
+  Compass,
+  Sparkles,
+  Sliders,
+  Terminal,
+  Cpu
+} from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
-import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-
-const features = [
-  { icon: FlaskConical, title: 'Virtual & AR Labs', desc: 'Real mathematical & physics engines — zero canned video clips' },
-  { icon: Smartphone, title: 'WebAR on Any Phone', desc: 'Project 3D breadboards & robotic arms into your room' },
-  { icon: Globe, title: 'Bilingual Interface', desc: 'Instant toggle between English & Kannada (ಕನ್ನಡ)' },
-  { icon: Zap, title: 'Works Offline', desc: 'PWA-enabled for uninterrupted access without internet' },
-]
+import { DOMAIN_REGISTRY } from '../data/domainRegistry'
 
 export default function Landing() {
   const { t } = useLanguage()
-  const { currentUser, userRole } = useAuth()
+  const [activeCategory, setActiveCategory] = useState('engineering') // 'puc' | 'engineering'
 
-  const dashboardPath = currentUser 
-    ? (userRole === 'teacher' ? '/faculty' : '/student')
-    : '/login'
+  // Filter active domains based on active category
+  const activeDomains = DOMAIN_REGISTRY.filter(d => d.level === activeCategory)
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 flex flex-col justify-between">
+    <div className="min-h-[100dvh] bg-white text-slate-900 flex flex-col justify-between selection:bg-slate-950 selection:text-white font-sans antialiased">
       <div>
         <Navbar />
 
-        {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white py-16 md:py-24">
-          <div className="absolute inset-0 opacity-20 pointer-events-none">
-            <div className="absolute top-10 left-1/4 w-96 h-96 bg-teal-500 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-indigo-500 rounded-full blur-3xl"></div>
-          </div>
+        {/* --- HERO SECTION: Pure White Minimalist Product Launch --- */}
+        <section className="relative pt-16 pb-16 md:pt-24 md:pb-28 px-4 sm:px-6 overflow-hidden bg-tech-dots border-b border-slate-200/60">
+          {/* Engineering Schematics Overlay */}
+          <svg 
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full opacity-[0.04] pointer-events-none stroke-slate-900" 
+            fill="none" 
+            viewBox="0 0 1200 800"
+          >
+            <path d="M100 120 H450 V280 H850 V480 H1100" strokeWidth="1.5" strokeDasharray="8 8" />
+            <path d="M150 580 H650 V380 H1050" strokeWidth="1.5" strokeDasharray="4 4" />
+            <circle cx="450" cy="280" r="5" fill="currentColor" />
+            <circle cx="850" cy="480" r="5" fill="currentColor" />
+            <circle cx="650" cy="380" r="5" fill="currentColor" />
+          </svg>
 
-          <div className="relative max-w-7xl mx-auto px-4 text-center">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-4 py-1.5 text-xs font-semibold mb-6 border border-white/15">
-              <Sparkles size={14} className="text-amber-400" />
-              <span>{t('AI-Powered Virtual Engineering & Science Laboratory Operating System', 'AI-ಚಾಲಿತ ವರ್ಚುವಲ್ ಲ್ಯಾಬೊರೇಟರಿ')}</span>
+          <div className="max-w-5xl mx-auto text-center relative z-10">
+            {/* Minimal Technical Badge */}
+            <div className="inline-flex items-center gap-2.5 bg-slate-100/80 backdrop-blur border border-slate-200/90 rounded-full px-4 py-1.5 text-xs font-medium text-slate-700 mb-8 shadow-2xs">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="font-mono text-[11px] tracking-wider uppercase text-slate-800 font-semibold">CurioLabs v2.0</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-slate-600 font-normal">{t('Virtual Engineering & Science Operating System', 'ವರ್ಚುವಲ್ ಲ್ಯಾಬೊರೇಟರಿ ಆಪರೇಟಿಂಗ್ ಸಿಸ್ಟಮ್')}</span>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-display font-black tracking-tight max-w-4xl mx-auto leading-tight">
-              {t('Virtual Labs Built for', 'ವರ್ಚುವಲ್ ಲ್ಯಾಬ್‌ಗಳು')}{' '}
-              <span className="bg-gradient-to-r from-teal-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
-                {t('Students & Faculty', 'ವಿದ್ಯಾರ್ಥಿಗಳು ಮತ್ತು ಶಿಕ್ಷಕರಿಗಾಗಿ')}
+            {/* Main Headline */}
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-display font-extrabold tracking-tight text-slate-950 max-w-4xl mx-auto leading-[1.06]">
+              {t('The Future of Science &', 'ವಿಜ್ಞಾನ ಮತ್ತು ಎಂಜಿನಿಯರಿಂಗ್‌')}{' '}
+              <span className="text-slate-500 font-normal underline decoration-slate-200 underline-offset-8 decoration-1">
+                {t('Engineering Education', 'ಭವಿಷ್ಯದ ವರ್ಚುವಲ್ ಲ್ಯಾಬ್‌ಗಳು')}
               </span>
             </h1>
 
-            <p className="text-base md:text-lg text-slate-300 mt-4 max-w-2xl mx-auto leading-relaxed">
+            {/* Subhead */}
+            <p className="text-base sm:text-lg text-slate-600 mt-6 max-w-2xl mx-auto font-normal leading-relaxed">
               {t(
-                'High-fidelity simulations, WebAR hardware projection, and automated AI viva evaluation across PUC and Undergraduate Engineering.',
-                'PUC ಮತ್ತು ಪದವಿಪೂರ್ವ ಎಂಜಿನಿಯರಿಂಗ್ ವಿಭಾಗಗಳಿಗೆ ಸಂವಾದಾತ್ಮಕ ಪ್ರಯೋಗಾಲಯಗಳು.'
+                'Interactive WebAR hardware projection, real-time mathematical simulation engines, and automated AI viva evaluation.',
+                'ನೈಜ-ಸಮಯದ ಸಿಮ್ಯುಲೇಶನ್, WebAR ಹಾರ್ಡ್‌ವೇರ್ ಪ್ರೊಜೆಕ್ಷನ್ ಮತ್ತು AI ಮೌಲ್ಯಮಾಪನ.'
               )}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-              <Link 
-                to="/level-select"
-                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold px-8 py-3 rounded-2xl shadow-lg shadow-teal-500/25 transition-all hover:scale-105 text-sm"
-              >
-                <span>{t('Enter Student Labs', 'ವಿದ್ಯಾರ್ಥಿ ಲ್ಯಾಬ್ ಪ್ರವೇಶಿಸಿ')}</span>
-                <ArrowRight size={16} />
-              </Link>
-              <Link 
-                to="/faculty"
-                className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-semibold px-8 py-3 rounded-2xl transition-all border border-white/10 text-sm"
-              >
-                <Users size={16} />
-                <span>{t('Faculty Command Console', 'ಶಿಕ್ಷಕರ ಕನ್ಸೋಲ್')}</span>
-              </Link>
+            {/* --- PRIMARY ACTION: BRANCH-FIRST CATEGORY SELECTOR --- */}
+            <div className="mt-12 max-w-xl mx-auto">
+              <div className="text-[11px] font-mono uppercase tracking-widest text-slate-400 mb-3 flex items-center justify-center gap-2">
+                <Compass size={13} className="text-slate-400" />
+                <span>{t('Step 1: Select Your Academic Category', 'ಹಂತ 1: ನಿಮ್ಮ ಶೈಕ್ಷಣಿಕ ವರ್ಗವನ್ನು ಆಯ್ಕೆಮಾಡಿ')}</span>
+              </div>
+
+              {/* Ultra-refined Segment Pill Control */}
+              <div className="p-1.5 bg-slate-100/90 backdrop-blur rounded-full border border-slate-200/90 flex items-center gap-1.5 shadow-2xs">
+                <button
+                  onClick={() => setActiveCategory('puc')}
+                  className={`flex-1 py-3 px-5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2.5 ${
+                    activeCategory === 'puc'
+                      ? 'bg-white text-slate-950 shadow-2xs border border-slate-200/90 font-bold'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-white/40'
+                  }`}
+                >
+                  <span className="text-base">🏫</span>
+                  <span>PUC Science (+2)</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                    4 Branches
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveCategory('engineering')}
+                  className={`flex-1 py-3 px-5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2.5 ${
+                    activeCategory === 'engineering'
+                      ? 'bg-white text-slate-950 shadow-2xs border border-slate-200/90 font-bold'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-white/40'
+                  }`}
+                >
+                  <span className="text-base">⚡</span>
+                  <span>Engineering (B.Tech)</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                    7 Branches
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Clean Apple-style Entry Gateways: Student vs Faculty */}
-        <section className="max-w-6xl mx-auto px-4 -mt-8 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* STUDENT GATEWAY CARD */}
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-slate-200/80 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <GraduationCap size={24} />
-                  </div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
-                    Student Portal
-                  </span>
-                </div>
-
-                <h2 className="text-2xl font-display font-bold text-slate-900">
-                  {t('I am a Student', 'ನಾನು ವಿದ್ಯಾರ್ಥಿ')}
-                </h2>
-                <p className="text-slate-500 text-xs mt-1 mb-6 leading-relaxed">
-                  {t(
-                    'Select your academic level below to launch verified curriculum experiments and automated AI evaluations:',
-                    'ಪ್ರಯೋಗಗಳನ್ನು ಪ್ರಾರಂಭಿಸಲು ನಿಮ್ಮ ಶೈಕ್ಷಣಿಕ ಹಂತವನ್ನು ಆಯ್ಕೆಮಾಡಿ:'
-                  )}
-                </p>
-
-                {/* Sub-level options for Student */}
-                <div className="space-y-3">
-                  <Link
-                    to="/catalog/puc"
-                    className="group/puc p-4 rounded-2xl border border-slate-200 bg-slate-50/60 hover:bg-teal-50/60 hover:border-teal-300 transition-all flex items-center justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">🏫</span>
-                        <span className="font-bold text-slate-900 group-hover/puc:text-teal-700 text-sm">
-                          PUC Foundation (+2 Science)
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Physics • Chemistry • Biology • Computer Science
-                      </p>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-white group-hover/puc:bg-teal-600 group-hover/puc:text-white flex items-center justify-center transition-all shadow-sm">
-                      <ArrowRight size={14} />
-                    </div>
-                  </Link>
-
-                  <Link
-                    to="/catalog/engineering"
-                    className="group/eng p-4 rounded-2xl border border-slate-200 bg-slate-50/60 hover:bg-indigo-50/60 hover:border-indigo-300 transition-all flex items-center justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">⚡</span>
-                        <span className="font-bold text-slate-900 group-hover/eng:text-indigo-700 text-sm">
-                          Undergraduate Engineering (B.Tech / B.E)
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Electronics • Robotics (+AR) • Cyber • Aerospace • AI/ML • IoT
-                      </p>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-white group-hover/eng:bg-indigo-600 group-hover/eng:text-white flex items-center justify-center transition-all shadow-sm">
-                      <ArrowRight size={14} />
-                    </div>
-                  </Link>
-                </div>
+        {/* --- BRANCH-FIRST SPECIALIZATION EXPLORER --- */}
+        <section className="py-16 md:py-24 px-4 sm:px-6 max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-4 border-b border-slate-100">
+            <div>
+              <div className="text-[11px] font-mono uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-1.5">
+                <Layers size={13} className="text-slate-500" />
+                <span>{t('Step 2: Select Specialization Branch', 'ಹಂತ 2: ನಿಮ್ಮ ವಿಭಾಗವನ್ನು ಆಯ್ಕೆಮಾಡಿ')}</span>
               </div>
-
-              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                <span>40+ Experiments</span>
-                <span>•</span>
-                <span>Automated AI Viva</span>
-                <span>•</span>
-                <span>Instant Certificate</span>
-              </div>
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-slate-950 tracking-tight">
+                {activeCategory === 'puc' ? 'PUC Foundational Sciences' : 'Undergraduate Engineering Specializations'}
+              </h2>
             </div>
-
-            {/* FACULTY GATEWAY CARD */}
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-slate-200/80 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                    <Users size={24} />
-                  </div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200">
-                    Faculty Console
-                  </span>
-                </div>
-
-                <h2 className="text-2xl font-display font-bold text-slate-900">
-                  {t('I am a Faculty / Teacher', 'ನಾನು ಶಿಕ್ಷಕ')}
-                </h2>
-                <p className="text-slate-500 text-xs mt-1 mb-6 leading-relaxed">
-                  {t(
-                    'Access complete laboratory management tools to author experiments, monitor live cohorts, and generate accreditation reports:',
-                    'ಪ್ರಯೋಗಗಳನ್ನು ರಚಿಸಿ, ವಿದ್ಯಾರ್ಥಿಗಳನ್ನು ಮೇಲ್ವಿಚಾರಣೆ ಮಾಡಿ ಮತ್ತು ವರದಿಗಳನ್ನು ರಚಿಸಿ:'
-                  )}
-                </p>
-
-                <div className="space-y-2 text-xs text-slate-600 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <span className="text-indigo-600 font-bold">✓</span>
-                    <span><strong>Live Telemetry:</strong> Monitor student simulation parameters in real time</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-indigo-600 font-bold">✓</span>
-                    <span><strong>Lab Authoring:</strong> Create custom experiments with custom tolerance bounds</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-indigo-600 font-bold">✓</span>
-                    <span><strong>AI Grading Audit:</strong> Review automated viva answers with override controls</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-indigo-600 font-bold">✓</span>
-                    <span><strong>Accreditation:</strong> Generate ABET and NAAC outcome attainment reports</span>
-                  </div>
-                </div>
-              </div>
-
-              <Link
-                to="/faculty"
-                className="w-full py-3 bg-slate-900 hover:bg-black text-white font-bold rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-md"
-              >
-                <span>{t('Open Faculty Console', 'ಶಿಕ್ಷಕರ ಕನ್ಸೋಲ್ ತೆರೆಯಿರಿ')}</span>
-                <ArrowRight size={14} />
-              </Link>
-            </div>
+            <p className="text-xs sm:text-sm text-slate-500 mt-2 md:mt-0 font-mono">
+              Showing {activeDomains.length} active branches • Zero-install WebAR ready
+            </p>
           </div>
-        </section>
 
-        {/* Feature Highlights */}
-        <section className="max-w-7xl mx-auto px-4 py-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {features.map((f, i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 text-center hover:shadow-md transition-shadow">
-                <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center mx-auto mb-3 text-teal-600">
-                  <f.icon size={20} />
+          {/* Bento Grid of Engineering Specialization Branches */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {activeDomains.map((domain) => (
+              <div
+                key={domain.id}
+                className="apple-card rounded-3xl p-6 relative flex flex-col justify-between group transition-all duration-300"
+              >
+                {/* Micro Circuit Trace Decorative SVG */}
+                <svg className="absolute top-5 right-5 w-10 h-10 opacity-[0.05] group-hover:opacity-[0.12] transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="3" strokeWidth="1.5" />
+                  <path d="M12 2v7m0 6v7M2 12h7m6 0h7" strokeWidth="1.5" strokeDasharray="2 2" />
+                </svg>
+
+                <div>
+                  {/* Top Icon & Tech Badges */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="w-12 h-12 rounded-2xl bg-slate-100/90 border border-slate-200/60 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
+                      {domain.icon}
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      {domain.hasAR && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-purple-50 text-purple-700 border border-purple-200/80">
+                          <Smartphone size={10} />
+                          WebAR 3D
+                        </span>
+                      )}
+                      <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium border border-slate-200/60">
+                        {domain.experimentsCount} Labs
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Title & Description */}
+                  <h3 className="text-lg sm:text-xl font-display font-bold text-slate-950 group-hover:text-slate-800 transition-colors flex items-center justify-between">
+                    <span>{t(domain.title, domain.titleKn || domain.title)}</span>
+                    <ChevronRight size={18} className="text-slate-300 group-hover:text-slate-950 group-hover:translate-x-1 transition-all" />
+                  </h3>
+
+                  <p className="text-xs text-slate-500 mt-2 leading-relaxed font-normal line-clamp-2">
+                    {domain.description}
+                  </p>
+
+                  {/* Tag Pills */}
+                  <div className="flex flex-wrap gap-1.5 mt-4">
+                    {(domain.tags || []).map((tg, idx) => (
+                      <span key={idx} className="text-[10px] font-mono text-slate-600 bg-slate-50 border border-slate-200/70 px-2 py-0.5 rounded-md">
+                        {tg}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Included Experiments Preview */}
+                  <div className="mt-6 pt-4 border-t border-slate-100 space-y-1.5">
+                    <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2">
+                      Included Experiments:
+                    </div>
+                    {(domain.experiments || []).slice(0, 3).map((exp, idx) => (
+                      <Link
+                        key={idx}
+                        to={exp.path}
+                        className="group/item flex items-center justify-between p-2 rounded-xl hover:bg-slate-100/70 border border-transparent hover:border-slate-200/80 text-xs text-slate-700 font-medium transition-all"
+                      >
+                        <span className="flex items-center gap-2 truncate">
+                          <span className="text-xs">{exp.icon || '🔬'}</span>
+                          <span className="truncate">{exp.title}</span>
+                        </span>
+                        <ArrowRight size={12} className="text-slate-300 group-hover/item:text-slate-950 group-hover/item:translate-x-0.5 transition-all flex-shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-                <h3 className="font-display font-bold text-slate-900 text-sm mb-1">{t(f.title, f.title)}</h3>
-                <p className="text-xs text-slate-500">{t(f.desc, f.desc)}</p>
+
+                {/* Primary Launch Button */}
+                <div className="mt-6 pt-2">
+                  <Link
+                    to={domain.path}
+                    className="w-full py-2.5 px-4 bg-slate-950 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-2xs"
+                  >
+                    <span>Launch {domain.title} Hub</span>
+                    <ArrowRight size={13} />
+                  </Link>
+                </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* --- NARRATIVE: Traditional vs CurioLabs Simulation Engine --- */}
+        <section className="py-20 px-4 sm:px-6 bg-slate-50/60 border-y border-slate-200/60">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <span className="text-[11px] font-mono uppercase tracking-widest text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full">
+                Engineering Paradigm Shift
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-950 mt-4 tracking-tight">
+                Built for deep mathematical mastery, not rote step-following.
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Traditional Virtual Labs */}
+              <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-mono text-xs font-bold">
+                      ✕
+                    </div>
+                    <h3 className="font-display font-bold text-slate-500 text-base">Traditional Virtual Labs</h3>
+                  </div>
+
+                  <ul className="space-y-4 text-xs sm:text-sm text-slate-500 font-normal">
+                    <li className="flex items-start gap-3">
+                      <span className="text-slate-300 font-bold mt-0.5">—</span>
+                      <span>Pre-recorded video clips with zero interactive parameter tuning.</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-slate-300 font-bold mt-0.5">—</span>
+                      <span>No 3D spatial hardware projection or real-world component testing.</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-slate-300 font-bold mt-0.5">—</span>
+                      <span>Manual viva voce scoring causing weeks of grading overhead.</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-slate-300 font-bold mt-0.5">—</span>
+                      <span>Heavy cloud server latency requiring constant high-bandwidth internet.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mt-8 pt-4 border-t border-slate-100 text-[11px] font-mono text-slate-400">
+                  Legacy Architecture
+                </div>
+              </div>
+
+              {/* CurioLabs Engine */}
+              <div className="bg-white rounded-3xl p-8 border border-slate-950 shadow-md relative overflow-hidden flex flex-col justify-between">
+                <div className="absolute top-0 right-0 bg-slate-950 text-white text-[10px] font-mono font-bold uppercase tracking-widest px-3.5 py-1 rounded-bl-xl">
+                  CurioLabs Advantage
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-mono text-xs font-bold">
+                      ✓
+                    </div>
+                    <h3 className="font-display font-bold text-slate-950 text-base">CurioLabs Simulation OS</h3>
+                  </div>
+
+                  <ul className="space-y-4 text-xs sm:text-sm text-slate-700 font-medium">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 size={16} className="text-emerald-600 mt-0.5 flex-shrink-0" />
+                      <span><strong>Mathematical Physics Engine:</strong> Computes real equations (Nernst, PID, Maxwell) in real time.</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 size={16} className="text-emerald-600 mt-0.5 flex-shrink-0" />
+                      <span><strong>WebAR Hardware Projection:</strong> Projects 3D breadboards & robotic arms directly onto your desk.</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 size={16} className="text-emerald-600 mt-0.5 flex-shrink-0" />
+                      <span><strong>Automated AI Viva Evaluation:</strong> Instant conceptual rubric assessment & feedback.</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 size={16} className="text-emerald-600 mt-0.5 flex-shrink-0" />
+                      <span><strong>Offline PWA Engine:</strong> Runs 100% client-side with zero network dependency.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mt-8 pt-4 border-t border-slate-100 text-[11px] font-mono text-emerald-600 font-medium flex items-center justify-between">
+                  <span>Engineered for Deep Learning</span>
+                  <span>v2.0 Client-Side</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* --- TECHNICAL ARCHITECTURE BENTO --- */}
+        <section className="py-20 px-4 sm:px-6 max-w-7xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-[11px] font-mono uppercase tracking-widest text-slate-400">Technical Foundation</span>
+            <h2 className="text-3xl font-display font-bold text-slate-950 mt-2 tracking-tight">
+              Engineering quality in every layer.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="apple-card rounded-3xl p-7 flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-950 mb-4">
+                  <Activity size={20} />
+                </div>
+                <h3 className="font-display font-bold text-slate-950 text-lg mb-2">Real-Time Waveforms</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-normal">
+                  Interactive HTML5 Canvas telemetry rendering mathematical differential equations with sub-millisecond precision.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-slate-100 font-mono text-[10px] text-slate-400 flex items-center justify-between">
+                <span>Canvas2D Math</span>
+                <span>60 FPS</span>
+              </div>
+            </div>
+
+            <div className="apple-card rounded-3xl p-7 flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-950 mb-4">
+                  <Smartphone size={20} />
+                </div>
+                <h3 className="font-display font-bold text-slate-950 text-lg mb-2">WebAR Hardware</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-normal">
+                  Zero-app-install 3D spatial hardware projection powered by WebXR & Google ModelViewer.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-slate-100 font-mono text-[10px] text-slate-400 flex items-center justify-between">
+                <span>WebXR API</span>
+                <span>Android & iOS</span>
+              </div>
+            </div>
+
+            <div className="apple-card rounded-3xl p-7 flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-950 mb-4">
+                  <Zap size={20} />
+                </div>
+                <h3 className="font-display font-bold text-slate-950 text-lg mb-2">Offline PWA OS</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-normal">
+                  Cache-first service worker architecture ensuring 100% lab availability even in rural connectivity zones.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-slate-100 font-mono text-[10px] text-slate-400 flex items-center justify-between">
+                <span>ServiceWorker</span>
+                <span>Offline First</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* --- DISCRETE FACULTY & INSTITUTIONAL GATEWAY --- */}
+        <section className="py-16 px-4 sm:px-6 bg-slate-950 text-white">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full text-[11px] font-mono text-slate-300 mb-3 border border-white/10">
+                <Users size={12} />
+                <span>Faculty & Institutional Governance</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-white">
+                Faculty Command Console & Accreditation Telemetry
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-400 mt-2 max-w-xl font-normal leading-relaxed">
+                Monitor live student cohort progress, author custom lab parameters, and generate automated ABET & NAAC outcome attainment reports.
+              </p>
+            </div>
+
+            <Link
+              to="/faculty"
+              className="px-6 py-3 bg-white hover:bg-slate-100 text-slate-950 font-bold rounded-2xl text-xs flex items-center gap-2 transition-all flex-shrink-0 shadow-sm"
+            >
+              <span>{t('Launch Faculty Console', 'ಶಿಕ್ಷಕರ ಕನ್ಸೋಲ್ ತೆರೆಯಿರಿ')}</span>
+              <ArrowRight size={14} />
+            </Link>
           </div>
         </section>
       </div>
