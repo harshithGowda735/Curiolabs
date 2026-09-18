@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!firebaseIsConfigured) {
+    if (!firebaseIsConfigured || !auth) {
       setLoading(false)
       return
     }
@@ -62,12 +62,15 @@ export function AuthProvider({ children }) {
         }
 
         try {
-          const snapshot = await getDoc(doc(db, 'users', user.uid))
-          if (snapshot.exists()) {
-            setProfile(snapshot.data())
-            localStorage.setItem('curiolabs_auth_profile', JSON.stringify(snapshot.data()))
-          } else {
-            setProfile(null)
+          if (db) {
+            const snapshot = await getDoc(doc(db, 'users', user.uid))
+            if (snapshot.exists()) {
+              const data = snapshot.data()
+              setProfile(data)
+              localStorage.setItem('curiolabs_auth_profile', JSON.stringify(data))
+            } else {
+              setProfile(null)
+            }
           }
         } catch (error) {
           console.warn('Unable to load Firestore profile:', error)
@@ -83,7 +86,7 @@ export function AuthProvider({ children }) {
 
   const createProfile = async (user, role, details = {}) => {
     if (!['student', 'faculty', 'admin'].includes(role)) {
-      throw new Error('Only Student and Faculty roles can be self-registered.')
+      throw new Error('Only Student and Faculty roles can be registered.')
     }
     const prof = {
       name: details.name || user.displayName || user.email?.split('@')[0] || 'CurioLabs User',
@@ -96,7 +99,7 @@ export function AuthProvider({ children }) {
     setProfile(prof)
     localStorage.setItem('curiolabs_auth_profile', JSON.stringify(prof))
 
-    if (firebaseIsConfigured) {
+    if (firebaseIsConfigured && db) {
       try {
         await Promise.all([
           setDoc(doc(db, 'users', user.uid), makeProfile(user, role, details), { merge: true }),
@@ -111,16 +114,8 @@ export function AuthProvider({ children }) {
   }
 
   const register = async (details) => {
-    if (!firebaseIsConfigured) {
-      const mockUser = {
-        uid: 'user-' + Date.now(),
-        email: details.email,
-        displayName: details.name
-      }
-      setCurrentUser(mockUser)
-      await createProfile(mockUser, details.role, details)
-      localStorage.setItem('curiolabs_auth_user', JSON.stringify(mockUser))
-      return { user: mockUser }
+    if (!firebaseIsConfigured || !auth) {
+      throw new Error('Firebase authentication is not configured in this environment.')
     }
 
     const credential = await createUserWithEmailAndPassword(auth, details.email, details.password)
@@ -130,44 +125,15 @@ export function AuthProvider({ children }) {
   }
 
   const signInWithGoogle = async () => {
-    if (!firebaseIsConfigured) {
-      const mockUser = {
-        uid: 'google-user-' + Date.now(),
-        email: 'scholar@curiolabs.edu',
-        displayName: 'CurioLabs Scholar',
-        photoURL: ''
-      }
-      setCurrentUser(mockUser)
-      setProfile({
-        name: mockUser.displayName,
-        email: mockUser.email,
-        role: 'student',
-        branch: 'Engineering'
-      })
-      localStorage.setItem('curiolabs_auth_user', JSON.stringify(mockUser))
-      localStorage.setItem('curiolabs_auth_profile', JSON.stringify({ role: 'student', name: mockUser.displayName }))
-      return { user: mockUser }
+    if (!firebaseIsConfigured || !auth) {
+      throw new Error('Firebase authentication is not configured in this environment.')
     }
     return signInWithPopup(auth, googleProvider)
   }
 
   const signInWithEmail = async (email, password) => {
-    if (!firebaseIsConfigured) {
-      const mockUser = {
-        uid: 'email-user-' + Date.now(),
-        email,
-        displayName: email.split('@')[0]
-      }
-      setCurrentUser(mockUser)
-      setProfile({
-        name: mockUser.displayName,
-        email,
-        role: 'student',
-        branch: 'Engineering'
-      })
-      localStorage.setItem('curiolabs_auth_user', JSON.stringify(mockUser))
-      localStorage.setItem('curiolabs_auth_profile', JSON.stringify({ role: 'student', name: mockUser.displayName }))
-      return { user: mockUser }
+    if (!firebaseIsConfigured || !auth) {
+      throw new Error('Firebase authentication is not configured in this environment.')
     }
     return signInWithEmailAndPassword(auth, email, password)
   }
@@ -177,31 +143,13 @@ export function AuthProvider({ children }) {
     setProfile(null)
     localStorage.removeItem('curiolabs_auth_user')
     localStorage.removeItem('curiolabs_auth_profile')
-    if (firebaseIsConfigured) {
+    if (firebaseIsConfigured && auth) {
       try {
         await firebaseSignOut(auth)
       } catch (e) {
         console.warn('Signout note:', e)
       }
     }
-  }
-
-  const demoSignIn = (role) => {
-    const normalized = role === 'teacher' ? 'faculty' : role
-    const mockUser = {
-      uid: 'demo-user',
-      displayName: normalized === 'faculty' ? 'Demo Faculty' : 'Demo Student',
-      email: 'demo@curiolabs.app'
-    }
-    setCurrentUser(mockUser)
-    setProfile({
-      role: normalized,
-      name: mockUser.displayName,
-      branch: 'Engineering'
-    })
-    localStorage.setItem('curiolabs_auth_user', JSON.stringify(mockUser))
-    localStorage.setItem('curiolabs_auth_profile', JSON.stringify({ role: normalized, name: mockUser.displayName }))
-    setLoading(false)
   }
 
   const userRole = profile?.role || 'student'
@@ -218,7 +166,6 @@ export function AuthProvider({ children }) {
     signUpWithEmail: (email, password) => register({ email, password, name: email.split('@')[0], role: 'student' }),
     signOut,
     createProfile,
-    demoSignIn,
     isAdmin: userRole === 'admin',
     isFaculty: ['faculty', 'admin', 'teacher'].includes(userRole)
   }), [currentUser, profile, userRole, loading])

@@ -4,56 +4,60 @@ import { getFirestore, initializeFirestore, persistentLocalCache, persistentMult
 import { getStorage } from 'firebase/storage'
 import { getAnalytics, isSupported } from 'firebase/analytics'
 
-// Configure these values in .env. Never commit production credentials or service accounts.
-const apiKey = import.meta.env.VITE_FIREBASE_API_KEY
-const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID
-
-const configured = Boolean(
-  apiKey &&
-  typeof apiKey === 'string' &&
-  apiKey.trim().length > 10 &&
-  !apiKey.includes('YOUR_') &&
-  projectId &&
-  !projectId.includes('YOUR_')
-)
-
+// Read environment variables directly configured in Vercel or .env
 const firebaseConfig = {
-  apiKey: configured ? apiKey : 'AIzaSyDemoFallbackKeyForLocalCurioLabsApp123',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'curiolabs-app.firebaseapp.com',
-  projectId: configured ? projectId : 'curiolabs-local',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'curiolabs-app.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '1234567890',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:1234567890:web:abcdef123456',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
 }
 
-export const firebaseIsConfigured = configured
+export const firebaseIsConfigured = Boolean(
+  firebaseConfig.apiKey &&
+  typeof firebaseConfig.apiKey === 'string' &&
+  firebaseConfig.apiKey.trim().length > 0 &&
+  firebaseConfig.projectId
+)
 
-const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig)
-
-export const auth = getAuth(app)
-export const db = configured
-  ? initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) })
-  : getFirestore(app)
-
-export const storage = getStorage(app)
+let app = null
+let auth = null
+let db = null
+let storage = null
 export const googleProvider = new GoogleAuthProvider()
 googleProvider.setCustomParameters({ prompt: 'select_account' })
+export let analytics = null
 
-if (typeof window !== 'undefined' && configured) {
+if (firebaseIsConfigured) {
+  app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig)
+  auth = getAuth(app)
+  
   try {
-    setPersistence(auth, browserLocalPersistence).catch(() => {})
-  } catch (e) {
-    // Non-blocking in local mode
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    })
+  } catch (err) {
+    db = getFirestore(app)
+  }
+
+  storage = getStorage(app)
+
+  if (typeof window !== 'undefined') {
+    try {
+      setPersistence(auth, browserLocalPersistence).catch(() => {})
+    } catch (e) {
+      // Non-blocking in browser environment
+    }
+
+    if (firebaseConfig.measurementId) {
+      isSupported().then((supported) => {
+        if (supported) analytics = getAnalytics(app)
+      }).catch(() => {})
+    }
   }
 }
 
-// Analytics is unavailable in SSR, private browsing modes, and some test runners.
-export let analytics = null
-if (configured && typeof window !== 'undefined' && firebaseConfig.measurementId) {
-  isSupported().then((supported) => {
-    if (supported) analytics = getAnalytics(app)
-  }).catch(() => {})
-}
-
+export { app, auth, db, storage }
 export default app
