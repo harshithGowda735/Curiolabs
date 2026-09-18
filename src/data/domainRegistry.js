@@ -146,28 +146,7 @@ export const DOMAIN_REGISTRY = [
       { slug: 'numerical-aperture', title: 'Attenuation Loss & Numerical Aperture', path: '/electronics/numerical-aperture', icon: '🔦', hasAR: true, hours: '2h', blooms: 'L1, L2, L3' }
     ]
   },
-  {
-    id: 'communication',
-    slug: 'communication',
-    level: 'engineering',
-    title: 'Communication Systems',
-    titleKn: 'ಸಂವಹನ ವ್ಯವಸ್ಥೆಗಳು',
-    description: 'Analog & digital carrier transmission, PAM, optical fiber loss, and numerical aperture',
-    icon: '📶',
-    gradient: 'from-blue-600 to-cyan-600',
-    path: '/electronics',
-    hasAR: true,
-    experimentsCount: 6,
-    tags: ['RF & Optical', 'Multiplexing', 'Fiber Optics'],
-    experiments: [
-      { slug: 'tdm', title: 'TDM Multiplexing / Demultiplexing', path: '/electronics/tdm', icon: '🔀', hasAR: true },
-      { slug: 'am-detection', title: 'Standard AM Generation & Detection', path: '/electronics/am-detection', icon: '📻', hasAR: true },
-      { slug: 'pam', title: 'Pulse Amplitude Modulation', path: '/electronics/pam', icon: '📊', hasAR: true },
-      { slug: 'pre-emphasis', title: 'Pre-Emphasis & De-Emphasis', path: '/electronics/pre-emphasis', icon: '⚡', hasAR: true },
-      { slug: 'fiber-bending-loss', title: 'Optical Fiber Coupling & Bending Loss', path: '/electronics/fiber-bending-loss', icon: '💡', hasAR: true },
-      { slug: 'numerical-aperture', title: 'Attenuation Loss & Numerical Aperture', path: '/electronics/numerical-aperture', icon: '🔦', hasAR: true }
-    ]
-  },
+
   {
     id: 'cybersecurity',
     slug: 'cybersecurity',
@@ -249,24 +228,5 @@ export const DOMAIN_REGISTRY = [
       { slug: 'cpu-scheduling', title: 'Reinforcement Task Scheduler', path: '/cs/cpu-scheduling', icon: '⏱️' }
     ]
   },
-  {
-    id: 'iot',
-    slug: 'iot',
-    level: 'engineering',
-    title: 'Internet of Things (IoT)',
-    titleKn: 'ಇಂಟರ್ನೆಟ್ ಆಫ್ ಥಿಂಗ್ಸ್',
-    description: 'Sensor telemetry networks, digital logic interfaces and edge controls',
-    icon: '🌐',
-    gradient: 'from-teal-500 to-emerald-600',
-    path: '/electronics',
-    experimentsCount: 5,
-    tags: ['Embedded Sensors', 'Telemetry', 'Actuators'],
-    experiments: [
-      { slug: 'logic-gates', title: 'GPIO Hardware Logic & Decoding', path: '/electronics/logic-gates', icon: '🔌' },
-      { slug: 'rc-filter', title: 'ADC Sensor Signal Conditioning', path: '/electronics/rc-filter', icon: '📡' },
-      { slug: 'opamp', title: 'Instrumentation Signal Amplification', path: '/electronics/opamp', icon: '🔊' },
-      { slug: 'antenna', title: 'LoRa / BLE Antenna Coverage', path: '/electronics/antenna', icon: '📶' },
-      { slug: 'modulation', title: 'FSK / PSK Sensor Modulation', path: '/electronics/modulation', icon: '📻' }
-    ]
-  }
+
 ]

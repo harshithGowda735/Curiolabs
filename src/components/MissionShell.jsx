@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Printer, Download, Volume2, VolumeX, ChevronDown, ChevronUp, Lightbulb, Sparkles } from 'lucide-react'
 import { useTTS } from '../hooks/useTTS'
 import { useLanguage } from '../contexts/LanguageContext'
-import Breadcrumbs from './Breadcrumbs'
+
 import AIEvaluationModal from './AIEvaluationModal'
 
 /**
@@ -63,11 +63,6 @@ export default function MissionShell({
     if (onExport) onExport()
   }
 
-  const breadcrumbItems = [
-    { label: 'Catalog', path: '/level-select' },
-    { label: subject, path: '/catalog' },
-    { label: title }
-  ]
 
   return (
     <div className="min-h-[100dvh] bg-gray-50 flex flex-col">
@@ -126,20 +121,9 @@ export default function MissionShell({
           </div>
         </div>
       </header>
-      <Breadcrumbs items={breadcrumbItems} />
 
-      {/* Student Info Bar */}
-      <div className="bg-white border-b border-gray-100 px-4 py-2">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-sm text-gray-600">
-            <span className="font-semibold text-gray-800">{t('Student', 'ವಿದ್ಯಾರ್ಥಿ')}:</span> {studentInfo.name} 
-            <span className="mx-2">|</span>
-            <span className="font-semibold text-gray-800">{t('Class', 'ತರಗತಿ')}:</span> {studentInfo.class}
-            <span className="mx-2">|</span>
-            <span className="font-semibold text-gray-800">{t('School', 'ಶಾಲೆ')}:</span> {studentInfo.school}
-          </p>
-        </div>
-      </div>
+
+
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-4 md:py-6">
