@@ -394,28 +394,56 @@ export default function TDMVirtualLab3D({
     bbGroup.add(make3DFilter(6.6))
     bbGroup.add(make3DFilter(7.6))
 
-    // 3D Curved Jumper Wires
-    const makeWireMesh = (p1, p2, color) => {
+    // 3D Curved Jumper Wires with Gold Terminal Pins
+    const pinTermGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.35, 12)
+    const pinTermMat = new THREE.MeshStandardMaterial({ color: '#facc15', metalness: 0.85, roughness: 0.2 })
+
+    const makeWireMesh = (p1, p2, color, arc = 0.45) => {
+      const g = new THREE.Group()
+
+      // Terminal Pins
+      const t1 = new THREE.Mesh(pinTermGeo, pinTermMat)
+      t1.position.copy(p1)
+      t1.position.y += 0.1
+      g.add(t1)
+
+      const t2 = new THREE.Mesh(pinTermGeo, pinTermMat)
+      t2.position.copy(p2)
+      t2.position.y += 0.1
+      g.add(t2)
+
       const midX = (p1.x + p2.x) / 2
-      const midY = Math.max(p1.y, p2.y) + Math.hypot(p2.x - p1.x, p2.z - p1.z) * 0.32 + 0.35
+      const midY = Math.max(p1.y, p2.y) + Math.hypot(p2.x - p1.x, p2.z - p1.z) * 0.35 + arc
       const midZ = (p1.z + p2.z) / 2
       const curve = new THREE.CatmullRomCurve3([p1, new THREE.Vector3(midX, midY, midZ), p2])
-      return new THREE.Mesh(
-        new THREE.TubeGeometry(curve, 20, 0.07, 8, false),
-        new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.1 })
+      const tube = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 24, 0.14, 10, false),
+        new THREE.MeshStandardMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: 0.35,
+          roughness: 0.3,
+          metalness: 0.15
+        })
       )
+      g.add(tube)
+      return g
     }
 
-    // Power, Ground, Signal, Clock, and TDM Bus 3D jumper wires
-    bbGroup.add(makeWireMesh(new THREE.Vector3(-5.2, 0.45, -3.8), new THREE.Vector3(-5.2, 0.45, 0.8), '#ef4444')) // +5V Mux
-    bbGroup.add(makeWireMesh(new THREE.Vector3(2.4, 0.45, -3.8), new THREE.Vector3(2.4, 0.45, 0.8), '#ef4444'))  // +5V Demux
-    bbGroup.add(makeWireMesh(new THREE.Vector3(-2.2, 0.45, -3.5), new THREE.Vector3(-2.2, 0.45, -0.8), '#1e293b'))// GND Mux
-    bbGroup.add(makeWireMesh(new THREE.Vector3(5.4, 0.45, -3.5), new THREE.Vector3(5.4, 0.45, -0.8), '#1e293b')) // GND Demux
+    // Power, Ground, Signal, Clock, and TDM Bus 3D jumper wires (High-Contrast Laboratory Palette)
+    bbGroup.add(makeWireMesh(new THREE.Vector3(-5.2, 0.45, -3.8), new THREE.Vector3(-5.2, 0.45, 0.8), '#ff2d55', 0.5)) // +5V Mux (Red)
+    bbGroup.add(makeWireMesh(new THREE.Vector3(2.4, 0.45, -3.8), new THREE.Vector3(2.4, 0.45, 0.8), '#ff2d55', 0.5))  // +5V Demux (Red)
+    bbGroup.add(makeWireMesh(new THREE.Vector3(-2.2, 0.45, -3.5), new THREE.Vector3(-2.2, 0.45, -0.8), '#00e5ff', 0.6))// GND Mux (Neon Cyan)
+    bbGroup.add(makeWireMesh(new THREE.Vector3(5.4, 0.45, -3.5), new THREE.Vector3(5.4, 0.45, -0.8), '#00e5ff', 0.6)) // GND Demux (Neon Cyan)
 
-    // TDM Bus Wire (IC1 Pin 3 to IC2 Pin 3)
-    bbGroup.add(makeWireMesh(new THREE.Vector3(-4.4, 0.45, -0.8), new THREE.Vector3(3.2, 0.45, -0.8), '#9333ea'))
-    // Clock Sync Wire (IC1 Pin 11 to IC2 Pin 11)
-    bbGroup.add(makeWireMesh(new THREE.Vector3(-3.2, 0.45, 0.8), new THREE.Vector3(4.4, 0.45, 0.8), '#2563eb'))
+    // TDM Bus Wire (IC1 Pin 3 to IC2 Pin 3) - Hot Neon Magenta
+    bbGroup.add(makeWireMesh(new THREE.Vector3(-4.4, 0.45, -0.8), new THREE.Vector3(3.2, 0.45, -0.8), '#d946ef', 0.9))
+    // Clock Sync Wire (IC1 Pin 11 to IC2 Pin 11) - Electric Royal Blue
+    bbGroup.add(makeWireMesh(new THREE.Vector3(-3.2, 0.45, 0.8), new THREE.Vector3(4.4, 0.45, 0.8), '#3b82f6', 0.9))
+
+    // Function Generator Signal Inputs to Breadboard Pins
+    bbGroup.add(makeWireMesh(new THREE.Vector3(-6.2, 0.45, 2.5), new THREE.Vector3(-4.4, 0.45, 0.8), '#38bdf8', 0.7)) // CH0 Sine to Pin 13
+    bbGroup.add(makeWireMesh(new THREE.Vector3(-6.2, 0.45, -2.5), new THREE.Vector3(-3.2, 0.45, -0.8), '#10b981', 0.7)) // CH1 Triangle to Pin 14
 
     scene.add(bbGroup)
 

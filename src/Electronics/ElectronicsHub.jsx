@@ -14,9 +14,6 @@ import {
   Cpu, 
   Volume2, 
   Wifi, 
-  Clock, 
-  Target, 
-  Smartphone,
   ArrowRight
 } from 'lucide-react'
 
@@ -104,51 +101,8 @@ export default function ElectronicsHub() {
     <div className="min-h-[100dvh] bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
       <Navbar />
 
-      {/* Hero Section - Clean Light Apple Style (Zero Emojis) */}
-      <div className="relative overflow-hidden bg-white border-b border-slate-200/80 px-4 py-12 lg:py-16 shadow-xs">
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/40 via-white to-white pointer-events-none" />
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-100/50 rounded-full blur-3xl pointer-events-none -z-0" />
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-4 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Engineering Laboratory</span>
-            <span>•</span>
-            <span>Hardware & WebAR Enabled</span>
-          </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 mb-4 leading-tight">
-            {t('Electronics & Communication Engineering Lab', 'ಎಲೆಕ್ಟ್ರಾನಿಕ್ಸ್ ಮತ್ತು ಸಂವಹನ ಎಂಜಿನಿಯರಿಂಗ್ ಲ್ಯಾಬ್')}
-          </h1>
 
-          <p className="text-base sm:text-lg text-slate-600 max-w-3xl leading-relaxed mb-8">
-            {t(
-              'Hands-on university syllabus laboratory experiments featuring discrete hardware kits, IC pinout references, interactive oscilloscopes, and WebAR 3D circuit board inspection.',
-              'ವಿಶ್ವವಿದ್ಯಾಲಯ ಪಠ್ಯಕ್ರಮದ ಹಾರ್ಡ್‌ವೇರ್ ಲ್ಯಾಬ್ ಪ್ರಯೋಗಗಳು, IC ಪಿನ್‌ಔಟ್, ಆಸಿಲ್ಲೋಸ್ಕೋಪ್ ಮತ್ತು WebAR 3D ಸರ್ಕ್ಯೂಟ್ ಮಾದರಿಗಳು.'
-            )}
-          </p>
-
-          {/* Quick Metrics Bar - Clean Light Pills with Professional Icons */}
-          <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm">
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-slate-700">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="font-semibold text-slate-900">Part – A:</span> 6 Discrete Experiments
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-slate-700">
-              <Clock size={14} className="text-emerald-600" />
-              <span className="font-semibold text-slate-900">Duration:</span> 2 Hours / Lab
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-slate-700">
-              <Target size={14} className="text-teal-600" />
-              <span className="font-semibold text-slate-900">Bloom's:</span> L1, L2, L3
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-slate-700">
-              <Smartphone size={14} className="text-indigo-600" />
-              <span className="font-semibold text-slate-900">WebAR 3D:</span> Circuit Wiring
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 py-8 lg:py-10 flex-1 w-full">
