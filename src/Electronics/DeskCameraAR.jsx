@@ -17,6 +17,7 @@ import {
   HelpCircle,
   Compass
 } from 'lucide-react'
+import { createRealisticBreadboardMesh } from '../components/Hardware/createRealisticBreadboardMesh'
 
 export default function DeskCameraAR({ onClose, clkFreq = 2.0, isCircuitPowered = true }) {
   const videoRef = useRef(null)
@@ -222,137 +223,15 @@ export default function DeskCameraAR({ onClose, clkFreq = 2.0, isCircuitPowered 
       scene.add(shadowPlane)
     }
 
-    // ── 3D Dual-IC Breadboard Circuit Assembly ──
-    const bbGroup = new THREE.Group()
+    // ── Ultra-Realistic 3D Dual-IC Breadboard Circuit Assembly (Identical to Main Page) ──
+    const bbGroup = createRealisticBreadboardMesh({
+      isCircuitPowered,
+      clkFreq
+    })
+    // Base scale to fit mobile camera and desk viewport comfortably
+    const baseScale = 0.58
+    bbGroup.scale.set(baseScale, baseScale, baseScale)
     breadboardGroupRef.current = bbGroup
-
-    // Breadboard body
-    const bodyGeo = new THREE.BoxGeometry(6.8, 0.38, 3.4)
-    const bodyMat = new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.6 })
-    const body = new THREE.Mesh(bodyGeo, bodyMat)
-    body.castShadow = true
-    body.receiveShadow = true
-    bbGroup.add(body)
-
-    // Divider groove
-    const groove = new THREE.Mesh(
-      new THREE.BoxGeometry(6.4, 0.12, 0.28),
-      new THREE.MeshStandardMaterial({ color: '#cbd5e1', roughness: 0.8 })
-    )
-    groove.position.set(0, 0.14, 0)
-    bbGroup.add(groove)
-
-    // Power Rails (Red & Blue lines)
-    const rTopRed = new THREE.Mesh(new THREE.BoxGeometry(6.3, 0.02, 0.08), new THREE.MeshBasicMaterial({ color: '#ef4444' }))
-    rTopRed.position.set(0, 0.2, -1.4); bbGroup.add(rTopRed)
-    const rTopBlue = new THREE.Mesh(new THREE.BoxGeometry(6.3, 0.02, 0.08), new THREE.MeshBasicMaterial({ color: '#3b82f6' }))
-    rTopBlue.position.set(0, 0.2, -1.25); bbGroup.add(rTopBlue)
-    const rBotRed = new THREE.Mesh(new THREE.BoxGeometry(6.3, 0.02, 0.08), new THREE.MeshBasicMaterial({ color: '#ef4444' }))
-    rBotRed.position.set(0, 0.2, 1.25); bbGroup.add(rBotRed)
-    const rBotBlue = new THREE.Mesh(new THREE.BoxGeometry(6.3, 0.02, 0.08), new THREE.MeshBasicMaterial({ color: '#3b82f6' }))
-    rBotBlue.position.set(0, 0.2, 1.4); bbGroup.add(rBotBlue)
-
-    // Dual IC 4051 chips
-    const makeIC = (xPos, label) => {
-      const ic = new THREE.Group()
-      ic.position.set(xPos, 0.32, 0)
-
-      const icBody = new THREE.Mesh(
-        new THREE.BoxGeometry(1.6, 0.24, 0.58),
-        new THREE.MeshStandardMaterial({ color: '#18181b', roughness: 0.3, metalness: 0.2 })
-      )
-      icBody.castShadow = true
-      ic.add(icBody)
-
-      // Silver lead pins
-      const pinGeo = new THREE.BoxGeometry(0.06, 0.18, 0.07)
-      const pinMat = new THREE.MeshStandardMaterial({ color: '#e2e8f0', metalness: 0.9, roughness: 0.2 })
-      for (let i = 0; i < 8; i++) {
-        const px = -0.65 + i * 0.18
-        const p1 = new THREE.Mesh(pinGeo, pinMat); p1.position.set(px, -0.09, -0.31); ic.add(p1)
-        const p2 = new THREE.Mesh(pinGeo, pinMat); p2.position.set(px, -0.09, 0.31); ic.add(p2)
-      }
-
-      // Notch
-      const notch = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.04, 12), new THREE.MeshStandardMaterial({ color: '#27272a' }))
-      notch.position.set(-0.75, 0.12, 0)
-      ic.add(notch)
-
-      return ic
-    }
-
-    const icMux = makeIC(-1.5, 'CD4051 MUX')
-    const icDemux = makeIC(1.5, 'CD4051 DEMUX')
-    bbGroup.add(icMux)
-    bbGroup.add(icDemux)
-
-    // RC low-pass filter components
-    const res = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.42, 12), new THREE.MeshStandardMaterial({ color: '#d6c7a1' }))
-    res.rotation.z = Math.PI / 2
-    res.position.set(2.5, 0.28, 0.75)
-    bbGroup.add(res)
-
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.06, 16), new THREE.MeshStandardMaterial({ color: '#f59e0b' }))
-    cap.rotation.x = Math.PI / 2
-    cap.position.set(2.8, 0.28, 1.05)
-    bbGroup.add(cap)
-
-    // ── High-Visibility 3D Jumper Wires with Gold Terminal Pins ──
-    const pinGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.2, 12)
-    const pinMat = new THREE.MeshStandardMaterial({ color: '#facc15', metalness: 0.85, roughness: 0.2 })
-
-    const makeWire = (p1, p2, color, arc = 0.55) => {
-      const wireGroup = new THREE.Group()
-
-      // Metallic insertion pins at both breadboard tie points
-      const t1 = new THREE.Mesh(pinGeo, pinMat)
-      t1.position.copy(p1)
-      t1.position.y += 0.05
-      wireGroup.add(t1)
-
-      const t2 = new THREE.Mesh(pinGeo, pinMat)
-      t2.position.copy(p2)
-      t2.position.y += 0.05
-      wireGroup.add(t2)
-
-      // Thickened bold wire tube with vibrant emissive glow (tripled radius: 0.09)
-      const mid = new THREE.Vector3((p1.x + p2.x) / 2, Math.max(p1.y, p2.y) + arc + Math.hypot(p2.x - p1.x, p2.z - p1.z) * 0.12, (p1.z + p2.z) / 2)
-      const curve = new THREE.CatmullRomCurve3([p1, mid, p2])
-      const tube = new THREE.Mesh(
-        new THREE.TubeGeometry(curve, 22, 0.09, 10, false),
-        new THREE.MeshStandardMaterial({
-          color,
-          emissive: color,
-          emissiveIntensity: 0.35,
-          roughness: 0.25,
-          metalness: 0.15
-        })
-      )
-      wireGroup.add(tube)
-      return wireGroup
-    }
-
-    // High-Contrast Laboratory Jumper Wiring:
-    // +5V Rail to CD4051 VDD (Pin 16) - Radiant Red
-    bbGroup.add(makeWire(new THREE.Vector3(-2.1, 0.2, -1.4), new THREE.Vector3(-2.1, 0.2, 0.3), '#ff2d55', 0.5))
-    bbGroup.add(makeWire(new THREE.Vector3(0.9, 0.2, -1.4), new THREE.Vector3(0.9, 0.2, 0.3), '#ff2d55', 0.5))
-
-    // GND Rail to CD4051 VEE/VSS/INH (Pin 8) - Neon Cyan (Highly visible on desks!)
-    bbGroup.add(makeWire(new THREE.Vector3(-0.9, 0.2, -1.25), new THREE.Vector3(-0.9, 0.2, -0.3), '#00e5ff', 0.55))
-    bbGroup.add(makeWire(new THREE.Vector3(2.1, 0.2, -1.25), new THREE.Vector3(2.1, 0.2, -0.3), '#00e5ff', 0.55))
-
-    // TDM Bus Wire (MUX Pin 3 to DEMUX Pin 3) - Hot Neon Magenta
-    bbGroup.add(makeWire(new THREE.Vector3(-1.7, 0.2, -0.3), new THREE.Vector3(1.3, 0.2, -0.3), '#d946ef', 0.8))
-
-    // Clock Sync Wire (MUX Pin 11 to DEMUX Pin 11) - Electric Royal Blue
-    bbGroup.add(makeWire(new THREE.Vector3(-1.3, 0.2, 0.3), new THREE.Vector3(1.7, 0.2, 0.3), '#3b82f6', 0.8))
-
-    // Signal Input CH0 (Sine) to Pin 13 - Bright Sky Cyan
-    bbGroup.add(makeWire(new THREE.Vector3(-2.7, 0.2, 1.2), new THREE.Vector3(-1.9, 0.2, 0.3), '#38bdf8', 0.6))
-
-    // Signal Input CH1 (Triangle) to Pin 14 - Vivid Emerald
-    bbGroup.add(makeWire(new THREE.Vector3(-2.7, 0.2, -1.2), new THREE.Vector3(-1.5, 0.2, -0.3), '#10b981', 0.6))
-
     scene.add(bbGroup)
 
     // ── 60 FPS Animation Loop (Reads from transformRef smoothly) ──
@@ -361,7 +240,8 @@ export default function DeskCameraAR({ onClose, clkFreq = 2.0, isCircuitPowered 
       animId = requestAnimationFrame(animate)
       if (breadboardGroupRef.current) {
         const { scale: s, rotation: r, position: pos } = transformRef.current
-        breadboardGroupRef.current.scale.set(s, s, s)
+        const effectiveScale = baseScale * s
+        breadboardGroupRef.current.scale.set(effectiveScale, effectiveScale, effectiveScale)
         breadboardGroupRef.current.rotation.y = r
         breadboardGroupRef.current.position.set(pos.x, pos.y, pos.z)
       }

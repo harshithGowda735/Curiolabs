@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
 import { Maximize2, RotateCcw, Eye, Zap, Sparkles, Smartphone, Volume2, Power, Camera } from 'lucide-react'
 import DeskCameraAR from './DeskCameraAR'
+import { createRealisticBreadboardMesh } from '../components/Hardware/createRealisticBreadboardMesh'
 
 export default function TDMVirtualLab3D({
   f1 = 100,
@@ -296,170 +296,15 @@ export default function TDMVirtualLab3D({
     scene.add(fg2)
 
     // ════════════════════════════════════════════════════════
-    // 8. 3D DUAL-IC SOLDERLESS BREADBOARD
+    // 8. 3D DUAL-IC SOLDERLESS BREADBOARD (Identical to Main Page)
     // ════════════════════════════════════════════════════════
-    const bbGroup = new THREE.Group()
+    const bbGroup = createRealisticBreadboardMesh({
+      isCircuitPowered: isPowered,
+      clkFreq
+    })
     bbGroup.position.set(0, 0.45, 3.8)
-
-    // Breadboard cream body
-    const bbBody = new THREE.Mesh(
-      new THREE.BoxGeometry(18, 0.85, 9),
-      new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.65, metalness: 0.05 })
-    )
-    bbBody.castShadow = true
-    bbBody.receiveShadow = true
-    bbGroup.add(bbBody)
-
-    // Center divider groove
-    const groove = new THREE.Mesh(
-      new THREE.BoxGeometry(17, 0.25, 0.7),
-      new THREE.MeshStandardMaterial({ color: '#cbd5e1', roughness: 0.9 })
-    )
-    groove.position.set(0, 0.36, 0)
-    bbGroup.add(groove)
-
-    // Power Rails (Red & Blue lines)
-    const railMatRed = new THREE.MeshBasicMaterial({ color: '#ef4444' })
-    const railMatBlue = new THREE.MeshBasicMaterial({ color: '#3b82f6' })
-    const stripGeo = new THREE.BoxGeometry(16.5, 0.04, 0.16)
-
-    const rTopRed = new THREE.Mesh(stripGeo, railMatRed); rTopRed.position.set(0, 0.44, -3.8); bbGroup.add(rTopRed)
-    const rTopBlue = new THREE.Mesh(stripGeo, railMatBlue); rTopBlue.position.set(0, 0.44, -3.5); bbGroup.add(rTopBlue)
-    const rBotRed = new THREE.Mesh(stripGeo, railMatRed); rBotRed.position.set(0, 0.44, 3.5); bbGroup.add(rBotRed)
-    const rBotBlue = new THREE.Mesh(stripGeo, railMatBlue); rBotBlue.position.set(0, 0.44, 3.8); bbGroup.add(rBotBlue)
-
-    // Dual IC 4051 DIP-16 Chips in 3D
-    const make3DIC = (xPos, chipLabel) => {
-      const ic = new THREE.Group()
-      ic.position.set(xPos, 0.65, 0)
-
-      // Epoxy body
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(4.0, 0.6, 1.5),
-        new THREE.MeshStandardMaterial({ color: '#18181b', roughness: 0.3, metalness: 0.2 })
-      )
-      body.castShadow = true
-      ic.add(body)
-
-      // Silver lead pins
-      const pinGeo = new THREE.BoxGeometry(0.14, 0.42, 0.16)
-      const pinMat = new THREE.MeshStandardMaterial({ color: '#e2e8f0', metalness: 0.9, roughness: 0.2 })
-      for (let i = 0; i < 8; i++) {
-        const px = -1.6 + i * 0.45
-        const pTop = new THREE.Mesh(pinGeo, pinMat); pTop.position.set(px, -0.22, -0.75); ic.add(pTop)
-        const pBot = new THREE.Mesh(pinGeo, pinMat); pBot.position.set(px, -0.22, 0.75); ic.add(pBot)
-      }
-
-      // Pin 1 Notch
-      const notch = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.2, 0.2, 0.1, 16),
-        new THREE.MeshStandardMaterial({ color: '#27272a' })
-      )
-      notch.position.set(-1.8, 0.28, 0)
-      ic.add(notch)
-
-      return ic
-    }
-
-    const ic1Mesh = make3DIC(-3.8, 'CD4051 MUX')
-    const ic2Mesh = make3DIC(3.8, 'CD4051 DEMUX')
-    bbGroup.add(ic1Mesh)
-    bbGroup.add(ic2Mesh)
-
-    // Passive RC Filters (5.6k Resistors + 0.1uF Ceramic Capacitors)
-    const make3DFilter = (xPos) => {
-      const fGroup = new THREE.Group()
-      fGroup.position.set(xPos, 0.65, 2.0)
-
-      // Resistor with color bands (Green, Blue, Red, Gold)
-      const res = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.18, 0.18, 1.0, 12),
-        new THREE.MeshStandardMaterial({ color: '#d6c7a1', roughness: 0.6 })
-      )
-      res.rotateZ(Math.PI / 2)
-      fGroup.add(res)
-
-      // Ceramic disc capacitor
-      const cap = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.32, 0.32, 0.14, 16),
-        new THREE.MeshStandardMaterial({ color: '#f59e0b', roughness: 0.5 })
-      )
-      cap.rotateX(Math.PI / 2)
-      cap.position.set(0.65, 0, 0.6)
-      fGroup.add(cap)
-
-      return fGroup
-    }
-
-    bbGroup.add(make3DFilter(6.6))
-    bbGroup.add(make3DFilter(7.6))
-
-    // 3D Curved Jumper Wires with Gold Terminal Pins
-    const pinTermGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.35, 12)
-    const pinTermMat = new THREE.MeshStandardMaterial({ color: '#facc15', metalness: 0.85, roughness: 0.2 })
-
-    const makeWireMesh = (p1, p2, color, arc = 0.45) => {
-      const g = new THREE.Group()
-
-      // Terminal Pins
-      const t1 = new THREE.Mesh(pinTermGeo, pinTermMat)
-      t1.position.copy(p1)
-      t1.position.y += 0.1
-      g.add(t1)
-
-      const t2 = new THREE.Mesh(pinTermGeo, pinTermMat)
-      t2.position.copy(p2)
-      t2.position.y += 0.1
-      g.add(t2)
-
-      const midX = (p1.x + p2.x) / 2
-      const midY = Math.max(p1.y, p2.y) + Math.hypot(p2.x - p1.x, p2.z - p1.z) * 0.35 + arc
-      const midZ = (p1.z + p2.z) / 2
-      const curve = new THREE.CatmullRomCurve3([p1, new THREE.Vector3(midX, midY, midZ), p2])
-      const tube = new THREE.Mesh(
-        new THREE.TubeGeometry(curve, 24, 0.14, 10, false),
-        new THREE.MeshStandardMaterial({
-          color,
-          emissive: color,
-          emissiveIntensity: 0.35,
-          roughness: 0.3,
-          metalness: 0.15
-        })
-      )
-      g.add(tube)
-      return g
-    }
-
-    // Power, Ground, Signal, Clock, and TDM Bus 3D jumper wires (High-Contrast Laboratory Palette)
-    bbGroup.add(makeWireMesh(new THREE.Vector3(-5.2, 0.45, -3.8), new THREE.Vector3(-5.2, 0.45, 0.8), '#ff2d55', 0.5)) // +5V Mux (Red)
-    bbGroup.add(makeWireMesh(new THREE.Vector3(2.4, 0.45, -3.8), new THREE.Vector3(2.4, 0.45, 0.8), '#ff2d55', 0.5))  // +5V Demux (Red)
-    bbGroup.add(makeWireMesh(new THREE.Vector3(-2.2, 0.45, -3.5), new THREE.Vector3(-2.2, 0.45, -0.8), '#00e5ff', 0.6))// GND Mux (Neon Cyan)
-    bbGroup.add(makeWireMesh(new THREE.Vector3(5.4, 0.45, -3.5), new THREE.Vector3(5.4, 0.45, -0.8), '#00e5ff', 0.6)) // GND Demux (Neon Cyan)
-
-    // TDM Bus Wire (IC1 Pin 3 to IC2 Pin 3) - Hot Neon Magenta
-    bbGroup.add(makeWireMesh(new THREE.Vector3(-4.4, 0.45, -0.8), new THREE.Vector3(3.2, 0.45, -0.8), '#d946ef', 0.9))
-    // Clock Sync Wire (IC1 Pin 11 to IC2 Pin 11) - Electric Royal Blue
-    bbGroup.add(makeWireMesh(new THREE.Vector3(-3.2, 0.45, 0.8), new THREE.Vector3(4.4, 0.45, 0.8), '#3b82f6', 0.9))
-
-    // Function Generator Signal Inputs to Breadboard Pins
-    bbGroup.add(makeWireMesh(new THREE.Vector3(-6.2, 0.45, 2.5), new THREE.Vector3(-4.4, 0.45, 0.8), '#38bdf8', 0.7)) // CH0 Sine to Pin 13
-    bbGroup.add(makeWireMesh(new THREE.Vector3(-6.2, 0.45, -2.5), new THREE.Vector3(-3.2, 0.45, -0.8), '#10b981', 0.7)) // CH1 Triangle to Pin 14
-
+    bbGroup.scale.set(1.7, 1.7, 1.7)
     scene.add(bbGroup)
-
-    // ── Generate Procedural AR GLB for Mobile QuickLook ──
-    const arScene = new THREE.Scene()
-    arScene.add(bbGroup.clone())
-    const exporter = new GLTFExporter()
-    try {
-      exporter.parse(arScene, (gltf) => {
-        const blob = new Blob([gltf], { type: 'model/gltf-binary' })
-        const url = URL.createObjectURL(blob)
-        setArModelUrl(url)
-      }, { binary: true })
-    } catch (e) {
-      console.warn('AR GLTF export note:', e)
-    }
 
     // ════════════════════════════════════════════════════════
     // 9. ANIMATION & LIVE REAL-TIME OSCILLOSCOPE DRAWING

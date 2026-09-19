@@ -13,11 +13,11 @@ export default defineConfig({
     tailwindcss(),
   ],
   resolve: {
-    alias: {
-      react: path.resolve(__dirname, 'node_modules/react'),
-      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
-      three: path.resolve(__dirname, 'node_modules/three'),
-    },
+    alias: [
+      { find: /^three$/, replacement: path.resolve(__dirname, 'node_modules/three/build/three.module.js') },
+      { find: 'react', replacement: path.resolve(__dirname, 'node_modules/react') },
+      { find: 'react-dom', replacement: path.resolve(__dirname, 'node_modules/react-dom') },
+    ],
     dedupe: ['react', 'react-dom', 'react-router-dom', 'three'],
   },
   optimizeDeps: {
@@ -28,6 +28,7 @@ export default defineConfig({
       'react-router-dom',
       'lucide-react',
       'three',
+      'three/examples/jsm/controls/OrbitControls.js',
       'firebase/app',
       'firebase/auth',
       'firebase/firestore',
