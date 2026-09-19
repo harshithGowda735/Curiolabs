@@ -1,4 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
+import { AlertTriangle, Sparkles, X, Undo2, HelpCircle, Check, Info } from 'lucide-react'
+import { validateTdmConnection, getNextPendingStepConnection } from '../../utils/tdmWireValidator'
 
 /* ════════════════════════════════════════════════════════════
    LAYOUT CONSTANTS & GRID
@@ -148,6 +150,30 @@ export default function InteractiveBreadboard({
   const [cursorPos, setCursorPos] = useState(null)
   const [snappedTarget, setSnappedTarget] = useState(null)
   const [justConnected, setJustConnected] = useState(null)
+  const [wiringError, setWiringError] = useState(null)
+  const [guidedHoleId, setGuidedHoleId] = useState(null)
+
+  const getGuidedHoleCoords = useCallback((hId) => {
+    if (!hId) return null
+    if (hId.startsWith('hole-')) {
+      const parts = hId.replace('hole-', '').split('-')
+      if (parts.length >= 2) {
+        const row = parts[0]
+        const col = parseInt(parts[1], 10)
+        const gx = colX(col)
+        let gy = rowY(row)
+        if (!gy) {
+          if (row === 'R_TP' || row === 'tp') gy = RAIL.tp
+          else if (row === 'R_TM' || row === 'tm') gy = RAIL.tm
+          else if (row === 'R_BP' || row === 'bp') gy = RAIL.bp
+          else if (row === 'R_BM' || row === 'bm') gy = RAIL.bm
+          else gy = 'ABCDE'.includes(row) ? rowY('D') : rowY('G')
+        }
+        return { x: gx, y: gy }
+      }
+    }
+    return null
+  }, [])
 
   const getSVGPoint = useCallback((e) => {
     const svg = svgRef.current
@@ -238,15 +264,32 @@ export default function InteractiveBreadboard({
       return
     }
 
+    // ── Check intelligent validation for correct wiring ──
+    const validation = validateTdmConnection(from, to, wires)
+    if (!validation.isValid) {
+      if (validation.error) {
+        setWiringError(validation.error)
+      }
+      setActiveWire(null)
+      setSnappedTarget(null)
+      return
+    }
+
+    // Valid wire: clear errors & guide beacons
+    setWiringError(null)
+    if (guidedHoleId && (guidedHoleId === to.id || guidedHoleId === from.id)) {
+      setGuidedHoleId(null)
+    }
+
     const exists = wires.some(w =>
       (w.fromId === from.id && w.toId === to.id) ||
       (w.fromId === to.id && w.toId === from.id)
     )
 
     if (!exists) {
-      let color = '#3b82f6'
+      let color = validation.connection?.wireColor || '#3b82f6'
       const termId = from.id.startsWith('term-') ? from.id : to.id.startsWith('term-') ? to.id : null
-      if (termId) {
+      if (termId && !validation.connection?.wireColor) {
         const raw = termId.replace('term-', '')
         const term = TERMINALS.find(t => t.id === raw)
         if (term) color = term.color
@@ -266,13 +309,13 @@ export default function InteractiveBreadboard({
       const nextWires = [...wires, newWire]
       setWires(nextWires)
       if (onConnectionsChange) onConnectionsChange(nextWires)
-      setJustConnected(to.label || from.label)
-      setTimeout(() => setJustConnected(null), 2500)
+      setJustConnected(validation.connection?.label || to.label || from.label)
+      setTimeout(() => setJustConnected(null), 3000)
     }
 
     setActiveWire(null)
     setSnappedTarget(null)
-  }, [wires, onConnectionsChange])
+  }, [wires, guidedHoleId, onConnectionsChange])
 
   const handleStartWire = useCallback((startObj) => {
     if (activeWire) {
@@ -392,10 +435,35 @@ export default function InteractiveBreadboard({
     if (onConnectionsChange) onConnectionsChange(filtered)
   }, [wires, onConnectionsChange])
 
+  const undoLastWire = useCallback(() => {
+    if (wires.length === 0) return
+    const updated = wires.slice(0, -1)
+    setWires(updated)
+    if (onConnectionsChange) onConnectionsChange(updated)
+    setWiringError(null)
+    setJustConnected('Undid last wire')
+    setTimeout(() => setJustConnected(null), 2000)
+  }, [wires, onConnectionsChange])
+
+  const guideNextPending = useCallback(() => {
+    const nextPending = getNextPendingStepConnection(connectionStatus)
+    if (!nextPending) {
+      setJustConnected('All circuit wires are already connected!')
+      setTimeout(() => setJustConnected(null), 2500)
+      return
+    }
+    const targetHole = `hole-${nextPending.toSec === 'top' ? 'D' : 'G'}-${nextPending.toCol}`
+    setGuidedHoleId(targetHole)
+    setJustConnected(`Target Pin Highlighted: ${nextPending.label}`)
+    setTimeout(() => setJustConnected(null), 3500)
+  }, [connectionStatus])
+
   const resetAll = useCallback(() => {
     setWires([])
     setActiveWire(null)
     setSnappedTarget(null)
+    setWiringError(null)
+    setGuidedHoleId(null)
     if (onConnectionsChange) onConnectionsChange([])
   }, [onConnectionsChange])
 
@@ -421,7 +489,7 @@ export default function InteractiveBreadboard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {justConnected && (
             <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg font-mono font-semibold">
               ✓ {justConnected}
@@ -431,10 +499,31 @@ export default function InteractiveBreadboard({
             {connectedCount}/{LAB_CONNECTIONS.length} Wired
           </span>
           <button
-            onClick={autoWireCircuit}
-            className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded-xl shadow-xs transition-all active:scale-95"
+            onClick={guideNextPending}
+            className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold px-3 py-1.5 rounded-xl shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
+            title="Highlight the next required connection pin on the breadboard"
           >
-            Auto-Wire (All Wires)
+            <Sparkles size={12} className="text-amber-600" />
+            <span>Guide Next Wire</span>
+          </button>
+          <button
+            onClick={undoLastWire}
+            disabled={wires.length === 0}
+            className={`text-xs font-medium px-2.5 py-1.5 rounded-xl border transition-colors flex items-center gap-1 ${
+              wires.length === 0
+                ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 active:scale-95'
+            }`}
+            title="Undo last connected wire"
+          >
+            <Undo2 size={12} />
+            <span>Undo</span>
+          </button>
+          <button
+            onClick={autoWireCircuit}
+            className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs transition-all active:scale-95"
+          >
+            Auto-Wire (All)
           </button>
           <button
             onClick={resetAll}
@@ -444,6 +533,74 @@ export default function InteractiveBreadboard({
           </button>
         </div>
       </div>
+
+      {/* ── REAL-TIME CONNECTION ERROR DIAGNOSTIC CARD (Educational Feedback) ── */}
+      {wiringError && (
+        <div className="bg-gradient-to-r from-amber-50 via-rose-50/40 to-amber-50 border-2 border-rose-300 rounded-2xl p-4 shadow-md text-slate-800 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-rose-100 text-rose-700 shrink-0 mt-0.5 border border-rose-200">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="font-display font-bold text-rose-950 text-sm">
+                    {wiringError.title}
+                  </h4>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 bg-rose-100 text-rose-800 border border-rose-200 rounded-md font-semibold">
+                    Connection Error Intercepted
+                  </span>
+                </div>
+                
+                <div className="text-xs space-y-1">
+                  <div className="font-semibold text-slate-900 bg-white/70 px-2 py-1 rounded border border-rose-100">
+                    <span className="text-slate-500 font-normal">Where it got caught:</span>{' '}
+                    <span className="font-mono text-rose-700 font-bold">{wiringError.where}</span>
+                  </div>
+                  
+                  <p className="text-slate-700 leading-relaxed text-[11px] pt-1">
+                    <strong className="text-rose-950">Why this is incorrect:</strong> {wiringError.why}
+                  </p>
+                  
+                  <div className="text-emerald-900 font-medium bg-emerald-50/90 p-2.5 rounded-xl border border-emerald-300 text-[11px] flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-emerald-950 block">How to make it correct:</strong>
+                      <span>{wiringError.fix}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setWiringError(null)}
+              className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-white/80 transition-colors shrink-0"
+              title="Dismiss error message"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {wiringError.targetHoleId && (
+            <div className="mt-3 pt-2.5 border-t border-rose-200/60 flex items-center justify-between flex-wrap gap-2">
+              <span className="text-[11px] text-slate-600 font-medium">
+                Need guidance finding the exact target hole on the breadboard?
+              </span>
+              <button
+                onClick={() => {
+                  setGuidedHoleId(wiringError.targetHoleId)
+                  setWiringError(null)
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95"
+              >
+                <Sparkles size={13} />
+                <span>🎯 Highlight Target Pin ({wiringError.targetLabel || 'Target'})</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Realistic Breadboard SVG Workbench (Light Laboratory Chassis) ── */}
       <div className="relative overflow-hidden rounded-2xl border border-slate-300/80 shadow-md bg-slate-100">
@@ -850,6 +1007,31 @@ export default function InteractiveBreadboard({
               />
             </g>
           )}
+
+          {/* ════════ GUIDED TARGET BEACON ════════ */}
+          {guidedHoleId && (() => {
+            const gCoord = getGuidedHoleCoords(guidedHoleId)
+            if (!gCoord) return null
+            return (
+              <g style={{ pointerEvents: 'none' }}>
+                <circle
+                  cx={gCoord.x} cy={gCoord.y} r="20"
+                  fill="none" stroke="#f59e0b" strokeWidth="3"
+                  className="animate-ping" opacity="0.8"
+                />
+                <circle
+                  cx={gCoord.x} cy={gCoord.y} r="10"
+                  fill="#fef3c7" fillOpacity="0.6" stroke="#d97706" strokeWidth="2.5"
+                />
+                <g transform={`translate(${gCoord.x}, ${gCoord.y - 20})`}>
+                  <rect x="-44" y="-14" width="88" height="16" rx="4" fill="#d97706" />
+                  <text x="0" y="-3" textAnchor="middle" fill="#ffffff" fontSize="7.5" fontWeight="bold" fontFamily="monospace">
+                    CONNECT HERE
+                  </text>
+                </g>
+              </g>
+            )
+          })()}
         </svg>
       </div>
 

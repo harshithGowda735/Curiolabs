@@ -2,46 +2,47 @@ import { useState, useMemo } from 'react'
 import MissionShell from '../components/MissionShell'
 import LabeledSlider from '../components/LabeledSlider'
 import InteractiveBreadboard, { LAB_CONNECTIONS } from '../components/Hardware/InteractiveBreadboard'
+import TDMExpectedVsObserved from './TDMExpectedVsObserved'
 import TDMVirtualLab3D from './TDMVirtualLab3D'
 import DeskCameraAR from './DeskCameraAR'
 import { useLanguage } from '../contexts/LanguageContext'
 import { CheckCircle2, AlertTriangle, XCircle, Zap, RefreshCw, Sparkles, Box, Activity, Layers, Power, ArrowRight, Camera, Smartphone } from 'lucide-react'
 
 /* ════════════════════════════════════════════════════════════
-   EXACT 8 PROCEDURE STEPS FROM COLLEGE LAB MANUAL
+   EASILY UNDERSTANDABLE STEP-BY-STEP LAB INSTRUCTIONS
    ════════════════════════════════════════════════════════════ */
 const steps = [
   {
-    title: '1. Make connection as per circuit diagram',
-    description: 'Make connection as per the circuit diagram. Connect +5V to Pin 16 (VDD), GND to Pin 8 (VSS), Pin 6 (INH), 7 (VEE), 9 (C), 10 (B) on both ICs, and bridge TDM Bus (Pin 3).'
+    title: '1. Wire Power, Ground & TDM Bus',
+    description: 'Connect +5V (Red) to Pin 16 (VDD) on both ICs. Connect GND (Black) to Pin 8 (VSS), Pin 6 (INH), and Pin 7 (VEE). Bridge Mux Pin 3 to Demux Pin 3 with a jumper wire.'
   },
   {
-    title: '2. IC 4051 multiplexer configuration',
-    description: 'IC4051 is used for multiplexing 2 signals. Grounding address pins B and C configures the IC for 2-channel time-multiplexing.'
+    title: '2. Configure 2-Channel Mode (Ground B & C)',
+    description: 'Ground Address Pins B (Pin 10) and C (Pin 9) on both ICs. This locks the 8-channel IC 4051 to alternate strictly between Channel 0 and Channel 1.'
   },
   {
-    title: '3. Apply message inputs (Pin 14 & 13)',
-    description: 'Apply a triangular wave of 1V, 300Hz to pin no. 14 and sinusoidal wave of 1V 100Hz to pin no. 13 as input.'
+    title: '3. Connect Message Inputs (FG1 & FG2)',
+    description: 'Connect FG1 (1V, 100Hz Sine) into IC1 Pin 13 (Channel 0), and connect FG2 (1V, 300Hz Triangle) into IC1 Pin 14 (Channel 1).'
   },
   {
-    title: '4. Apply control clock signal (<10kHz)',
-    description: 'Apply a control signal square wave 5V, <10kHz to pin no. 11 (Address Select A) to drive rapid channel alternation.'
+    title: '4. Connect Control Clock (<10 kHz)',
+    description: 'Connect the 2kHz 5V Square Wave Clock to IC1 Pin 11 (Address Select A), and bridge it to IC2 Pin 11 to keep multiplexer and demultiplexer in sync.'
   },
   {
-    title: '5. Switch on the 5V power supply',
-    description: 'Switch on the power supply 5V, at pin no. 16 to energize the internal CMOS analog bilateral transmission gates.'
+    title: '5. Energize DC Power Supply (5V)',
+    description: 'Click the "5V SUPPLY ON" toggle switch in the left control panel to energize the CMOS bilateral transmission gates.'
   },
   {
-    title: '6. Observe output signal at Pin 3',
-    description: 'Observe the output signal pin no. 3 on the oscilloscope to view the time-division multiplexed (TDM) interleaved PAM pulse train.'
+    title: '6. Probe TDM Output at Pin 3 (Oscilloscope)',
+    description: 'Attach the DSO oscilloscope probe to Pin 3 to view the time-division multiplexed interleaved PAM pulse train.'
   },
   {
-    title: '7. Demultiplexer PAM outputs (Pin 14 & 13)',
-    description: 'Now, the second IC 4051 is working as a demultiplexer. Observe the demultiplexed PAM outputs at pin no. 14 and 13.'
+    title: '7. Demultiplexing Channel Routing',
+    description: 'The second IC 4051 demultiplexes the composite pulse train back into Channel 0 (Pin 13) and Channel 1 (Pin 14).'
   },
   {
-    title: '8. Observe reconstructed signals at RC junction',
-    description: 'Observe the reconstructed message signals at the junction of RC combination (5.6kΩ + 0.1μF) and compare them with the original message signals.'
+    title: '8. Observe Recovered Signals (RC Filter)',
+    description: 'Attach DSO probes to the RC filter junctions (5.6kΩ + 0.1μF) to observe the smooth reconstructed 100Hz Sine and 300Hz Triangle waveforms.'
   }
 ]
 
@@ -519,11 +520,31 @@ export default function TimeDivisionMultiplexing() {
 
       {/* ── TAB 1: INTERACTIVE BREADBOARD WIRING ── */}
       {activeTab === 'breadboard' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-          <InteractiveBreadboard
-            activeProcedureStep={activeStep + 1}
-            isPowerSwitchedOn={isPowerOn}
-            onConnectionsChange={(wires) => setPlacedWires(wires)}
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <InteractiveBreadboard
+              activeProcedureStep={activeStep + 1}
+              isPowerSwitchedOn={isPowerOn}
+              onConnectionsChange={(wires) => setPlacedWires(wires)}
+            />
+          </div>
+
+          {/* Expected vs Observed Real-Time Verification Comparison */}
+          <TDMExpectedVsObserved
+            circuitState={circuitState}
+            isPowerOn={isPowerOn}
+            f1={f1}
+            f2={f2}
+            amp1={amp1}
+            amp2={amp2}
+            clkFreq={clkFreq}
+            dutyCycle={dutyCycle}
+            ch0Pts={ch0Pts}
+            ch1Pts={ch1Pts}
+            clkPts={clkPts}
+            tdmPts={tdmPts}
+            recon0Pts={recon0Pts}
+            recon1Pts={recon1Pts}
           />
         </div>
       )}
@@ -731,6 +752,24 @@ export default function TimeDivisionMultiplexing() {
               </div>
             )}
           </div>
+
+          {/* Expected vs Observed Real-Time Verification Comparison */}
+          <TDMExpectedVsObserved
+            circuitState={circuitState}
+            isPowerOn={isPowerOn}
+            f1={f1}
+            f2={f2}
+            amp1={amp1}
+            amp2={amp2}
+            clkFreq={clkFreq}
+            dutyCycle={dutyCycle}
+            ch0Pts={ch0Pts}
+            ch1Pts={ch1Pts}
+            clkPts={clkPts}
+            tdmPts={tdmPts}
+            recon0Pts={recon0Pts}
+            recon1Pts={recon1Pts}
+          />
         </div>
       )}
 
