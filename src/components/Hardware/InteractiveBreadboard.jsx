@@ -6,10 +6,10 @@ import { validateTdmConnection, getNextPendingStepConnection } from '../../utils
    LAYOUT CONSTANTS & GRID
    ════════════════════════════════════════════════════════════ */
 const S = 22             // hole spacing (px)
-const R = 3.2            // hole radius
-const X0 = 150           // first column x offset
+const R = 3.6            // hole radius (larger & easier to click)
+const X0 = 226           // centered first column x offset
 const COLS = 30          // 30 columns (full dual-IC breadboard)
-const SVG_W = 1040
+const SVG_W = 1080
 const SVG_H = 550
 
 const colX = (c) => X0 + (c - 1) * S
@@ -80,25 +80,25 @@ const ALL_IC_PINS = [
 const IC_OCCUPIED = new Set(ALL_IC_PINS.map(p => `${p.row}-${p.col}`))
 
 /* ════════════════════════════════════════════════════════════
-   BENCH EQUIPMENT TERMINALS (Realistic Hardware Styling)
+   BENCH EQUIPMENT TERMINALS (High-Visibility Hardware Buttons)
    ════════════════════════════════════════════════════════════ */
 export const TERMINALS = [
   // Left: Power Supply & Signal Generator Terminal Panel
-  { id: 'pwr',  label: 'DC +5V Rail',          shortLabel: '+5V',   sub: 'DC 5V Supply',   x: 35, y: 70,  type: 'banana', color: '#ef4444', ring: '#fee2e2' },
-  { id: 'gnd',  label: 'Ground (0V)',          shortLabel: 'GND',   sub: 'Circuit Common',  x: 35, y: 130, type: 'banana', color: '#1e293b', ring: '#e2e8f0' },
-  { id: 'sig0', label: 'FG1 Sine (100Hz)',     shortLabel: 'CH0',   sub: '1V 100Hz Message', x: 35, y: 195, type: 'bnc',    color: '#ca8a04', ring: '#fef08a' },
-  { id: 'sig1', label: 'FG2 Triangle (300Hz)', shortLabel: 'CH1',   sub: '1V 300Hz Message', x: 35, y: 260, type: 'bnc',    color: '#16a34a', ring: '#bbf7d0' },
-  { id: 'clk',  label: 'Control Clock (2kHz)', shortLabel: 'CLK',   sub: '5V TTL Square',   x: 35, y: 325, type: 'bnc',    color: '#2563eb', ring: '#bfdbfe' },
+  { id: 'pwr',  label: 'DC +5V Rail',          shortLabel: '+5V SUPPLY',    sub: 'Pin 16 (VDD)',     x: 52, y: 88,  type: 'banana', color: '#ef4444', ring: '#fee2e2' },
+  { id: 'gnd',  label: 'Ground (0V)',          shortLabel: 'GROUND (0V)',   sub: 'Pin 8, 6, 7 (GND)',x: 52, y: 168, type: 'banana', color: '#1e293b', ring: '#e2e8f0' },
+  { id: 'sig0', label: 'FG1 Sine (100Hz)',     shortLabel: 'CH0 SINE (FG1)',sub: '1V 100Hz ➔ Pin 13',x: 52, y: 248, type: 'bnc',    color: '#ca8a04', ring: '#fef08a' },
+  { id: 'sig1', label: 'FG2 Triangle (300Hz)', shortLabel: 'CH1 TRI (FG2)', sub: '1V 300Hz ➔ Pin 14',x: 52, y: 328, type: 'bnc',    color: '#16a34a', ring: '#bbf7d0' },
+  { id: 'clk',  label: 'Control Clock (2kHz)', shortLabel: 'CLOCK (2kHz)',  sub: '5V Square ➔ Pin 11',x: 52, y: 408, type: 'bnc',    color: '#2563eb', ring: '#bfdbfe' },
 
   // Right: DSO Oscilloscope Probe Hub
-  { id: 'probe_tdm', label: 'DSO Probe: Pin 3 (TDM)',   shortLabel: 'TDM',  sub: 'Composite Bus', x: SVG_W - 80, y: 140, type: 'probe', color: '#9333ea', ring: '#f3e8ff' },
-  { id: 'probe_rc0', label: 'DSO Probe: Filtered CH0',  shortLabel: 'REC0', sub: '100Hz Sine Out', x: SVG_W - 80, y: 215, type: 'probe', color: '#0284c7', ring: '#e0f2fe' },
-  { id: 'probe_rc1', label: 'DSO Probe: Filtered CH1',  shortLabel: 'REC1', sub: '300Hz Tri Out',  x: SVG_W - 80, y: 290, type: 'probe', color: '#059669', ring: '#d1fae5' },
+  { id: 'probe_tdm', label: 'DSO Probe: Pin 3 (TDM)',   shortLabel: 'TDM BUS PROBE',  sub: 'Clip to Pin 3',    x: SVG_W - 52, y: 140, type: 'probe', color: '#9333ea', ring: '#f3e8ff' },
+  { id: 'probe_rc0', label: 'DSO Probe: Filtered CH0',  shortLabel: 'REC0 LPF PROBE', sub: '100Hz Sine Out',   x: SVG_W - 52, y: 250, type: 'probe', color: '#0284c7', ring: '#e0f2fe' },
+  { id: 'probe_rc1', label: 'DSO Probe: Filtered CH1',  shortLabel: 'REC1 LPF PROBE', sub: '300Hz Tri Out',    x: SVG_W - 52, y: 360, type: 'probe', color: '#059669', ring: '#d1fae5' },
 ]
 
 export const termPos = (t) => {
-  if (t.x < SVG_W / 2) return { x: t.x + 36, y: t.y }
-  return { x: t.x - 36, y: t.y }
+  if (t.x < SVG_W / 2) return { x: 154, y: t.y }
+  return { x: 926, y: t.y }
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -191,12 +191,16 @@ export default function InteractiveBreadboard({
     let best = null
     let minDist = snapRadius
 
-    // 1. Terminals
+    // 1. Terminals (High snap tolerance across button card)
     TERMINALS.forEach(t => {
       const p = termPos(t)
-      const d = Math.hypot(pt.x - p.x, pt.y - p.y)
-      if (d < minDist + 8) {
-        minDist = d
+      const isLeft = t.x < SVG_W / 2
+      const cardX = isLeft ? 12 : 920
+      const cardY = t.y - 35
+      const dPost = Math.hypot(pt.x - p.x, pt.y - p.y)
+      const insideCard = pt.x >= cardX && pt.x <= cardX + 144 && pt.y >= cardY && pt.y <= cardY + 70
+      if (dPost < minDist + 16 || insideCard) {
+        minDist = Math.min(minDist, dPost)
         best = { id: `term-${t.id}`, x: p.x, y: p.y, label: t.label }
       }
     })
@@ -658,52 +662,50 @@ export default function InteractiveBreadboard({
           <rect x="0" y="0" width={SVG_W} height={SVG_H} fill="url(#chassisCleanBench)" />
           <rect x="0" y="0" width={SVG_W} height={SVG_H} fill="none" stroke="#cbd5e1" strokeWidth="2" />
 
-          {/* ════════ LEFT DOCK: POWER & FUNCTION GENERATORS (Light Panel) ════════ */}
-          <rect x="15" y="25" width="95" height={SVG_H - 50} rx="12" fill="url(#dockCardGrad)" stroke="#cbd5e1" strokeWidth="1.5" filter="url(#shadowHeavy)" />
-          <text x="62" y="48" textAnchor="middle" fontSize="7.5" fill="#334155" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
+          {/* ════════ LEFT DOCK: POWER & FUNCTION GENERATORS (Tactile Panel) ════════ */}
+          <rect x="12" y="25" width="148" height={SVG_H - 50} rx="14" fill="url(#dockCardGrad)" stroke="#cbd5e1" strokeWidth="1.5" filter="url(#shadowHeavy)" />
+          <text x="86" y="48" textAnchor="middle" fontSize="9" fill="#1e293b" fontWeight="bold" fontFamily="monospace" letterSpacing="1.5">
             SOURCES DOCK
           </text>
-          <line x1="25" y1="54" x2="100" y2="54" stroke="#e2e8f0" strokeWidth="1" />
+          <line x1="22" y1="56" x2="150" y2="56" stroke="#e2e8f0" strokeWidth="1.2" />
 
-          {/* ════════ RIGHT DOCK: OSCILLOSCOPE BNC PROBE HUB (Light Panel) ════════ */}
-          <rect x={SVG_W - 110} y="25" width="95" height={SVG_H - 50} rx="12" fill="url(#dockCardGrad)" stroke="#cbd5e1" strokeWidth="1.5" filter="url(#shadowHeavy)" />
-          <text x={SVG_W - 62} y="48" textAnchor="middle" fontSize="7.5" fill="#334155" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
+          {/* ════════ RIGHT DOCK: OSCILLOSCOPE BNC PROBE HUB (Tactile Panel) ════════ */}
+          <rect x={SVG_W - 160} y="25" width="148" height={SVG_H - 50} rx="14" fill="url(#dockCardGrad)" stroke="#cbd5e1" strokeWidth="1.5" filter="url(#shadowHeavy)" />
+          <text x={SVG_W - 86} y="48" textAnchor="middle" fontSize="9" fill="#1e293b" fontWeight="bold" fontFamily="monospace" letterSpacing="1.5">
             DSO PROBE HUB
           </text>
-          <line x1={SVG_W - 100} y1="54" x2={SVG_W - 25} y2="54" stroke="#e2e8f0" strokeWidth="1" />
+          <line x1={SVG_W - 150} y1="56" x2={SVG_W - 22} y2="56" stroke="#e2e8f0" strokeWidth="1.2" />
 
           {/* ════════ SOLDERLESS BREADBOARD CHASSIS ════════ */}
-          <rect x="125" y="25" width={SVG_W - 250} height={SVG_H - 50} rx="14"
+          <rect x="170" y="25" width={740} height={SVG_H - 50} rx="14"
             fill="url(#bbWhitePlastic)" stroke="#cbd5e1" strokeWidth="2" filter="url(#shadowHeavy)" />
-
-          {/* Beveled Inset Border */}
-          <rect x="130" y="30" width={SVG_W - 260} height={SVG_H - 60} rx="10"
+          <rect x="175" y="30" width={730} height={SVG_H - 60} rx="10"
             fill="none" stroke="#d5c8b5" strokeWidth="1" />
 
           {/* ════════ TOP POWER RAILS (+ and -) ════════ */}
-          <rect x="135" y={RAIL.tp - 9} width={colX(COLS) - 135 + 15} height="18" rx="4" fill="#fee2e2" stroke="#fca5a5" strokeWidth="0.8" />
-          <line x1="138" y1={RAIL.tp - 9} x2={colX(COLS) + 15} y2={RAIL.tp - 9} stroke="#ef4444" strokeWidth="2.5" />
-          <text x="142" y={RAIL.tp + 4} fontSize="11" fill="#dc2626" fontWeight="bold">+</text>
+          <rect x="180" y={RAIL.tp - 9} width={720} height="18" rx="4" fill="#fee2e2" stroke="#fca5a5" strokeWidth="0.8" />
+          <line x1="182" y1={RAIL.tp - 9} x2={898} y2={RAIL.tp - 9} stroke="#ef4444" strokeWidth="2.5" />
+          <text x="195" y={RAIL.tp + 4} fontSize="13" fill="#dc2626" fontWeight="bold">+</text>
 
-          <rect x="135" y={RAIL.tm - 9} width={colX(COLS) - 135 + 15} height="18" rx="4" fill="#dbeafe" stroke="#93c5fd" strokeWidth="0.8" />
-          <line x1="138" y1={RAIL.tm + 9} x2={colX(COLS) + 15} y2={RAIL.tm + 9} stroke="#3b82f6" strokeWidth="2.5" />
-          <text x="142" y={RAIL.tm + 4} fontSize="11" fill="#2563eb" fontWeight="bold">−</text>
+          <rect x="180" y={RAIL.tm - 9} width={720} height="18" rx="4" fill="#dbeafe" stroke="#93c5fd" strokeWidth="0.8" />
+          <line x1="182" y1={RAIL.tm + 9} x2={898} y2={RAIL.tm + 9} stroke="#3b82f6" strokeWidth="2.5" />
+          <text x="195" y={RAIL.tm + 4} fontSize="13" fill="#2563eb" fontWeight="bold">−</text>
 
           {/* ════════ BOTTOM POWER RAILS (+ and -) ════════ */}
-          <rect x="135" y={RAIL.bp - 9} width={colX(COLS) - 135 + 15} height="18" rx="4" fill="#fee2e2" stroke="#fca5a5" strokeWidth="0.8" />
-          <line x1="138" y1={RAIL.bp - 9} x2={colX(COLS) + 15} y2={RAIL.bp - 9} stroke="#ef4444" strokeWidth="2.5" />
-          <text x="142" y={RAIL.bp + 4} fontSize="11" fill="#dc2626" fontWeight="bold">+</text>
+          <rect x="180" y={RAIL.bp - 9} width={720} height="18" rx="4" fill="#fee2e2" stroke="#fca5a5" strokeWidth="0.8" />
+          <line x1="182" y1={RAIL.bp - 9} x2={898} y2={RAIL.bp - 9} stroke="#ef4444" strokeWidth="2.5" />
+          <text x="195" y={RAIL.bp + 4} fontSize="13" fill="#dc2626" fontWeight="bold">+</text>
 
-          <rect x="135" y={RAIL.bm - 9} width={colX(COLS) - 135 + 15} height="18" rx="4" fill="#dbeafe" stroke="#93c5fd" strokeWidth="0.8" />
-          <line x1="138" y1={RAIL.bm + 9} x2={colX(COLS) + 15} y2={RAIL.bm + 9} stroke="#3b82f6" strokeWidth="2.5" />
-          <text x="142" y={RAIL.bm + 4} fontSize="11" fill="#2563eb" fontWeight="bold">−</text>
+          <rect x="180" y={RAIL.bm - 9} width={720} height="18" rx="4" fill="#dbeafe" stroke="#93c5fd" strokeWidth="0.8" />
+          <line x1="182" y1={RAIL.bm + 9} x2={898} y2={RAIL.bm + 9} stroke="#3b82f6" strokeWidth="2.5" />
+          <text x="195" y={RAIL.bm + 4} fontSize="13" fill="#2563eb" fontWeight="bold">−</text>
 
           {/* Power Rail Holes */}
           {[RAIL.tp, RAIL.tm, RAIL.bp, RAIL.bm].map(ry =>
             Array.from({ length: COLS }, (_, i) => i + 1).map(c => (
               <circle
                 key={`rail-${ry}-${c}`}
-                cx={colX(c)} cy={ry} r={R - 0.3}
+                cx={colX(c)} cy={ry} r={R}
                 fill="#3f3f46" stroke="#a1a1aa" strokeWidth="0.6"
                 className="cursor-pointer hover:fill-amber-400"
                 onClick={() => handleStartWire({ id: `hole-${ry}-${c}`, x: colX(c), y: ry, label: `Power Rail Col ${c}` })}
@@ -712,25 +714,25 @@ export default function InteractiveBreadboard({
           )}
 
           {/* ════════ CENTER NOTCH GROOVE (IC DIP SOCKET SEPARATOR) ════════ */}
-          <rect x="135" y="214" width={colX(COLS) - 135 + 15} height="36" rx="4" fill="#cfc2ad" stroke="#baac97" strokeWidth="1.2" />
-          <line x1="135" y1="232" x2={colX(COLS) + 15} y2="232" stroke="#b0a28d" strokeWidth="1" strokeDasharray="4,4" />
-          <text x={colX(15)} y="235" textAnchor="middle" fontSize="8" fill="#786c5a" fontFamily="monospace" fontWeight="bold" letterSpacing="3">
+          <rect x="180" y="214" width={720} height="36" rx="4" fill="#cfc2ad" stroke="#baac97" strokeWidth="1.2" />
+          <line x1="180" y1="232" x2={900} y2="232" stroke="#b0a28d" strokeWidth="1" strokeDasharray="4,4" />
+          <text x={colX(15)} y="235" textAnchor="middle" fontSize="9" fill="#786c5a" fontFamily="monospace" fontWeight="bold" letterSpacing="3">
             BREADBOARD CENTER DIVIDER
           </text>
 
           {/* Column Numbers */}
           {Array.from({ length: COLS }, (_, i) => i + 1).map(c => (
             <g key={`num-${c}`}>
-              <text x={colX(c)} y="95" textAnchor="middle" fontSize="7.5" fill="#716758" fontFamily="monospace">{c}</text>
-              <text x={colX(c)} y="386" textAnchor="middle" fontSize="7.5" fill="#716758" fontFamily="monospace">{c}</text>
+              <text x={colX(c)} y="94" textAnchor="middle" fontSize="8" fill="#716758" fontFamily="monospace">{c}</text>
+              <text x={colX(c)} y="388" textAnchor="middle" fontSize="8" fill="#716758" fontFamily="monospace">{c}</text>
             </g>
           ))}
 
           {/* Row Letters (Left & Right) */}
           {[...ROWS_TOP, ...ROWS_BOT].map(row => (
             <g key={`row-${row}`}>
-              <text x="142" y={rowY(row) + 3} textAnchor="middle" fontSize="9" fill="#716758" fontWeight="bold" fontFamily="monospace">{row}</text>
-              <text x={colX(COLS) + 20} y={rowY(row) + 3} textAnchor="middle" fontSize="9" fill="#716758" fontWeight="bold" fontFamily="monospace">{row}</text>
+              <text x="195" y={rowY(row) + 4} textAnchor="middle" fontSize="10.5" fill="#716758" fontWeight="bold" fontFamily="monospace">{row}</text>
+              <text x="886" y={rowY(row) + 4} textAnchor="middle" fontSize="10.5" fill="#716758" fontWeight="bold" fontFamily="monospace">{row}</text>
             </g>
           ))}
 
@@ -782,28 +784,28 @@ export default function InteractiveBreadboard({
 
           {/* ════════ IC 1 BODY (CD4051BE MULTIPLEXER) ════════ */}
           {(() => {
-            const x1 = colX(IC1_COL_START) - 8
-            const x2 = colX(IC1_COL_END) + 8
-            const y1 = rowY('E') - 6
-            const y2 = rowY('F') + 6
+            const x1 = colX(IC1_COL_START) - 9
+            const x2 = colX(IC1_COL_END) + 9
+            const y1 = rowY('E') - 8
+            const y2 = rowY('F') + 8
             return (
               <g className="cursor-pointer" onClick={() => handleStartWire({ id: 'hole-D-9', x: colX(9), y: rowY('D'), label: 'IC1 Mux Pin 3 (TDM Out)' })}>
                 {/* Silver Lead Pins */}
                 {IC1_PINS.filter(p => p.row === 'E').map(p => (
-                  <rect key={`pin-top-${p.pin}`} x={colX(p.col) - 1.5} y={y1 - 4} width="3" height="5" fill="url(#nickelSilver)" />
+                  <rect key={`pin-top-${p.pin}`} x={colX(p.col) - 1.8} y={y1 - 5} width="3.6" height="6" fill="url(#nickelSilver)" />
                 ))}
                 {IC1_PINS.filter(p => p.row === 'F').map(p => (
-                  <rect key={`pin-bot-${p.pin}`} x={colX(p.col) - 1.5} y={y2 - 1} width="3" height="5" fill="url(#nickelSilver)" />
+                  <rect key={`pin-bot-${p.pin}`} x={colX(p.col) - 1.8} y={y2 - 1} width="3.6" height="6" fill="url(#nickelSilver)" />
                 ))}
                 {/* Epoxy Plastic Body */}
-                <rect x={x1} y={y1} width={x2 - x1} height={y2 - y1} rx="4" fill="url(#icGradHighEnd)" stroke="#09090b" strokeWidth="1.5" filter="url(#shadowHeavy)" />
+                <rect x={x1} y={y1} width={x2 - x1} height={y2 - y1} rx="5" fill="url(#icGradHighEnd)" stroke="#09090b" strokeWidth="1.5" filter="url(#shadowHeavy)" />
                 {/* Pin 1 Index Notch */}
-                <circle cx={x1 + 8} cy={(y1 + y2) / 2} r="3.5" fill="none" stroke="#52525b" strokeWidth="1.2" />
+                <circle cx={x1 + 8} cy={(y1 + y2) / 2} r="4.5" fill="none" stroke="#71717a" strokeWidth="1.5" />
                 {/* White Laser Marking */}
-                <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 2} textAnchor="middle" fontSize="9" fill="#f8fafc" fontWeight="bold" fontFamily="monospace">
+                <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 3} textAnchor="middle" fontSize="11" fill="#f8fafc" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
                   CD4051BE
                 </text>
-                <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 + 8} textAnchor="middle" fontSize="6.5" fill="#38bdf8" fontWeight="bold" fontFamily="monospace">
+                <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 + 9} textAnchor="middle" fontSize="8" fill="#38bdf8" fontWeight="bold" fontFamily="monospace">
                   IC1: MULTIPLEXER
                 </text>
               </g>
@@ -812,28 +814,28 @@ export default function InteractiveBreadboard({
 
           {/* ════════ IC 2 BODY (CD4051BE DEMULTIPLEXER) ════════ */}
           {(() => {
-            const x1 = colX(IC2_COL_START) - 8
-            const x2 = colX(IC2_COL_END) + 8
-            const y1 = rowY('E') - 6
-            const y2 = rowY('F') + 6
+            const x1 = colX(IC2_COL_START) - 9
+            const x2 = colX(IC2_COL_END) + 9
+            const y1 = rowY('E') - 8
+            const y2 = rowY('F') + 8
             return (
               <g className="cursor-pointer" onClick={() => handleStartWire({ id: 'hole-D-19', x: colX(19), y: rowY('D'), label: 'IC2 Demux Pin 3 (COM In)' })}>
                 {/* Silver Lead Pins */}
                 {IC2_PINS.filter(p => p.row === 'E').map(p => (
-                  <rect key={`pin-top-${p.pin}`} x={colX(p.col) - 1.5} y={y1 - 4} width="3" height="5" fill="url(#nickelSilver)" />
+                  <rect key={`pin-top-${p.pin}`} x={colX(p.col) - 1.8} y={y1 - 5} width="3.6" height="6" fill="url(#nickelSilver)" />
                 ))}
                 {IC2_PINS.filter(p => p.row === 'F').map(p => (
-                  <rect key={`pin-bot-${p.pin}`} x={colX(p.col) - 1.5} y={y2 - 1} width="3" height="5" fill="url(#nickelSilver)" />
+                  <rect key={`pin-bot-${p.pin}`} x={colX(p.col) - 1.8} y={y2 - 1} width="3.6" height="6" fill="url(#nickelSilver)" />
                 ))}
                 {/* Epoxy Plastic Body */}
-                <rect x={x1} y={y1} width={x2 - x1} height={y2 - y1} rx="4" fill="url(#icGradHighEnd)" stroke="#09090b" strokeWidth="1.5" filter="url(#shadowHeavy)" />
+                <rect x={x1} y={y1} width={x2 - x1} height={y2 - y1} rx="5" fill="url(#icGradHighEnd)" stroke="#09090b" strokeWidth="1.5" filter="url(#shadowHeavy)" />
                 {/* Pin 1 Index Notch */}
-                <circle cx={x1 + 8} cy={(y1 + y2) / 2} r="3.5" fill="none" stroke="#52525b" strokeWidth="1.2" />
+                <circle cx={x1 + 8} cy={(y1 + y2) / 2} r="4.5" fill="none" stroke="#71717a" strokeWidth="1.5" />
                 {/* White Laser Marking */}
-                <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 2} textAnchor="middle" fontSize="9" fill="#f8fafc" fontWeight="bold" fontFamily="monospace">
+                <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 3} textAnchor="middle" fontSize="11" fill="#f8fafc" fontWeight="bold" fontFamily="monospace" letterSpacing="1">
                   CD4051BE
                 </text>
-                <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 + 8} textAnchor="middle" fontSize="6.5" fill="#34d399" fontWeight="bold" fontFamily="monospace">
+                <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 + 9} textAnchor="middle" fontSize="8" fill="#34d399" fontWeight="bold" fontFamily="monospace">
                   IC2: DEMULTIPLEXER
                 </text>
               </g>
@@ -843,17 +845,57 @@ export default function InteractiveBreadboard({
           {/* IC Pin Function Callouts */}
           {ALL_IC_PINS.map(p => {
             const isTop = p.row === 'E'
-            const y = isTop ? rowY('C') + 4 : rowY('H') - 2
-            const isHighlighted = p.pin === 16 || p.pin === 8 || p.pin === 3 || p.pin === 11 || p.pin === 13 || p.pin === 14
+            const x = colX(p.col)
+            const yBadge = isTop ? rowY('C') + 2 : rowY('H') - 4
+            let badgeFill = '#f8fafc'
+            let badgeStroke = '#cbd5e1'
+            let textFill = '#334155'
+            if (p.pin === 16) { badgeFill = '#fee2e2'; badgeStroke = '#f87171'; textFill = '#dc2626'; }
+            else if (p.pin === 8) { badgeFill = '#e2e8f0'; badgeStroke = '#94a3b8'; textFill = '#0f172a'; }
+            else if (p.pin === 3) { badgeFill = '#f3e8ff'; badgeStroke = '#c084fc'; textFill = '#7e22ce'; }
+            else if (p.pin === 13) { badgeFill = '#e0f2fe'; badgeStroke = '#7dd3fc'; textFill = '#0369a1'; }
+            else if (p.pin === 14) { badgeFill = '#dcfce7'; badgeStroke = '#86efac'; textFill = '#15803d'; }
+            else if (p.pin === 11) { badgeFill = '#dbeafe'; badgeStroke = '#93c5fd'; textFill = '#1d4ed8'; }
+            else if (p.pin === 9 || p.pin === 10) { badgeFill = '#fef3c7'; badgeStroke = '#fcd34d'; textFill = '#b45309'; }
+
             return (
-              <g key={`pin-callout-${p.ic}-${p.pin}`} className="cursor-pointer"
+              <g
+                key={`pin-callout-${p.ic}-${p.pin}`}
+                className="cursor-pointer group"
                 onClick={() => handleStartWire({ id: `hole-${isTop ? 'D' : 'G'}-${p.col}`, x: colX(p.col), y: isTop ? rowY('D') : rowY('G'), label: `${p.ic} Pin ${p.pin} (${p.label})` })}
               >
-                <text x={colX(p.col)} y={y} textAnchor="middle" fontSize="6.5"
-                  fill={isHighlighted ? '#0f172a' : '#64748b'} fontWeight={isHighlighted ? 'bold' : 'normal'} fontFamily="monospace">
+                {/* Pin Callout Badge */}
+                <rect
+                  x={x - 10}
+                  y={yBadge - 8}
+                  width="20"
+                  height="15"
+                  rx="3.5"
+                  fill={badgeFill}
+                  stroke={badgeStroke}
+                  strokeWidth="1"
+                  filter="url(#shadowHeavy)"
+                />
+                <text
+                  x={x}
+                  y={yBadge + 2.5}
+                  textAnchor="middle"
+                  fontSize="7.5"
+                  fill={textFill}
+                  fontWeight="bold"
+                  fontFamily="monospace"
+                >
                   {p.label}
                 </text>
-                <text x={colX(p.col)} y={isTop ? y - 9 : y + 9} textAnchor="middle" fontSize="5.5" fill="#94a3b8" fontFamily="monospace">
+                <text
+                  x={x}
+                  y={isTop ? yBadge - 10 : yBadge + 16}
+                  textAnchor="middle"
+                  fontSize="6.5"
+                  fill="#64748b"
+                  fontWeight="bold"
+                  fontFamily="monospace"
+                >
                   P{p.pin}
                 </text>
               </g>
@@ -863,28 +905,36 @@ export default function InteractiveBreadboard({
           {/* ════════ RC RECONSTRUCTION LOW-PASS FILTERS (Cols 26-29) ════════ */}
           <g>
             {/* R1: 5.6k Resistor for CH0 */}
-            <rect x={colX(26) - 4} y={rowY('G') - 4} width={S + 8} height="8" rx="3" fill="#e2d4b7" stroke="#8c7853" strokeWidth="1" />
-            <line x1={colX(26) + 4} y1={rowY('G') - 4} x2={colX(26) + 4} y2={rowY('G') + 4} stroke="#15803d" strokeWidth="2" />
-            <line x1={colX(26) + 9} y1={rowY('G') - 4} x2={colX(26) + 9} y2={rowY('G') + 4} stroke="#2563eb" strokeWidth="2" />
-            <line x1={colX(26) + 14} y1={rowY('G') - 4} x2={colX(26) + 14} y2={rowY('G') + 4} stroke="#dc2626" strokeWidth="2" />
-            <text x={colX(26) + 11} y={rowY('G') - 7} textAnchor="middle" fontSize="6" fill="#15803d" fontWeight="bold">R1: 5.6k</text>
+            <g className="cursor-pointer" onClick={() => handleStartWire({ id: `hole-G-27`, x: colX(27), y: rowY('G'), label: 'R1 5.6k Filter Junction' })}>
+              <rect x={colX(26) - 5} y={rowY('G') - 6} width={S + 10} height="12" rx="3.5" fill="#f5ebe0" stroke="#b08968" strokeWidth="1" />
+              <line x1={colX(26) + 4} y1={rowY('G') - 6} x2={colX(26) + 4} y2={rowY('G') + 6} stroke="#15803d" strokeWidth="2.5" />
+              <line x1={colX(26) + 11} y1={rowY('G') - 6} x2={colX(26) + 11} y2={rowY('G') + 6} stroke="#2563eb" strokeWidth="2.5" />
+              <line x1={colX(26) + 18} y1={rowY('G') - 6} x2={colX(26) + 18} y2={rowY('G') + 6} stroke="#dc2626" strokeWidth="2.5" />
+              <text x={colX(26) + 11} y={rowY('G') - 9} textAnchor="middle" fontSize="7" fill="#15803d" fontWeight="bold">R1: 5.6k</text>
+            </g>
 
             {/* C1: 0.1uF Capacitor for CH0 */}
-            <circle cx={colX(27)} cy={rowY('I')} r="6" fill="#f59e0b" stroke="#b45309" strokeWidth="1" />
-            <text x={colX(27)} y={rowY('I') + 2.5} textAnchor="middle" fontSize="5" fill="#78350f" fontWeight="bold">0.1μ</text>
-            <text x={colX(27)} y={rowY('J') + 11} textAnchor="middle" fontSize="6.5" fill="#0284c7" fontWeight="bold">LPF 0</text>
+            <g className="cursor-pointer" onClick={() => handleStartWire({ id: `hole-I-27`, x: colX(27), y: rowY('I'), label: 'C1 0.1uF Filter Junction' })}>
+              <circle cx={colX(27)} cy={rowY('I')} r="8" fill="#f59e0b" stroke="#b45309" strokeWidth="1.2" filter="url(#shadowHeavy)" />
+              <text x={colX(27)} y={rowY('I') + 3} textAnchor="middle" fontSize="6.5" fill="#78350f" fontWeight="bold">0.1μ</text>
+              <text x={colX(27)} y={rowY('J') + 13} textAnchor="middle" fontSize="7.5" fill="#0284c7" fontWeight="bold">LPF 0</text>
+            </g>
 
             {/* R2: 5.6k Resistor for CH1 */}
-            <rect x={colX(28) - 4} y={rowY('G') - 4} width={S + 8} height="8" rx="3" fill="#e2d4b7" stroke="#8c7853" strokeWidth="1" />
-            <line x1={colX(28) + 4} y1={rowY('G') - 4} x2={colX(28) + 4} y2={rowY('G') + 4} stroke="#15803d" strokeWidth="2" />
-            <line x1={colX(28) + 9} y1={rowY('G') - 4} x2={colX(28) + 9} y2={rowY('G') + 4} stroke="#2563eb" strokeWidth="2" />
-            <line x1={colX(28) + 14} y1={rowY('G') - 4} x2={colX(28) + 14} y2={rowY('G') + 4} stroke="#dc2626" strokeWidth="2" />
-            <text x={colX(28) + 11} y={rowY('G') - 7} textAnchor="middle" fontSize="6" fill="#15803d" fontWeight="bold">R2: 5.6k</text>
+            <g className="cursor-pointer" onClick={() => handleStartWire({ id: `hole-G-28`, x: colX(28), y: rowY('G'), label: 'R2 5.6k Filter Junction' })}>
+              <rect x={colX(28) - 5} y={rowY('G') - 6} width={S + 10} height="12" rx="3.5" fill="#f5ebe0" stroke="#b08968" strokeWidth="1" />
+              <line x1={colX(28) + 4} y1={rowY('G') - 6} x2={colX(28) + 4} y2={rowY('G') + 6} stroke="#15803d" strokeWidth="2.5" />
+              <line x1={colX(28) + 11} y1={rowY('G') - 6} x2={colX(28) + 11} y2={rowY('G') + 6} stroke="#2563eb" strokeWidth="2.5" />
+              <line x1={colX(28) + 18} y1={rowY('G') - 6} x2={colX(28) + 18} y2={rowY('G') + 6} stroke="#dc2626" strokeWidth="2.5" />
+              <text x={colX(28) + 11} y={rowY('G') - 9} textAnchor="middle" fontSize="7" fill="#15803d" fontWeight="bold">R2: 5.6k</text>
+            </g>
 
             {/* C2: 0.1uF Capacitor for CH1 */}
-            <circle cx={colX(29)} cy={rowY('I')} r="6" fill="#f59e0b" stroke="#b45309" strokeWidth="1" />
-            <text x={colX(29)} y={rowY('I') + 2.5} textAnchor="middle" fontSize="5" fill="#78350f" fontWeight="bold">0.1μ</text>
-            <text x={colX(29)} y={rowY('J') + 11} textAnchor="middle" fontSize="6.5" fill="#059669" fontWeight="bold">LPF 1</text>
+            <g className="cursor-pointer" onClick={() => handleStartWire({ id: `hole-I-29`, x: colX(29), y: rowY('I'), label: 'C2 0.1uF Filter Junction' })}>
+              <circle cx={colX(29)} cy={rowY('I')} r="8" fill="#f59e0b" stroke="#b45309" strokeWidth="1.2" filter="url(#shadowHeavy)" />
+              <text x={colX(29)} y={rowY('I') + 3} textAnchor="middle" fontSize="6.5" fill="#78350f" fontWeight="bold">0.1μ</text>
+              <text x={colX(29)} y={rowY('J') + 13} textAnchor="middle" fontSize="7.5" fill="#059669" fontWeight="bold">LPF 1</text>
+            </g>
           </g>
 
           {/* ════════ REALISTIC HARDWARE BINDING POSTS / BNC TERMINALS ════════ */}
@@ -893,6 +943,11 @@ export default function InteractiveBreadboard({
             const isLeft = t.x < SVG_W / 2
             const isSelected = activeWire?.id === `term-${t.id}`
             const isTargeted = snappedTarget?.id === `term-${t.id}`
+            const cardX = isLeft ? 18 : SVG_W - 154
+            const cardY = t.y - 33
+            const cardW = 136
+            const cardH = 66
+            const jackX = isLeft ? 46 : SVG_W - 46
 
             return (
               <g
@@ -900,20 +955,34 @@ export default function InteractiveBreadboard({
                 className="cursor-pointer group"
                 onClick={() => handleStartWire({ id: `term-${t.id}`, x: p.x, y: p.y, label: t.label })}
               >
-                {/* Connecting lead trace to dock */}
+                {/* Button-like tactile background card */}
+                <rect
+                  x={cardX}
+                  y={cardY}
+                  width={cardW}
+                  height={cardH}
+                  rx="10"
+                  fill={isSelected ? '#fef3c7' : isTargeted ? '#fef9c3' : '#ffffff'}
+                  stroke={isSelected ? '#d97706' : isTargeted ? '#f59e0b' : '#cbd5e1'}
+                  strokeWidth={isSelected || isTargeted ? 2.5 : 1.2}
+                  filter="url(#shadowHeavy)"
+                  className="transition-all group-hover:stroke-slate-400"
+                />
+
+                {/* Connecting lead trace to dock post */}
                 <line
-                  x1={isLeft ? t.x + 20 : t.x - 20}
+                  x1={isLeft ? 68 : SVG_W - 68}
                   y1={t.y}
                   x2={p.x}
                   y2={p.y}
                   stroke={t.color}
-                  strokeWidth="2"
-                  opacity="0.6"
+                  strokeWidth="2.5"
+                  opacity="0.8"
                 />
 
                 {/* Outer bezel ring (Clean Light Bezel) */}
                 <circle
-                  cx={t.x} cy={t.y} r="16"
+                  cx={jackX} cy={t.y} r="18"
                   fill="#ffffff"
                   stroke={isSelected || isTargeted ? '#f59e0b' : '#cbd5e1'}
                   strokeWidth={isSelected || isTargeted ? 2.5 : 1.5}
@@ -921,45 +990,72 @@ export default function InteractiveBreadboard({
 
                 {/* Metallic connector core */}
                 <circle
-                  cx={t.x} cy={t.y} r="11"
-                  fill={t.type === 'banana' ? (t.id === 'pwr' ? '#dc2626' : '#334155') : 'url(#nickelSilver)'}
+                  cx={jackX} cy={t.y} r="12.5"
+                  fill={t.type === 'banana' ? (t.id === 'pwr' ? '#dc2626' : '#1e293b') : 'url(#nickelSilver)'}
                   stroke="#94a3b8" strokeWidth="1"
                 />
 
                 {/* Connector jack hole / contact */}
                 <circle
-                  cx={t.x} cy={t.y} r="4.5"
-                  fill="#1e293b"
-                  stroke={t.color} strokeWidth="1.5"
+                  cx={jackX} cy={t.y} r="5.5"
+                  fill={t.type === 'banana' ? '#0f172a' : '#1e293b'}
+                  stroke={t.color} strokeWidth="1.8"
                 />
 
-                {/* Label text (High Contrast Dark Slate) */}
-                <text
-                  x={t.x}
-                  y={t.y - 20}
-                  textAnchor="middle"
-                  fontSize="7.5"
-                  fill="#0f172a"
-                  fontWeight="bold"
-                  fontFamily="monospace"
-                >
-                  {t.shortLabel}
-                </text>
-                <text
-                  x={t.x}
-                  y={t.y + 24}
-                  textAnchor="middle"
-                  fontSize="5.5"
-                  fill="#64748b"
-                  fontFamily="sans-serif"
-                  fontWeight="medium"
-                >
-                  {t.sub}
-                </text>
+                {/* High-Contrast Clear Typography */}
+                {isLeft ? (
+                  <g transform={`translate(72, ${t.y})`}>
+                    <text
+                      x="0"
+                      y="-4"
+                      fontSize="9.5"
+                      fill="#0f172a"
+                      fontWeight="bold"
+                      fontFamily="monospace"
+                    >
+                      {t.shortLabel}
+                    </text>
+                    <text
+                      x="0"
+                      y="10"
+                      fontSize="7.5"
+                      fill="#64748b"
+                      fontWeight="semibold"
+                      fontFamily="sans-serif"
+                    >
+                      {t.sub}
+                    </text>
+                  </g>
+                ) : (
+                  <g transform={`translate(${SVG_W - 72}, ${t.y})`}>
+                    <text
+                      x="0"
+                      y="-4"
+                      textAnchor="end"
+                      fontSize="9.5"
+                      fill="#0f172a"
+                      fontWeight="bold"
+                      fontFamily="monospace"
+                    >
+                      {t.shortLabel}
+                    </text>
+                    <text
+                      x="0"
+                      y="10"
+                      textAnchor="end"
+                      fontSize="7.5"
+                      fill="#64748b"
+                      fontWeight="semibold"
+                      fontFamily="sans-serif"
+                    >
+                      {t.sub}
+                    </text>
+                  </g>
+                )}
 
                 {/* Connecting binding post pin (on breadboard boundary) */}
                 <circle
-                  cx={p.x} cy={p.y} r="6"
+                  cx={p.x} cy={p.y} r="7"
                   fill={t.color}
                   stroke="#ffffff" strokeWidth="2"
                   filter="url(#shadowHeavy)"
