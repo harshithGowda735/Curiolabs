@@ -12,7 +12,8 @@ import {
   Sparkles,
   ClipboardList,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Layers
 } from 'lucide-react'
 import { useTTS } from '../hooks/useTTS'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -31,6 +32,7 @@ export default function MissionShell({
   gradientFrom = 'from-slate-900',
   gradientTo = 'to-slate-800',
   steps = [],
+  apparatus = [],
   currentStep = 0,
   controls,
   visualization,
@@ -165,6 +167,40 @@ export default function MissionShell({
                         {setupMessage}
                       </p>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Apparatus / Required Components Standardized Card */}
+              {apparatus && apparatus.length > 0 && (
+                <div className="apple-card rounded-2xl p-5 border border-slate-200/90 shadow-2xs">
+                  <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-100">
+                    <h2 className="text-sm font-display font-bold text-slate-950 flex items-center gap-2">
+                      <Layers size={16} className="text-emerald-600" />
+                      <span>{t('Apparatus / Components Required', 'ಅಗತ್ಯವಿರುವ ಘಟಕಗಳು ಮತ್ತು ಉಪಕರಣಗಳು')}</span>
+                    </h2>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      {apparatus.length} Items
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2">
+                    {apparatus.map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-xs p-2 rounded-xl bg-slate-50/90 border border-slate-100 hover:border-slate-200 transition-colors">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-2xs" />
+                          <div className="min-w-0">
+                            <span className="font-semibold text-slate-900 block truncate">{item.name}</span>
+                            {item.spec && <span className="text-[10px] text-slate-500 block truncate font-mono">{item.spec}</span>}
+                          </div>
+                        </div>
+                        {item.qty && (
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-white text-slate-700 border border-slate-200 shadow-2xs shrink-0 ml-2">
+                            {item.qty}
+                          </span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

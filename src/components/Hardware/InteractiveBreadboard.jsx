@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import { AlertTriangle, Sparkles, X, Undo2, HelpCircle, Check, Info } from 'lucide-react'
+import { AlertTriangle, Sparkles, X, Undo2, HelpCircle, Check, Info, Zap, ArrowRight } from 'lucide-react'
 import { validateTdmConnection, getNextPendingStepConnection } from '../../utils/tdmWireValidator'
 
 /* ════════════════════════════════════════════════════════════
@@ -152,6 +152,7 @@ export default function InteractiveBreadboard({
   const [justConnected, setJustConnected] = useState(null)
   const [wiringError, setWiringError] = useState(null)
   const [guidedHoleId, setGuidedHoleId] = useState(null)
+  const [activeGuide, setActiveGuide] = useState(null)
 
   const getGuidedHoleCoords = useCallback((hId) => {
     if (!hId) return null
@@ -255,6 +256,41 @@ export default function InteractiveBreadboard({
   const connectedCount = connectionStatus.filter(c => c.connected).length
   const allConnected = connectionStatus.every(c => c.connected)
 
+  const resolveGuideNode = useCallback((fromId) => {
+    if (!fromId) return null
+    if (fromId.startsWith('hole-')) {
+      const parts = fromId.replace('hole-', '').split('-')
+      const row = parts[0]
+      const col = parseInt(parts[1], 10)
+      const gx = colX(col)
+      const gy = rowY(row) || ('ABCDE'.includes(row) ? rowY('D') : rowY('G'))
+      const icPin = ALL_IC_PINS.find(p => p.col === col && (p.row === 'E' ? 'ABCDE'.includes(row) : 'FGHIJ'.includes(row)))
+      let label = icPin ? `${icPin.ic} Pin ${icPin.pin} (${icPin.label})` : `Col ${col}`
+      if (col === 9 && 'ABCDE'.includes(row)) label = 'IC1 Pin 3 (TDM Out)'
+      if (col === 12 && 'FGHIJ'.includes(row)) label = 'IC1 Pin 11 (Clock A)'
+      return { id: fromId, x: gx, y: gy, label }
+    }
+    const raw = fromId.replace('term-', '')
+    const term = TERMINALS.find(t => t.id === raw)
+    if (term) {
+      const p = termPos(term)
+      return { id: `term-${term.id}`, x: p.x, y: p.y, label: term.shortLabel || term.label, color: term.color }
+    }
+    return null
+  }, [])
+
+  const resolveTargetNode = useCallback((toCol, toSec) => {
+    const tx = colX(toCol)
+    const ty = toSec === 'top' ? rowY('D') : rowY('G')
+    const tRow = toSec === 'top' ? 'D' : 'G'
+    const targetId = `hole-${tRow}-${toCol}`
+    const icPin = ALL_IC_PINS.find(p => p.col === toCol && (toSec === 'top' ? p.row === 'E' : p.row === 'F'))
+    let label = icPin ? `${icPin.ic} Pin ${icPin.pin} (${icPin.label})` : `Col ${toCol}`
+    if (toCol === 27) label = 'R1/C1 Junction (CH0 Out)'
+    if (toCol === 28) label = 'R2/C2 Junction (CH1 Out)'
+    return { id: targetId, x: tx, y: ty, label }
+  }, [])
+
   const commitWire = useCallback((from, to) => {
     if (!from || !to || from.id === to.id) {
       setActiveWire(null)
@@ -315,11 +351,59 @@ export default function InteractiveBreadboard({
       if (onConnectionsChange) onConnectionsChange(nextWires)
       setJustConnected(validation.connection?.label || to.label || from.label)
       setTimeout(() => setJustConnected(null), 3000)
+
+      // Auto-advance or clear active guide if this connection matched
+      if (activeGuide) {
+        const isMatch =
+          (from.id === activeGuide.from.id && to.id === activeGuide.to.id) ||
+          (from.id === activeGuide.to.id && to.id === activeGuide.from.id)
+        if (isMatch) {
+          const remaining = LAB_CONNECTIONS.filter(req => {
+            if (req.id === activeGuide.connection?.id) return false
+            const isConn = nextWires.some(w => {
+              const fromMatch = w.fromId === req.from || w.fromId === `term-${req.from}`
+              const toMatch = w.toId === req.from || w.toId === `term-${req.from}`
+              const tHole = fromMatch ? w.toId : toMatch ? w.fromId : null
+              if (!tHole || !tHole.startsWith('hole-')) return false
+              const [, row, colStr] = tHole.split('-')
+              const col = parseInt(colStr, 10)
+              if (col !== req.toCol) return false
+              const isTop = 'ABCDE'.includes(row)
+              return req.toSec === 'top' ? isTop : !isTop
+            })
+            return !isConn
+          })
+
+          if (remaining.length > 0) {
+            const nextConn = remaining[0]
+            const nextFrom = resolveGuideNode(nextConn.from)
+            const nextTo = resolveTargetNode(nextConn.toCol, nextConn.toSec)
+            if (nextFrom && nextTo) {
+              setActiveGuide({
+                connection: nextConn,
+                from: nextFrom,
+                to: nextTo,
+                wireColor: nextConn.wireColor,
+                desc: nextConn.desc,
+                step: nextConn.step,
+                label: nextConn.label
+              })
+              setGuidedHoleId(nextTo.id)
+            } else {
+              setActiveGuide(null)
+              setGuidedHoleId(null)
+            }
+          } else {
+            setActiveGuide(null)
+            setGuidedHoleId(null)
+          }
+        }
+      }
     }
 
     setActiveWire(null)
     setSnappedTarget(null)
-  }, [wires, guidedHoleId, onConnectionsChange])
+  }, [wires, guidedHoleId, activeGuide, onConnectionsChange, resolveGuideNode, resolveTargetNode])
 
   const handleStartWire = useCallback((startObj) => {
     if (activeWire) {
@@ -452,15 +536,107 @@ export default function InteractiveBreadboard({
   const guideNextPending = useCallback(() => {
     const nextPending = getNextPendingStepConnection(connectionStatus)
     if (!nextPending) {
+      setActiveGuide(null)
+      setGuidedHoleId(null)
       setJustConnected('All circuit wires are already connected!')
       setTimeout(() => setJustConnected(null), 2500)
       return
     }
-    const targetHole = `hole-${nextPending.toSec === 'top' ? 'D' : 'G'}-${nextPending.toCol}`
-    setGuidedHoleId(targetHole)
-    setJustConnected(`Target Pin Highlighted: ${nextPending.label}`)
-    setTimeout(() => setJustConnected(null), 3500)
-  }, [connectionStatus])
+
+    const fromNode = resolveGuideNode(nextPending.from)
+    const toNode = resolveTargetNode(nextPending.toCol, nextPending.toSec)
+
+    if (fromNode && toNode) {
+      setActiveGuide({
+        connection: nextPending,
+        from: fromNode,
+        to: toNode,
+        wireColor: nextPending.wireColor,
+        desc: nextPending.desc,
+        step: nextPending.step,
+        label: nextPending.label
+      })
+      setGuidedHoleId(toNode.id)
+      setWiringError(null)
+      setJustConnected(`Guiding: ${fromNode.label} ➔ ${toNode.label}`)
+      setTimeout(() => setJustConnected(null), 3500)
+    }
+  }, [connectionStatus, resolveGuideNode, resolveTargetNode])
+
+  const snapGuidedWire = useCallback(() => {
+    if (!activeGuide) return
+    const from = activeGuide.from
+    const to = activeGuide.to
+
+    const exists = wires.some(w =>
+      (w.fromId === from.id && w.toId === to.id) ||
+      (w.fromId === to.id && w.toId === from.id)
+    )
+
+    if (!exists) {
+      const newWire = {
+        id: `wire-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        fromId: from.id,
+        toId: to.id,
+        fromX: from.x,
+        fromY: from.y,
+        toX: to.x,
+        toY: to.y,
+        color: activeGuide.wireColor || '#3b82f6',
+      }
+
+      const nextWires = [...wires, newWire]
+      setWires(nextWires)
+      if (onConnectionsChange) onConnectionsChange(nextWires)
+      setJustConnected(`✓ Connected: ${activeGuide.label}`)
+      setTimeout(() => setJustConnected(null), 2500)
+
+      // Auto advance guide to next pending wire
+      const currentConnId = activeGuide.connection?.id
+      const remaining = LAB_CONNECTIONS.filter(req => {
+        if (req.id === currentConnId) return false
+        const isConn = nextWires.some(w => {
+          const fromMatch = w.fromId === req.from || w.fromId === `term-${req.from}`
+          const toMatch = w.toId === req.from || w.toId === `term-${req.from}`
+          const tHole = fromMatch ? w.toId : toMatch ? w.fromId : null
+          if (!tHole || !tHole.startsWith('hole-')) return false
+          const [, row, colStr] = tHole.split('-')
+          const col = parseInt(colStr, 10)
+          if (col !== req.toCol) return false
+          const isTop = 'ABCDE'.includes(row)
+          return req.toSec === 'top' ? isTop : !isTop
+        })
+        return !isConn
+      })
+
+      if (remaining.length > 0) {
+        const nextConn = remaining[0]
+        const nextFrom = resolveGuideNode(nextConn.from)
+        const nextTo = resolveTargetNode(nextConn.toCol, nextConn.toSec)
+        if (nextFrom && nextTo) {
+          setActiveGuide({
+            connection: nextConn,
+            from: nextFrom,
+            to: nextTo,
+            wireColor: nextConn.wireColor,
+            desc: nextConn.desc,
+            step: nextConn.step,
+            label: nextConn.label
+          })
+          setGuidedHoleId(nextTo.id)
+        } else {
+          setActiveGuide(null)
+          setGuidedHoleId(null)
+        }
+      } else {
+        setActiveGuide(null)
+        setGuidedHoleId(null)
+      }
+    }
+
+    setActiveWire(null)
+    setSnappedTarget(null)
+  }, [activeGuide, wires, onConnectionsChange, resolveGuideNode, resolveTargetNode])
 
   const resetAll = useCallback(() => {
     setWires([])
@@ -468,6 +644,7 @@ export default function InteractiveBreadboard({
     setSnappedTarget(null)
     setWiringError(null)
     setGuidedHoleId(null)
+    setActiveGuide(null)
     if (onConnectionsChange) onConnectionsChange([])
   }, [onConnectionsChange])
 
@@ -537,6 +714,63 @@ export default function InteractiveBreadboard({
           </button>
         </div>
       </div>
+
+      {/* ── INTERACTIVE ACTIVE WIRE GUIDANCE HUD BANNER ── */}
+      {activeGuide && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-50 to-emerald-500/10 border-2 border-amber-400 rounded-2xl p-4 shadow-sm text-slate-800 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="p-2 rounded-xl bg-amber-500 text-white shadow-xs shrink-0 mt-0.5 animate-pulse">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="min-w-0 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
+                    Connection Guide • Step {activeGuide.step}
+                  </span>
+                  <span className="text-xs font-bold text-slate-900 font-mono">
+                    {activeGuide.label}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-950 font-mono font-bold text-xs border border-emerald-300 shadow-2xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    <span>1. START:</span> <span className="underline decoration-emerald-500">{activeGuide.from.label}</span>
+                  </span>
+                  <ArrowRight size={14} className="text-amber-600 shrink-0" />
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-950 font-mono font-bold text-xs border border-amber-300 shadow-2xs">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                    <span>2. CONNECT TO:</span> <span className="underline decoration-amber-500">{activeGuide.to.label}</span>
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-slate-600">
+                  {activeGuide.desc} — Click the pulsing green terminal to start, or click <strong className="text-amber-900 font-semibold">Snap Wire Now</strong> to auto-connect.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={snapGuidedWire}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-600 hover:to-emerald-700 text-white font-bold text-xs shadow-xs active:scale-95 flex items-center gap-1.5 transition-all"
+                title="Instantly make this connection"
+              >
+                <Zap size={14} className="fill-white" />
+                <span>⚡ Snap Wire Now</span>
+              </button>
+              <button
+                onClick={() => { setActiveGuide(null); setGuidedHoleId(null); }}
+                className="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200 transition-colors shadow-2xs"
+                title="Close guide"
+              >
+                <X size={15} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── REAL-TIME CONNECTION ERROR DIAGNOSTIC CARD (Educational Feedback) ── */}
       {wiringError && (
@@ -903,38 +1137,72 @@ export default function InteractiveBreadboard({
           })}
 
           {/* ════════ RC RECONSTRUCTION LOW-PASS FILTERS (Cols 26-29) ════════ */}
-          <g>
-            {/* R1: 5.6k Resistor for CH0 */}
+          <g id="demux-rc-lpf-group">
+            {/* Header Plate */}
+            <rect x={colX(26) - 12} y={rowY('F') - 28} width="98" height="19" rx="4" fill="#0f172a" stroke="#38bdf8" strokeWidth="1.2" filter="url(#shadowHeavy)" />
+            <text x={colX(26) + 37} y={rowY('F') - 15} textAnchor="middle" fill="#38bdf8" fontSize="7.5" fontWeight="bold" fontFamily="monospace">
+              DEMUX RC FILTERS
+            </text>
+
+            {/* Signal Feed from Demux Pin 13 (Col 20) to R1 (Col 26) */}
+            <path
+              d={`M ${colX(20)} ${rowY('G')} Q ${(colX(20) + colX(26)) / 2} ${rowY('G') + 16} ${colX(26)} ${rowY('G')}`}
+              fill="none" stroke="#0284c7" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="3,2" opacity="0.85"
+            />
+            {/* Signal Feed from Demux Pin 14 (Col 19) to R2 (Col 28) */}
+            <path
+              d={`M ${colX(19)} ${rowY('G')} Q ${(colX(19) + colX(28)) / 2} ${rowY('G') + 24} ${colX(28)} ${rowY('G')}`}
+              fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="3,2" opacity="0.85"
+            />
+
+            {/* R1: 5.6k Resistor for CH0 (Col 26 to Col 27) */}
             <g className="cursor-pointer" onClick={() => handleStartWire({ id: `hole-G-27`, x: colX(27), y: rowY('G'), label: 'R1 5.6k Filter Junction' })}>
-              <rect x={colX(26) - 5} y={rowY('G') - 6} width={S + 10} height="12" rx="3.5" fill="#f5ebe0" stroke="#b08968" strokeWidth="1" />
-              <line x1={colX(26) + 4} y1={rowY('G') - 6} x2={colX(26) + 4} y2={rowY('G') + 6} stroke="#15803d" strokeWidth="2.5" />
-              <line x1={colX(26) + 11} y1={rowY('G') - 6} x2={colX(26) + 11} y2={rowY('G') + 6} stroke="#2563eb" strokeWidth="2.5" />
-              <line x1={colX(26) + 18} y1={rowY('G') - 6} x2={colX(26) + 18} y2={rowY('G') + 6} stroke="#dc2626" strokeWidth="2.5" />
-              <text x={colX(26) + 11} y={rowY('G') - 9} textAnchor="middle" fontSize="7" fill="#15803d" fontWeight="bold">R1: 5.6k</text>
+              <rect x={colX(26) - 5} y={rowY('G') - 7} width={S + 10} height="14" rx="4" fill="#fdfbf7" stroke="#b08968" strokeWidth="1.4" filter="url(#shadowHeavy)" />
+              {/* Color Code Bands for 5.6k: Green, Blue, Red, Gold */}
+              <line x1={colX(26) + 3} y1={rowY('G') - 7} x2={colX(26) + 3} y2={rowY('G') + 7} stroke="#16a34a" strokeWidth="2.5" />
+              <line x1={colX(26) + 10} y1={rowY('G') - 7} x2={colX(26) + 10} y2={rowY('G') + 7} stroke="#2563eb" strokeWidth="2.5" />
+              <line x1={colX(26) + 17} y1={rowY('G') - 7} x2={colX(26) + 17} y2={rowY('G') + 7} stroke="#dc2626" strokeWidth="2.5" />
+              <line x1={colX(26) + 24} y1={rowY('G') - 7} x2={colX(26) + 24} y2={rowY('G') + 7} stroke="#ca8a04" strokeWidth="1.5" />
+              <text x={colX(26) + 11} y={rowY('G') - 10} textAnchor="middle" fontSize="7.5" fill="#15803d" fontWeight="bold" fontFamily="monospace">R1: 5.6kΩ</text>
             </g>
 
-            {/* C1: 0.1uF Capacitor for CH0 */}
+            {/* C1: 0.1uF Capacitor for CH0 (Col 27 Row I to Ground Rail) */}
             <g className="cursor-pointer" onClick={() => handleStartWire({ id: `hole-I-27`, x: colX(27), y: rowY('I'), label: 'C1 0.1uF Filter Junction' })}>
-              <circle cx={colX(27)} cy={rowY('I')} r="8" fill="#f59e0b" stroke="#b45309" strokeWidth="1.2" filter="url(#shadowHeavy)" />
-              <text x={colX(27)} y={rowY('I') + 3} textAnchor="middle" fontSize="6.5" fill="#78350f" fontWeight="bold">0.1μ</text>
-              <text x={colX(27)} y={rowY('J') + 13} textAnchor="middle" fontSize="7.5" fill="#0284c7" fontWeight="bold">LPF 0</text>
+              {/* Lead trace down to Ground rail */}
+              <line x1={colX(27)} y1={rowY('I')} x2={colX(27)} y2={RAIL.bm} stroke="#1e293b" strokeWidth="2.2" strokeLinecap="round" />
+              <circle cx={colX(27)} cy={RAIL.bm} r="3" fill="#1e293b" />
+              {/* Ceramic Disc Capacitor Body */}
+              <circle cx={colX(27)} cy={rowY('I')} r="9" fill="#f59e0b" stroke="#b45309" strokeWidth="1.5" filter="url(#shadowHeavy)" />
+              <text x={colX(27)} y={rowY('I') + 3} textAnchor="middle" fontSize="6.5" fill="#ffffff" fontWeight="bold" fontFamily="monospace">0.1μF</text>
+              <text x={colX(27)} y={rowY('J') + 14} textAnchor="middle" fontSize="7.5" fill="#0284c7" fontWeight="bold" fontFamily="monospace">C1 ➔ GND</text>
             </g>
 
-            {/* R2: 5.6k Resistor for CH1 */}
+            {/* R2: 5.6k Resistor for CH1 (Col 28 to Col 29) */}
             <g className="cursor-pointer" onClick={() => handleStartWire({ id: `hole-G-28`, x: colX(28), y: rowY('G'), label: 'R2 5.6k Filter Junction' })}>
-              <rect x={colX(28) - 5} y={rowY('G') - 6} width={S + 10} height="12" rx="3.5" fill="#f5ebe0" stroke="#b08968" strokeWidth="1" />
-              <line x1={colX(28) + 4} y1={rowY('G') - 6} x2={colX(28) + 4} y2={rowY('G') + 6} stroke="#15803d" strokeWidth="2.5" />
-              <line x1={colX(28) + 11} y1={rowY('G') - 6} x2={colX(28) + 11} y2={rowY('G') + 6} stroke="#2563eb" strokeWidth="2.5" />
-              <line x1={colX(28) + 18} y1={rowY('G') - 6} x2={colX(28) + 18} y2={rowY('G') + 6} stroke="#dc2626" strokeWidth="2.5" />
-              <text x={colX(28) + 11} y={rowY('G') - 9} textAnchor="middle" fontSize="7" fill="#15803d" fontWeight="bold">R2: 5.6k</text>
+              <rect x={colX(28) - 5} y={rowY('G') - 7} width={S + 10} height="14" rx="4" fill="#fdfbf7" stroke="#b08968" strokeWidth="1.4" filter="url(#shadowHeavy)" />
+              {/* Color Code Bands for 5.6k: Green, Blue, Red, Gold */}
+              <line x1={colX(28) + 3} y1={rowY('G') - 7} x2={colX(28) + 3} y2={rowY('G') + 7} stroke="#16a34a" strokeWidth="2.5" />
+              <line x1={colX(28) + 10} y1={rowY('G') - 7} x2={colX(28) + 10} y2={rowY('G') + 7} stroke="#2563eb" strokeWidth="2.5" />
+              <line x1={colX(28) + 17} y1={rowY('G') - 7} x2={colX(28) + 17} y2={rowY('G') + 7} stroke="#dc2626" strokeWidth="2.5" />
+              <line x1={colX(28) + 24} y1={rowY('G') - 7} x2={colX(28) + 24} y2={rowY('G') + 7} stroke="#ca8a04" strokeWidth="1.5" />
+              <text x={colX(28) + 11} y={rowY('G') - 10} textAnchor="middle" fontSize="7.5" fill="#15803d" fontWeight="bold" fontFamily="monospace">R2: 5.6kΩ</text>
             </g>
 
-            {/* C2: 0.1uF Capacitor for CH1 */}
+            {/* C2: 0.1uF Capacitor for CH1 (Col 29 Row I to Ground Rail) */}
             <g className="cursor-pointer" onClick={() => handleStartWire({ id: `hole-I-29`, x: colX(29), y: rowY('I'), label: 'C2 0.1uF Filter Junction' })}>
-              <circle cx={colX(29)} cy={rowY('I')} r="8" fill="#f59e0b" stroke="#b45309" strokeWidth="1.2" filter="url(#shadowHeavy)" />
-              <text x={colX(29)} y={rowY('I') + 3} textAnchor="middle" fontSize="6.5" fill="#78350f" fontWeight="bold">0.1μ</text>
-              <text x={colX(29)} y={rowY('J') + 13} textAnchor="middle" fontSize="7.5" fill="#059669" fontWeight="bold">LPF 1</text>
+              {/* Lead trace down to Ground rail */}
+              <line x1={colX(29)} y1={rowY('I')} x2={colX(29)} y2={RAIL.bm} stroke="#1e293b" strokeWidth="2.2" strokeLinecap="round" />
+              <circle cx={colX(29)} cy={RAIL.bm} r="3" fill="#1e293b" />
+              {/* Ceramic Disc Capacitor Body */}
+              <circle cx={colX(29)} cy={rowY('I')} r="9" fill="#f59e0b" stroke="#b45309" strokeWidth="1.5" filter="url(#shadowHeavy)" />
+              <text x={colX(29)} y={rowY('I') + 3} textAnchor="middle" fontSize="6.5" fill="#ffffff" fontWeight="bold" fontFamily="monospace">0.1μF</text>
+              <text x={colX(29)} y={rowY('J') + 14} textAnchor="middle" fontSize="7.5" fill="#059669" fontWeight="bold" fontFamily="monospace">C2 ➔ GND</text>
             </g>
+
+            {/* Bottom Subtitle */}
+            <text x={colX(26) + 37} y={rowY('J') + 26} textAnchor="middle" fill="#64748b" fontSize="6.5" fontWeight="bold" fontFamily="monospace">
+              fc = 1/(2πRC) ≈ 284 Hz (Low-Pass)
+            </text>
           </g>
 
           {/* ════════ REALISTIC HARDWARE BINDING POSTS / BNC TERMINALS ════════ */}
@@ -1104,8 +1372,165 @@ export default function InteractiveBreadboard({
             </g>
           )}
 
-          {/* ════════ GUIDED TARGET BEACON ════════ */}
-          {guidedHoleId && (() => {
+          {/* ════════ DUAL-ENDED ACTIVE WIRE GUIDANCE OVERLAY ════════ */}
+          {activeGuide && (() => {
+            const { from, to, wireColor } = activeGuide
+            const midX = (from.x + to.x) / 2
+            const midY = (from.y + to.y) / 2 - 24
+
+            return (
+              <g id="active-wire-guide-layer">
+                <defs>
+                  <linearGradient id="guideGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+                    <stop offset="50%" stopColor={wireColor || '#f59e0b'} stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.8" />
+                  </linearGradient>
+                </defs>
+
+                {/* Wide Ambient Glow Tube */}
+                <path
+                  d={wirePath(from.x, from.y, to.x, to.y)}
+                  fill="none"
+                  stroke="url(#guideGlowGrad)"
+                  strokeWidth="14"
+                  strokeOpacity="0.3"
+                  strokeLinecap="round"
+                />
+
+                {/* Pulsing Animated Dashed Flight Trajectory */}
+                <path
+                  d={wirePath(from.x, from.y, to.x, to.y)}
+                  fill="none"
+                  stroke={wireColor || '#f59e0b'}
+                  strokeWidth="4.5"
+                  strokeDasharray="12 8"
+                  strokeLinecap="round"
+                >
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    from="40"
+                    to="0"
+                    dur="0.85s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+
+                {/* Midpoint Directional Badge */}
+                <g transform={`translate(${midX}, ${midY})`}>
+                  <rect x="-38" y="-11" width="76" height="20" rx="6" fill="#0f172a" stroke="#fbbf24" strokeWidth="1.4" filter="url(#shadowHeavy)" />
+                  <text x="0" y="3" textAnchor="middle" fill="#fbbf24" fontSize="8" fontWeight="bold" fontFamily="monospace">
+                    CONNECT ➔
+                  </text>
+                </g>
+
+                {/* 1. START BEACON (Clickable to initiate wiring) */}
+                <g
+                  className="cursor-pointer group"
+                  onClick={() => handleStartWire(from)}
+                >
+                  <circle
+                    cx={from.x}
+                    cy={from.y}
+                    r="24"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="3.5"
+                    className="animate-ping"
+                    opacity="0.85"
+                  />
+                  <circle
+                    cx={from.x}
+                    cy={from.y}
+                    r="11"
+                    fill="#10b981"
+                    stroke="#ffffff"
+                    strokeWidth="2.5"
+                    filter="url(#shadowHeavy)"
+                  />
+                  {/* Floating Start Badge */}
+                  <g transform={`translate(${from.x}, ${from.y > 200 ? from.y - 20 : from.y + 22})`}>
+                    <rect
+                      x="-65"
+                      y="-13"
+                      width="130"
+                      height="18"
+                      rx="5"
+                      fill="#064e3b"
+                      stroke="#34d399"
+                      strokeWidth="1.5"
+                      filter="url(#shadowHeavy)"
+                    />
+                    <text
+                      x="0"
+                      y="0"
+                      textAnchor="middle"
+                      fill="#ffffff"
+                      fontSize="7.5"
+                      fontWeight="bold"
+                      fontFamily="monospace"
+                    >
+                      1. START: {from.label}
+                    </text>
+                  </g>
+                </g>
+
+                {/* 2. TARGET BEACON (Clickable to snap connection) */}
+                <g
+                  className="cursor-pointer group"
+                  onClick={snapGuidedWire}
+                >
+                  <circle
+                    cx={to.x}
+                    cy={to.y}
+                    r="24"
+                    fill="none"
+                    stroke="#f59e0b"
+                    strokeWidth="3.5"
+                    className="animate-ping"
+                    opacity="0.85"
+                  />
+                  <circle
+                    cx={to.x}
+                    cy={to.y}
+                    r="11"
+                    fill="#f59e0b"
+                    stroke="#ffffff"
+                    strokeWidth="2.5"
+                    filter="url(#shadowHeavy)"
+                  />
+                  {/* Floating Target Badge */}
+                  <g transform={`translate(${to.x}, ${to.y > 200 ? to.y - 20 : to.y + 22})`}>
+                    <rect
+                      x="-70"
+                      y="-13"
+                      width="140"
+                      height="18"
+                      rx="5"
+                      fill="#78350f"
+                      stroke="#fbbf24"
+                      strokeWidth="1.5"
+                      filter="url(#shadowHeavy)"
+                    />
+                    <text
+                      x="0"
+                      y="0"
+                      textAnchor="middle"
+                      fill="#ffffff"
+                      fontSize="7.5"
+                      fontWeight="bold"
+                      fontFamily="monospace"
+                    >
+                      2. PLUG IN: {to.label}
+                    </text>
+                  </g>
+                </g>
+              </g>
+            )
+          })()}
+
+          {/* Fallback Single Guided Beacon (if activeGuide not set) */}
+          {!activeGuide && guidedHoleId && (() => {
             const gCoord = getGuidedHoleCoords(guidedHoleId)
             if (!gCoord) return null
             return (

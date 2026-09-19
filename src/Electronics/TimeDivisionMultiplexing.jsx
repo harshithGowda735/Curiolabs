@@ -9,40 +9,54 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { CheckCircle2, AlertTriangle, XCircle, Zap, RefreshCw, Sparkles, Box, Activity, Layers, Power, ArrowRight, Camera, Smartphone } from 'lucide-react'
 
 /* ════════════════════════════════════════════════════════════
+   REQUIRED COMPONENTS & APPARATUS (LAB MANUAL STANDARD)
+   ════════════════════════════════════════════════════════════ */
+const tdmApparatus = [
+  { name: 'IC CD4051B', spec: '8-Channel CMOS Analog Multiplexer / Demultiplexer', qty: '2 Nos.' },
+  { name: 'Resistors (R1, R2)', spec: '5.6 kΩ, 0.25W (Demux RC Low-Pass Reconstruction Filter)', qty: '2 Nos.' },
+  { name: 'Capacitors (C1, C2)', spec: '0.1 μF (100nF) Ceramic / Disc (fc ≈ 284 Hz filter to Ground)', qty: '2 Nos.' },
+  { name: 'Digital Storage Oscilloscope', spec: 'Dual-Trace DSO (DC - 20 MHz) with 10X probes', qty: '1 No.' },
+  { name: 'Audio Function Generators', spec: 'FG1: 100Hz Sine (1V p-p), FG2: 300Hz Triangle (1V p-p)', qty: '2 Nos.' },
+  { name: 'Digital Clock Pulse Generator', spec: 'Square Wave (2 kHz, 5V p-p, 50% duty cycle)', qty: '1 No.' },
+  { name: 'Regulated DC Power Supply', spec: '+5V DC Rail (Pin 16 VDD) & Ground 0V (VSS)', qty: '1 No.' },
+  { name: 'Solderless Breadboard & Wires', spec: 'Full-size breadboard & single-strand jumper wires', qty: '1 Set' },
+]
+
+/* ════════════════════════════════════════════════════════════
    EASILY UNDERSTANDABLE STEP-BY-STEP LAB INSTRUCTIONS
    ════════════════════════════════════════════════════════════ */
 const steps = [
   {
     title: '1. Wire Power, Ground & TDM Bus',
-    description: 'Connect +5V (Red) to Pin 16 (VDD) on both ICs. Connect GND (Black) to Pin 8 (VSS), Pin 6 (INH), and Pin 7 (VEE). Bridge Mux Pin 3 to Demux Pin 3 with a jumper wire.'
+    description: 'Place two CD4051 ICs on breadboard. Connect +5V (Red) to Pin 16 (VDD) on both ICs. Connect GND (Black) to Pin 8 (VSS), Pin 6 (INH), and Pin 7 (VEE) on both ICs. Bridge MUX Pin 3 (TDM Bus) to DEMUX Pin 3 (COM In) with a jumper wire.'
   },
   {
     title: '2. Configure 2-Channel Mode (Ground B & C)',
-    description: 'Ground Address Pins B (Pin 10) and C (Pin 9) on both ICs. This locks the 8-channel IC 4051 to alternate strictly between Channel 0 and Channel 1.'
+    description: 'Ground Address Select Pins B (Pin 10) and C (Pin 9) on both ICs. This locks the 8-channel ICs to toggle strictly between Channel 0 and Channel 1.'
   },
   {
     title: '3. Connect Message Inputs (FG1 & FG2)',
-    description: 'Connect FG1 (1V, 100Hz Sine) into IC1 Pin 13 (Channel 0), and connect FG2 (1V, 300Hz Triangle) into IC1 Pin 14 (Channel 1).'
+    description: 'Connect Function Generator 1 (1V, 100Hz Sine) into IC1 Pin 13 (Channel 0 / X0). Connect Function Generator 2 (1V, 300Hz Triangle) into IC1 Pin 14 (Channel 1 / X1).'
   },
   {
     title: '4. Connect Control Clock (<10 kHz)',
-    description: 'Connect the 2kHz 5V Square Wave Clock to IC1 Pin 11 (Address Select A), and bridge it to IC2 Pin 11 to keep multiplexer and demultiplexer in sync.'
+    description: 'Connect the 2kHz 5V Square Wave Clock to IC1 Pin 11 (Address Select A), and bridge it to IC2 Pin 11 to keep multiplexer and demultiplexer switching in exact synchrony.'
   },
   {
     title: '5. Energize DC Power Supply (5V)',
-    description: 'Click the "5V SUPPLY ON" toggle switch in the left control panel to energize the CMOS bilateral transmission gates.'
+    description: 'Turn ON the +5V DC regulated power supply (Pin 16 VDD) in the left control panel to energize the internal CMOS analog bilateral transmission gates.'
   },
   {
     title: '6. Probe TDM Output at Pin 3 (Oscilloscope)',
-    description: 'Attach the DSO oscilloscope probe to Pin 3 to view the time-division multiplexed interleaved PAM pulse train.'
+    description: 'Attach the DSO oscilloscope probe to Pin 3 to observe the time-division multiplexed interleaved PAM pulse train carrying samples of both message signals.'
   },
   {
-    title: '7. Demultiplexing Channel Routing',
-    description: 'The second IC 4051 demultiplexes the composite pulse train back into Channel 0 (Pin 13) and Channel 1 (Pin 14).'
+    title: '7. Install Demux Low-Pass Reconstruction Filters (5.6kΩ + 0.1μF)',
+    description: 'Connect two 5.6kΩ resistors (R1, R2) to Demux output pins 13 (Y0) and 14 (Y1). Connect two 0.1μF capacitors (C1, C2) from the resistor outputs to Ground. This builds 1st-order RC low-pass filters (fc = 1/(2πRC) ≈ 284 Hz) to reconstruct continuous analog waveforms from the discrete PAM pulse train.'
   },
   {
-    title: '8. Observe Recovered Signals (RC Filter)',
-    description: 'Attach DSO probes to the RC filter junctions (5.6kΩ + 0.1μF) to observe the smooth reconstructed 100Hz Sine and 300Hz Triangle waveforms.'
+    title: '8. Observe Reconstructed Analog Signals via DSO Probes',
+    description: 'Clip DSO Channel 1 probe across C1 (0.1μF) to observe the smooth recovered 100Hz Sine wave, and Channel 2 probe across C2 (0.1μF) to observe the recovered 300Hz Triangle wave without carrier switching noise.'
   }
 ]
 
@@ -795,6 +809,7 @@ export default function TimeDivisionMultiplexing() {
       gradientFrom="from-emerald-600"
       gradientTo="to-teal-700"
       steps={steps}
+      apparatus={tdmApparatus}
       currentStep={activeStep}
       setupStatus={circuitState.allReady ? 'complete' : 'incomplete'}
       setupMessage={
