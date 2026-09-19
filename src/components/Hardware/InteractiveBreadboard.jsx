@@ -675,77 +675,84 @@ export default function InteractiveBreadboard({
 
   return (
     <div className="w-full select-none space-y-3">
-      {/* ── Top Bar with Status and Quick Actions (Modern Clean Lab Theme) ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white text-slate-800 p-3.5 rounded-2xl shadow-xs border border-slate-200">
-        <div className="flex items-center gap-2.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-xs" />
-          <div>
-            <h3 className="text-xs font-display font-bold tracking-tight text-slate-900 uppercase">
-              Solderless Hardware Breadboard Simulator (CD4051 Dual-IC)
+      {/* ── Top Bar with Status and Quick Actions (Virtual Labs Header Format) ── */}
+      <div className="bg-white rounded-md border-2 border-[#7ea4e7] overflow-hidden shadow-xs">
+        {/* Blue Header Title Bar */}
+        <div className="bg-[#85a7e6] py-2 px-4 border-b border-[#6e93db] flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-xs inline-block" />
+            <h3 className="font-serif font-bold text-xs sm:text-sm tracking-wide text-[#0e1d4a] uppercase">
+              SOLDERLESS BREADBOARD SIMULATOR (CD4051 DUAL-IC)
             </h3>
-            <p className="text-[11px] text-slate-500">
-              {activeWire ? (
-                <span className="text-amber-800 font-semibold flex items-center gap-2 flex-wrap">
-                  <span className="animate-pulse">⚡ Selected: {activeWire.label} — Click breadboard hole to connect</span>
-                  <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded shadow-2xs">
-                    Press <kbd className="font-bold underline">ESC</kbd> to leave wire
-                  </span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setActiveWire(null); setSnappedTarget(null); }}
-                    className="text-[10px] text-rose-600 hover:text-rose-800 underline font-bold cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </span>
-              ) : (
-                'Click terminal post to start wire, then click breadboard hole to connect. Press ESC to cancel. Right-click wire to remove.'
-              )}
-            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {justConnected && (
+              <span className="text-[11px] text-[#0e1d4a] bg-white/80 border border-[#6e93db] px-2 py-0.5 rounded font-mono font-bold">
+                ✓ {justConnected}
+              </span>
+            )}
+            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-[#0e1d4a] text-white">
+              {connectedCount}/{LAB_CONNECTIONS.length} Wired
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {justConnected && (
-            <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg font-mono font-semibold">
-              ✓ {justConnected}
-            </span>
-          )}
-          <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full ${allConnected ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
-            {connectedCount}/{LAB_CONNECTIONS.length} Wired
-          </span>
-          <button
-            onClick={guideNextPending}
-            className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold px-3 py-1.5 rounded-xl shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
-            title="Highlight the next required connection pin on the breadboard"
-          >
-            <Sparkles size={12} className="text-amber-600" />
-            <span>Guide Next Wire</span>
-          </button>
-          <button
-            onClick={undoLastWire}
-            disabled={wires.length === 0}
-            className={`text-xs font-medium px-2.5 py-1.5 rounded-xl border transition-colors flex items-center gap-1 ${
-              wires.length === 0
-                ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 active:scale-95'
-            }`}
-            title="Undo last connected wire"
-          >
-            <Undo2 size={12} />
-            <span>Undo</span>
-          </button>
-          <button
-            onClick={autoWireCircuit}
-            className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs transition-all active:scale-95"
-          >
-            Auto-Wire (All)
-          </button>
-          <button
-            onClick={resetAll}
-            className="text-xs bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-medium px-2.5 py-1.5 rounded-xl border border-slate-200 transition-colors"
-          >
-            Clear Board
-          </button>
+        {/* Toolbar Controls */}
+        <div className="p-3 bg-white flex flex-wrap items-center justify-between gap-3 border-b border-slate-200">
+          <p className="text-[11.5px] font-sans font-medium text-slate-700 flex-1 min-w-[240px]">
+            {activeWire ? (
+              <span className="text-amber-900 font-bold flex items-center gap-2 flex-wrap">
+                <span>⚡ Selected: {activeWire.label} — Click breadboard hole to connect</span>
+                <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded">
+                  Press <kbd className="font-bold underline">ESC</kbd> to cancel
+                </span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setActiveWire(null); setSnappedTarget(null); }}
+                  className="text-[10px] text-rose-700 hover:text-rose-900 underline font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </span>
+            ) : (
+              'Click terminal post to start wire, then click breadboard hole to connect. Press ESC to cancel.'
+            )}
+          </p>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              onClick={guideNextPending}
+              className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 font-bold px-3 py-1.5 rounded transition-all active:scale-95 flex items-center gap-1.5"
+              title="Highlight the next required connection pin on the breadboard"
+            >
+              <Sparkles size={12} className="text-amber-700" />
+              <span>Guide Next Wire</span>
+            </button>
+            <button
+              onClick={undoLastWire}
+              disabled={wires.length === 0}
+              className={`text-xs font-bold px-2.5 py-1.5 rounded border transition-colors flex items-center gap-1 ${
+                wires.length === 0
+                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 active:scale-95'
+              }`}
+              title="Undo last connected wire"
+            >
+              <Undo2 size={12} />
+              <span>Undo</span>
+            </button>
+            <button
+              onClick={autoWireCircuit}
+              className="text-xs bg-[#0e1d4a] hover:bg-[#1a2f6c] text-white font-bold px-3 py-1.5 rounded transition-all active:scale-95"
+            >
+              Auto-Wire (All)
+            </button>
+            <button
+              onClick={resetAll}
+              className="text-xs bg-slate-100 hover:bg-rose-100 hover:text-rose-800 text-slate-700 font-bold px-2.5 py-1.5 rounded border border-slate-300 transition-colors"
+            >
+              Clear Board
+            </button>
+          </div>
         </div>
       </div>
 

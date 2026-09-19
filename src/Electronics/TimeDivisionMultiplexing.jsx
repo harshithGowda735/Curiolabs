@@ -475,39 +475,45 @@ export default function TimeDivisionMultiplexing() {
   // Visualization Main View
   const visualization = (
     <div className="space-y-4">
-      {/* Tab Switcher */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center p-1 bg-slate-200/80 rounded-xl shadow-xs">
+      {/* Laboratory Workstation Tab Header Bar */}
+      <div className="bg-[#85a7e6] p-1.5 rounded-md border-2 border-[#6e93db] flex flex-wrap items-center justify-between gap-2 shadow-xs">
+        <div className="flex items-center gap-1 flex-wrap">
           <button
             onClick={() => setActiveTab('breadboard')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              activeTab === 'breadboard' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3.5 py-1.5 rounded text-xs font-bold font-sans flex items-center gap-1.5 transition-all border ${
+              activeTab === 'breadboard' 
+                ? 'bg-[#0e1d4a] text-white border-[#0e1d4a] shadow-xs' 
+                : 'bg-white/70 hover:bg-white text-[#0e1d4a] border-transparent hover:border-slate-300'
             }`}
           >
-            <Layers size={13} className="text-amber-600" />
+            <Layers size={13} />
             <span>Interactive Breadboard</span>
           </button>
           <button
             onClick={() => setActiveTab('dso')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              activeTab === 'dso' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3.5 py-1.5 rounded text-xs font-bold font-sans flex items-center gap-1.5 transition-all border ${
+              activeTab === 'dso' 
+                ? 'bg-[#0e1d4a] text-white border-[#0e1d4a] shadow-xs' 
+                : 'bg-white/70 hover:bg-white text-[#0e1d4a] border-transparent hover:border-slate-300'
             }`}
           >
-            <Activity size={13} className="text-sky-600" />
+            <Activity size={13} />
             <span>Lab Waveforms (DSO)</span>
           </button>
           <button
             onClick={() => setActiveTab('3d')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              activeTab === '3d' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3.5 py-1.5 rounded text-xs font-bold font-sans flex items-center gap-1.5 transition-all border ${
+              activeTab === '3d' 
+                ? 'bg-[#0e1d4a] text-white border-[#0e1d4a] shadow-xs' 
+                : 'bg-white/70 hover:bg-white text-[#0e1d4a] border-transparent hover:border-slate-300'
             }`}
           >
-            <Box size={13} className="text-emerald-600" />
+            <Box size={13} />
             <span>3D Virtual Lab Bench</span>
           </button>
           <button
             onClick={() => setShowDirectDeskAR(true)}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-xs transition-all active:scale-95"
+            className="px-3.5 py-1.5 rounded text-xs font-bold font-sans flex items-center gap-1.5 bg-white/70 hover:bg-white text-[#0e1d4a] border border-transparent hover:border-slate-300 transition-all"
             title="Open camera to project circuit on your physical desk"
           >
             <Camera size={13} />
@@ -515,20 +521,16 @@ export default function TimeDivisionMultiplexing() {
           </button>
         </div>
 
-        {/* Live Status Pill (Only shows completion badge when ready) */}
         {circuitState.allReady && (
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-              Procedure Complete • Real Outputs Active
-            </span>
-          </div>
+          <span className="text-[11px] font-bold font-mono px-2.5 py-1 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
+            ✓ Complete
+          </span>
         )}
       </div>
 
       {/* ── TAB 1: INTERACTIVE BREADBOARD WIRING ── */}
       {activeTab === 'breadboard' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+        <div className="bg-white rounded-md border-2 border-[#7ea4e7] p-3 sm:p-4 shadow-xs">
           <InteractiveBreadboard
             activeProcedureStep={activeStep + 1}
             isPowerSwitchedOn={isPowerOn}
@@ -539,43 +541,44 @@ export default function TimeDivisionMultiplexing() {
 
       {/* ── TAB 2: DIGITAL STORAGE OSCILLOSCOPE (DSO) REAL HARDWARE SIGNALS ── */}
       {activeTab === 'dso' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="bg-white rounded-md border-2 border-[#7ea4e7] overflow-hidden shadow-xs">
+          <div className="bg-[#85a7e6] py-2 px-4 border-b border-[#6e93db] flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h3 className="font-bold text-slate-900 text-sm">Real Oscilloscope Outputs (Procedure Verification)</h3>
-              <p className="text-xs text-slate-500">Waveforms dynamically respond to breadboard jumper connections</p>
+              <h3 className="font-serif font-bold text-xs sm:text-sm tracking-wide text-[#0e1d4a] uppercase">
+                DIGITAL STORAGE OSCILLOSCOPE (DSO) — WAVEFORMS
+              </h3>
             </div>
 
             {/* Filter Buttons */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-xs">
+            <div className="flex items-center gap-1 bg-white/70 p-0.5 rounded text-xs border border-[#6e93db]">
               <button
                 onClick={() => setDsoChannel('all')}
-                className={`px-2.5 py-1 rounded-md font-medium transition-all ${dsoChannel === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'}`}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${dsoChannel === 'all' ? 'bg-[#0e1d4a] text-white' : 'text-[#0e1d4a] hover:bg-white'}`}
               >
                 All Channels
               </button>
               <button
                 onClick={() => setDsoChannel('inputs')}
-                className={`px-2.5 py-1 rounded-md font-medium transition-all ${dsoChannel === 'inputs' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'}`}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${dsoChannel === 'inputs' ? 'bg-[#0e1d4a] text-white' : 'text-[#0e1d4a] hover:bg-white'}`}
               >
                 Step 3 Inputs
               </button>
               <button
                 onClick={() => setDsoChannel('tdm')}
-                className={`px-2.5 py-1 rounded-md font-medium transition-all ${dsoChannel === 'tdm' ? 'bg-white text-purple-700 shadow-xs' : 'text-slate-600'}`}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${dsoChannel === 'tdm' ? 'bg-[#0e1d4a] text-white' : 'text-[#0e1d4a] hover:bg-white'}`}
               >
                 Step 6 Pin 3
               </button>
               <button
                 onClick={() => setDsoChannel('recon')}
-                className={`px-2.5 py-1 rounded-md font-medium transition-all ${dsoChannel === 'recon' ? 'bg-white text-sky-700 shadow-xs' : 'text-slate-600'}`}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${dsoChannel === 'recon' ? 'bg-[#0e1d4a] text-white' : 'text-[#0e1d4a] hover:bg-white'}`}
               >
                 Step 8 Reconstructed
               </button>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="p-4 space-y-3">
             {/* Step 3: Message Signal 1 (Pin 13 Sinusoidal Wave) */}
             {(dsoChannel === 'all' || dsoChannel === 'inputs') && (
               <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
