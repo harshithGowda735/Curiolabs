@@ -31,6 +31,7 @@ export default function MissionShell({
   accentColor = 'emerald',
   gradientFrom = 'from-slate-900',
   gradientTo = 'to-slate-800',
+  aim = '',
   steps = [],
   apparatus = [],
   currentStep = 0,
@@ -171,37 +172,55 @@ export default function MissionShell({
                 </div>
               )}
 
-              {/* Apparatus / Required Components Standardized Card */}
-              {apparatus && apparatus.length > 0 && (
-                <div className="apple-card rounded-2xl p-5 border border-slate-200/90 shadow-2xs">
-                  <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-100">
-                    <h2 className="text-sm font-display font-bold text-slate-950 flex items-center gap-2">
-                      <Layers size={16} className="text-emerald-600" />
-                      <span>{t('Apparatus / Components Required', 'ಅಗತ್ಯವಿರುವ ಘಟಕಗಳು ಮತ್ತು ಉಪಕರಣಗಳು')}</span>
-                    </h2>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {apparatus.length} Items
-                    </span>
-                  </div>
+              {/* Lab Manual Authentic Box: AIM & APPARATUS (Exact Manual Format) */}
+              {(aim || (apparatus && apparatus.length > 0)) && (
+                <div className="bg-white rounded-xl border border-slate-300 p-5 shadow-xs text-slate-950">
+                  {/* AIM */}
+                  {aim && (
+                    <div className="mb-4 text-xs font-sans leading-relaxed">
+                      <span className="font-extrabold text-slate-950 uppercase tracking-wide text-xs mr-2">AIM:</span>
+                      <span className="text-slate-900 font-medium">{aim}</span>
+                    </div>
+                  )}
 
-                  <div className="grid grid-cols-1 gap-2">
-                    {apparatus.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-xs p-2 rounded-xl bg-slate-50/90 border border-slate-100 hover:border-slate-200 transition-colors">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-2xs" />
-                          <div className="min-w-0">
-                            <span className="font-semibold text-slate-900 block truncate">{item.name}</span>
-                            {item.spec && <span className="text-[10px] text-slate-500 block truncate font-mono">{item.spec}</span>}
-                          </div>
-                        </div>
-                        {item.qty && (
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-white text-slate-700 border border-slate-200 shadow-2xs shrink-0 ml-2">
-                            {item.qty}
-                          </span>
-                        )}
+                  {/* APPARATUS TABLE */}
+                  {apparatus && apparatus.length > 0 && (
+                    <div>
+                      <h3 className="text-xs font-extrabold uppercase tracking-wide text-slate-950 font-sans mb-2">
+                        APPARATUS:
+                      </h3>
+                      <div className="overflow-x-auto rounded-md">
+                        <table className="w-full border-collapse border border-slate-900 text-xs font-sans">
+                          <thead>
+                            <tr className="bg-slate-100/70">
+                              <th className="border border-slate-900 px-3 py-2 text-center font-bold text-slate-950 w-16">Sl. No.</th>
+                              <th className="border border-slate-900 px-4 py-2 text-left font-bold text-slate-950">Particulars</th>
+                              <th className="border border-slate-900 px-3 py-2 text-center font-bold text-slate-950 w-28">Range</th>
+                              <th className="border border-slate-900 px-3 py-2 text-center font-bold text-slate-950 w-20">Quantity</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {apparatus.map((row, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                <td className="border border-slate-900 px-3 py-2 text-center font-medium text-slate-900">
+                                  {row.slNo || `${idx + 1}.`}
+                                </td>
+                                <td className="border border-slate-900 px-4 py-2 text-left font-medium text-slate-900">
+                                  {row.particulars || row.name}
+                                </td>
+                                <td className="border border-slate-900 px-3 py-2 text-center font-medium text-slate-800">
+                                  {row.range || row.spec || '-'}
+                                </td>
+                                <td className="border border-slate-900 px-3 py-2 text-center font-medium text-slate-900">
+                                  {row.quantity || row.qty}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
 

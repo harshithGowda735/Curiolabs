@@ -9,17 +9,17 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { CheckCircle2, AlertTriangle, XCircle, Zap, RefreshCw, Sparkles, Box, Activity, Layers, Power, ArrowRight, Camera, Smartphone } from 'lucide-react'
 
 /* ════════════════════════════════════════════════════════════
-   REQUIRED COMPONENTS & APPARATUS (LAB MANUAL STANDARD)
+   AIM & APPARATUS (EXACT LAB MANUAL STANDARD)
    ════════════════════════════════════════════════════════════ */
+const tdmAim = 'To study the performance of multiplexing and demultiplexing of two band limited signals.'
+
 const tdmApparatus = [
-  { name: 'IC CD4051B', spec: '8-Channel CMOS Analog Multiplexer / Demultiplexer', qty: '2 Nos.' },
-  { name: 'Resistors (R1, R2)', spec: '5.6 kΩ, 0.25W (Demux RC Low-Pass Reconstruction Filter)', qty: '2 Nos.' },
-  { name: 'Capacitors (C1, C2)', spec: '0.1 μF (100nF) Ceramic / Disc (fc ≈ 284 Hz filter to Ground)', qty: '2 Nos.' },
-  { name: 'Digital Storage Oscilloscope', spec: 'Dual-Trace DSO (DC - 20 MHz) with 10X probes', qty: '1 No.' },
-  { name: 'Audio Function Generators', spec: 'FG1: 100Hz Sine (1V p-p), FG2: 300Hz Triangle (1V p-p)', qty: '2 Nos.' },
-  { name: 'Digital Clock Pulse Generator', spec: 'Square Wave (2 kHz, 5V p-p, 50% duty cycle)', qty: '1 No.' },
-  { name: 'Regulated DC Power Supply', spec: '+5V DC Rail (Pin 16 VDD) & Ground 0V (VSS)', qty: '1 No.' },
-  { name: 'Solderless Breadboard & Wires', spec: 'Full-size breadboard & single-strand jumper wires', qty: '1 Set' },
+  { slNo: '1.', particulars: 'IC', range: '4051', quantity: '02' },
+  { slNo: '2.', particulars: 'Resistor', range: '5.6KΩ', quantity: '02' },
+  { slNo: '3.', particulars: 'Capacitor', range: '0.1μF', quantity: '02' },
+  { slNo: '4.', particulars: 'Dc Power supplies', range: '-', quantity: '01' },
+  { slNo: '5.', particulars: 'Oscilloscopes', range: '-', quantity: '01' },
+  { slNo: '6.', particulars: 'Function Generator', range: '-', quantity: '02' },
 ]
 
 /* ════════════════════════════════════════════════════════════
@@ -808,8 +808,9 @@ export default function TimeDivisionMultiplexing() {
       accentColor="emerald"
       gradientFrom="from-emerald-600"
       gradientTo="to-teal-700"
-      steps={steps}
+      aim={tdmAim}
       apparatus={tdmApparatus}
+      steps={steps}
       currentStep={activeStep}
       setupStatus={circuitState.allReady ? 'complete' : 'incomplete'}
       setupMessage={
