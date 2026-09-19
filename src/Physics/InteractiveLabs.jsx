@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
 import MissionShell from '../components/MissionShell'
 
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n))
@@ -8,17 +6,41 @@ const path = (points, sx, sy) => points.map((p) => `${sx(p.x)},${sy(p.y)}`).join
 
 function Bench({ kind }) {
   const colors = { ohm: '#f97316', pendulum: '#0ea5e9', projectile: '#f43f5e', hysteresis: '#8b5cf6', diode: '#22c55e', slit: '#eab308' }
-  return <div className="h-44 overflow-hidden rounded-xl border border-slate-700 bg-slate-950">
-    <Canvas camera={{ position: [4.6, 3.1, 5.2], fov: 42 }}>
-      <ambientLight intensity={0.55} /><directionalLight position={[3, 5, 3]} intensity={1.3} />
-      <mesh position={[0, -0.45, 0]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[8, 6]} /><meshStandardMaterial color="#334155" roughness={0.8} /></mesh>
-      <mesh position={[0, -0.22, 0]}><boxGeometry args={[4.5, 0.25, 2.8]} /><meshStandardMaterial color="#d6b98a" /></mesh>
-      <mesh position={[0, 0.2, 0]}><boxGeometry args={[2.8, 0.55, 1.25]} /><meshStandardMaterial color={colors[kind]} emissive={colors[kind]} emissiveIntensity={0.16} /></mesh>
-      <mesh position={[-1.25, 0.4, 0]}><cylinderGeometry args={[0.32, 0.32, 0.7, 32]} /><meshStandardMaterial color="#e2e8f0" metalness={0.6} /></mesh>
-      <mesh position={[1.25, 0.45, 0]}><sphereGeometry args={[0.4, 32, 16]} /><meshStandardMaterial color="#94a3b8" metalness={0.45} /></mesh>
-      <OrbitControls enablePan enableZoom minDistance={3.5} maxDistance={8} />
-    </Canvas>
-  </div>
+  const accent = colors[kind] || '#38bdf8'
+  return (
+    <div className="h-44 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 p-4 flex flex-col justify-between relative shadow-inner">
+      <div className="flex justify-between items-center z-10">
+        <span className="text-[11px] font-mono tracking-widest text-slate-400 uppercase font-semibold">Laboratory Workstation Bench</span>
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-full">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> ONLINE
+        </span>
+      </div>
+      <div className="relative flex-1 flex items-center justify-center">
+        <svg viewBox="0 0 360 90" className="w-full h-full max-w-md drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
+          <polygon points="180,10 330,35 180,60 30,35" fill="#1e293b" stroke="#334155" strokeWidth="1.5" />
+          <polygon points="30,35 180,60 180,72 30,47" fill="#0f172a" />
+          <polygon points="180,60 330,35 330,47 180,72" fill="#1e293b" />
+          
+          <polygon points="180,22 230,31 180,40 130,31" fill={accent} opacity="0.9" />
+          <polygon points="130,31 180,40 180,48 130,39" fill={accent} opacity="0.7" />
+          <polygon points="180,40 230,31 230,39 180,48" fill={accent} opacity="0.6" />
+          
+          <g>
+            <ellipse cx="90" cy="30" rx="10" ry="5" fill="#64748b" />
+            <rect x="80" y="24" width="20" height="6" fill="#475569" />
+            <ellipse cx="90" cy="24" rx="10" ry="5" fill="#94a3b8" />
+          </g>
+          
+          <circle cx="270" cy="33" r="8" fill="#38bdf8" opacity="0.8" />
+          <circle cx="270" cy="33" r="12" fill="none" stroke="#38bdf8" strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
+        </svg>
+      </div>
+      <div className="text-[10px] text-slate-500 font-mono flex justify-between z-10">
+        <span>ISO-9001 CALIBRATED</span>
+        <span className="text-slate-400">BENCH-READY</span>
+      </div>
+    </div>
+  )
 }
 
 function SvgGraph({ title, series, yLabel = 'value', colors = ['#38bdf8', '#f97316'] }) {

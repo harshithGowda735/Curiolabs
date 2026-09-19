@@ -1,8 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { Download, FileText, MoveHorizontal, RotateCcw, Save } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { jsPDF } from 'jspdf'
 
 const LC = 0.02
 const specimens = [
@@ -47,7 +45,49 @@ export default function VernierCaliper() {
   const selectSpecimen = id => { const next = specimens.find(item => item.id === id); setSpecimenId(id); setOpening(next.size); }
   const record = () => setHistory(old => [...old, { trial: old.length + 1, reading: +reading.toFixed(2), error: +error.toFixed(2), accuracy: +accuracy.toFixed(1), object: specimen.name }])
   const csv = () => { const body = ['Trial,Object,Corrected reading (mm),Error (mm),Accuracy (%)', ...history.map(r => `${r.trial},${r.object},${r.reading},${r.error},${r.accuracy}`)].join('\n'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([body], { type: 'text/csv' })); a.download = 'vernier-observations.csv'; a.click(); URL.revokeObjectURL(a.href) }
-  const pdf = () => { const doc = new jsPDF(); doc.text('CurioLabs Vernier Caliper Lab Report', 15, 18); doc.text(`Specimen: ${specimen.name}`, 15, 28); history.forEach((r, i) => doc.text(`${r.trial}. ${r.reading} mm | error ${r.error} mm | ${r.accuracy}%`, 15, 40 + i * 8)); doc.save('vernier-lab-report.pdf') }
+  const pdf = () => {
+    const printWin = window.open('', '_blank')
+    if (!printWin) return
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>CurioLabs Vernier Caliper Lab Report</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 32px; color: #0f172a; }
+            h1 { font-size: 22px; margin-bottom: 4px; color: #0f766e; }
+            .meta { color: #64748b; font-size: 13px; margin-bottom: 24px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+            th, td { border: 1px solid #e2e8f0; padding: 10px 14px; text-align: left; font-size: 13px; }
+            th { background: #f8fafc; font-weight: 600; color: #334155; }
+            tr:nth-child(even) { background: #f8fafc; }
+          </style>
+        </head>
+        <body>
+          <h1>CurioLabs Vernier Caliper Lab Report</h1>
+          <div class="meta">Specimen: <strong>${specimen.name}</strong> (${specimen.size} mm) &bull; Date: ${new Date().toLocaleDateString()}</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Trial #</th>
+                <th>Specimen</th>
+                <th>Corrected Reading (mm)</th>
+                <th>Error (mm)</th>
+                <th>Accuracy (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${history.map(r => `<tr><td>#${r.trial}</td><td>${r.object}</td><td>${r.reading} mm</td><td>${r.error} mm</td><td>${r.accuracy}%</td></tr>`).join('')}
+            </tbody>
+          </table>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `)
+    printWin.document.close()
+  }
   const readout = useMemo(() => `MSR ${msr} mm + VSR ${vsd} × ${LC} mm − zero error ${zeroError.toFixed(2)} mm`, [msr, vsd, zeroError])
   return <div className="min-h-[100dvh] bg-slate-50 text-slate-900"><header className="border-b border-slate-200 bg-white"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4"><div><Link to="/physics" className="text-xs font-semibold text-cyan-700">← Physics Lab</Link><h1 className="font-display text-lg font-bold">Virtual Vernier Caliper Laboratory</h1></div><div className="flex gap-2">{['practice','guided','exam'].map(m => <button key={m} onClick={() => setLabMode(m)} className={`rounded-lg px-3 py-1.5 text-xs font-bold capitalize ${labMode === m ? 'bg-slate-900 text-white' : 'border border-slate-200 bg-white text-slate-600'}`}>{m}</button>)}</div></div></header>
     <main className="mx-auto max-w-7xl p-4 md:p-6"><div className="mb-5"><p className="text-xs font-bold uppercase tracking-[.16em] text-cyan-700">Precision measurement workstation</p><p className="mt-1 text-sm text-slate-500">Grab the blue moving jaw directly. The scales and contact assessment update continuously.</p></div><div className="grid gap-5 xl:grid-cols-[230px_minmax(0,1fr)_270px]">
@@ -57,4 +97,54 @@ export default function VernierCaliper() {
     </div></main></div>
 }
 
-function Chart({ title, data, dataKey, color, domain }) { return <div className="rounded-xl border border-slate-200 bg-white p-3"><p className="text-xs font-bold text-slate-700">{title}</p><div className="h-36"><ResponsiveContainer width="100%" height="100%"><LineChart data={data}><XAxis dataKey="trial" tick={{fontSize:10}}/><YAxis domain={domain || ['auto','auto']} tick={{fontSize:10}}/><Tooltip/><Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} dot={{r:3}}/></LineChart></ResponsiveContainer></div></div> }
+function Chart({ title, data, dataKey, color, domain }) {
+  const vals = (data || []).map(d => d[dataKey] ?? 0)
+  const minVal = domain ? domain[0] : (vals.length > 0 ? Math.min(...vals, 0) : 0)
+  const maxVal = domain ? domain[1] : (vals.length > 0 ? Math.max(...vals, 1) : 1)
+  const range = maxVal - minVal || 1
+
+  const width = 280
+  const height = 120
+  const padX = 32
+  const padY = 16
+  const plotW = width - padX - 12
+  const plotH = height - padY - 24
+
+  const points = (data || []).map((d, i) => {
+    const x = data.length > 1 ? padX + (i / (data.length - 1)) * plotW : padX + plotW / 2
+    const y = padY + plotH - ((d[dataKey] - minVal) / range) * plotH
+    return { x, y, val: d[dataKey], trial: d.trial }
+  })
+
+  const polylineStr = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <p className="text-xs font-bold text-slate-700">{title}</p>
+      <div className="h-36 flex items-center justify-center">
+        {data.length === 0 ? (
+          <p className="text-xs text-slate-400">Record readings to plot chart</p>
+        ) : (
+          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
+            <line x1={padX} y1={padY} x2={width - 12} y2={padY} stroke="#f1f5f9" strokeDasharray="3 3" />
+            <line x1={padX} y1={padY + plotH / 2} x2={width - 12} y2={padY + plotH / 2} stroke="#f1f5f9" strokeDasharray="3 3" />
+            <line x1={padX} y1={padY + plotH} x2={width - 12} y2={padY + plotH} stroke="#cbd5e1" />
+            
+            <text x={padX - 4} y={padY + 4} textAnchor="end" fontSize="9" fill="#94a3b8">{maxVal.toFixed(1)}</text>
+            <text x={padX - 4} y={padY + plotH} textAnchor="end" fontSize="9" fill="#94a3b8">{minVal.toFixed(1)}</text>
+
+            {points.length > 1 && (
+              <polyline fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={polylineStr} />
+            )}
+            {points.map((p, idx) => (
+              <g key={idx}>
+                <circle cx={p.x} cy={p.y} r="3.5" fill="#ffffff" stroke={color} strokeWidth="2" />
+                <text x={p.x} y={padY + plotH + 13} textAnchor="middle" fontSize="8" fill="#64748b">#{p.trial}</text>
+              </g>
+            ))}
+          </svg>
+        )}
+      </div>
+    </div>
+  )
+}
