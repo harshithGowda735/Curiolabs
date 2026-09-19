@@ -224,79 +224,44 @@ export default function MissionShell({
                 </div>
               )}
 
-              {/* Lab Procedure & Instructions Standardized Professional Card */}
+              {/* Instruction Box (Exact Virtual Labs / College Manual Format) */}
               {steps.length > 0 && (
-                <div className="bg-white rounded-xl border border-slate-300 p-5 shadow-xs text-slate-950">
-                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
-                    <div>
-                      <h2 className="text-xs font-extrabold uppercase tracking-wide text-slate-950 font-sans flex items-center gap-2">
-                        <span>PROCEDURE / LAB INSTRUCTIONS:</span>
-                      </h2>
-                      <p className="text-[11px] text-slate-500 font-sans mt-0.5">
-                        Step-by-step experimental execution instructions
-                      </p>
-                    </div>
-
+                <div className="bg-white rounded-md border-2 border-[#7ea4e7] overflow-hidden shadow-xs">
+                  {/* Blue Header */}
+                  <div className="bg-[#85a7e6] py-2.5 px-4 relative flex items-center justify-center border-b border-[#6e93db]">
+                    <h2 className="font-serif font-bold text-base sm:text-lg tracking-widest text-[#0e1d4a] uppercase">
+                      INSTRUCTION
+                    </h2>
                     <button 
                       onClick={() => toggle(stepText)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
-                        isSpeaking 
-                          ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' 
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      className={`absolute right-3 p-1 rounded transition-colors ${
+                        isSpeaking ? 'bg-white/40 text-rose-800' : 'text-[#0e1d4a] hover:bg-white/20'
                       }`}
                       title={isSpeaking ? t('Stop reading', 'ಓದುವುದನ್ನು ನಿಲ್ಲಿಸಿ') : t('Read aloud', 'ಜೋರಾಗಿ ಓದಿ')}
                     >
-                      {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                      <span className="font-mono text-[11px]">{isSpeaking ? 'Stop' : 'Listen'}</span>
+                      {isSpeaking ? <VolumeX size={15} /> : <Volume2 size={15} />}
                     </button>
                   </div>
 
-                  <div className="space-y-3">
+                  {/* Body: Numbered list with bold serif font */}
+                  <div className="p-5 sm:p-6 bg-white space-y-3.5 text-xs sm:text-[13.5px] font-serif font-bold text-black leading-relaxed">
                     {steps.map((step, i) => {
-                      const isActive = i === currentStep
-                      const isDone = i < currentStep
-                      const rawTitle = step.title ? step.title.replace(/^\d+[\.\:\-\)]\s*/, '') : ''
-
+                      const text = typeof step === 'string' ? step : (step.description || step.title)
                       return (
-                        <div 
-                          key={i} 
-                          className={`rounded-lg p-3.5 border transition-all text-xs ${
-                            isActive 
-                              ? 'bg-slate-50/90 border-slate-400 shadow-xs' 
-                              : isDone 
-                                ? 'bg-slate-50/40 border-slate-200' 
-                                : 'bg-white border-slate-200/80'
-                          }`}
-                        >
-                          <div className="flex items-start gap-2.5">
-                            <span className={`inline-flex items-center justify-center w-5 h-5 rounded text-[11px] font-mono font-bold shrink-0 mt-0.5 ${
-                              isActive 
-                                ? 'bg-slate-900 text-white' 
-                                : isDone 
-                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
-                                  : 'bg-slate-100 text-slate-700 border border-slate-200'
-                            }`}>
-                              {isDone ? '✓' : i + 1}
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              {rawTitle && (
-                                <h3 className={`font-bold font-sans text-xs mb-1 ${
-                                  isActive ? 'text-slate-950' : 'text-slate-800'
-                                }`}>
-                                  {rawTitle}
-                                </h3>
-                              )}
-                              <p className={`font-sans leading-relaxed text-[11.5px] ${
-                                isActive ? 'text-slate-800 font-medium' : 'text-slate-600'
-                              }`}>
-                                {step.description || step.title}
-                              </p>
-                            </div>
-                          </div>
+                        <div key={i} className="flex items-start gap-3">
+                          <span className="shrink-0 font-serif font-bold min-w-[22px] select-none text-black">
+                            {i + 1}.
+                          </span>
+                          <span className="flex-1 text-black">
+                            {text}
+                          </span>
                         </div>
                       )
                     })}
                   </div>
+
+                  {/* Blue Bottom Accent Stripe */}
+                  <div className="h-3 bg-[#3875d7]" />
                 </div>
               )}
 
