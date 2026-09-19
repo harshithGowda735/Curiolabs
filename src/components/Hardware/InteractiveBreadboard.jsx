@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { AlertTriangle, Sparkles, X, Undo2, HelpCircle, Check, Info, Zap, ArrowRight } from 'lucide-react'
 import { validateTdmConnection, getNextPendingStepConnection } from '../../utils/tdmWireValidator'
 
@@ -153,6 +153,31 @@ export default function InteractiveBreadboard({
   const [wiringError, setWiringError] = useState(null)
   const [guidedHoleId, setGuidedHoleId] = useState(null)
   const [activeGuide, setActiveGuide] = useState(null)
+
+  // ── Keyboard shortcuts: ESC key cancels active wire selection, dismisses guide or error ──
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        if (activeWire) {
+          e.preventDefault()
+          setActiveWire(null)
+          setSnappedTarget(null)
+          setJustConnected('Wire canceled (Esc)')
+          setTimeout(() => setJustConnected(null), 1500)
+        } else if (activeGuide) {
+          e.preventDefault()
+          setActiveGuide(null)
+          setGuidedHoleId(null)
+        } else if (wiringError) {
+          e.preventDefault()
+          setWiringError(null)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activeWire, activeGuide, wiringError])
 
   const getGuidedHoleCoords = useCallback((hId) => {
     if (!hId) return null
@@ -660,11 +685,20 @@ export default function InteractiveBreadboard({
             </h3>
             <p className="text-[11px] text-slate-500">
               {activeWire ? (
-                <span className="text-amber-600 font-semibold animate-pulse">
-                  ⚡ Selected {activeWire.label} — Click any hole to attach wire!
+                <span className="text-amber-800 font-semibold flex items-center gap-2 flex-wrap">
+                  <span className="animate-pulse">⚡ Selected: {activeWire.label} — Click breadboard hole to connect</span>
+                  <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded shadow-2xs">
+                    Press <kbd className="font-bold underline">ESC</kbd> to leave wire
+                  </span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setActiveWire(null); setSnappedTarget(null); }}
+                    className="text-[10px] text-rose-600 hover:text-rose-800 underline font-bold cursor-pointer"
+                  >
+                    Cancel
+                  </button>
                 </span>
               ) : (
-                'Click terminal post to start wire, then click breadboard hole to connect. Right-click wire to remove.'
+                'Click terminal post to start wire, then click breadboard hole to connect. Press ESC to cancel. Right-click wire to remove.'
               )}
             </p>
           </div>
@@ -849,7 +883,15 @@ export default function InteractiveBreadboard({
           style={{ cursor: activeWire ? 'crosshair' : 'default' }}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          onContextMenu={(e) => e.preventDefault()}
+          onContextMenu={(e) => {
+            e.preventDefault()
+            if (activeWire) {
+              setActiveWire(null)
+              setSnappedTarget(null)
+              setJustConnected('Wire canceled (Esc)')
+              setTimeout(() => setJustConnected(null), 1500)
+            }
+          }}
         >
           <defs>
             {/* Realistic drop shadows */}
@@ -888,13 +930,37 @@ export default function InteractiveBreadboard({
             <linearGradient id="nickelSilver" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#f8fafc" />
               <stop offset="50%" stopColor="#cbd5e1" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
+            <linearGradient id="copperTrace" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fdba74" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#c2410c" />
+            </linearGradient>
+            <linearGradient id="bindingDark" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+            <linearGradient id="wireShield" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#94a3b8" />
               <stop offset="100%" stopColor="#64748b" />
             </linearGradient>
           </defs>
 
           {/* ════════ WORKBENCH ANODIZED CASING SURFACE ════════ */}
-          <rect x="0" y="0" width={SVG_W} height={SVG_H} fill="url(#chassisCleanBench)" />
-          <rect x="0" y="0" width={SVG_W} height={SVG_H} fill="none" stroke="#cbd5e1" strokeWidth="2" />
+          <rect
+            x="0" y="0" width={SVG_W} height={SVG_H}
+            fill="url(#chassisCleanBench)"
+            onClick={() => {
+              if (activeWire) {
+                setActiveWire(null)
+                setSnappedTarget(null)
+                setJustConnected('Wire canceled (Esc)')
+                setTimeout(() => setJustConnected(null), 1500)
+              }
+            }}
+          />
+          <rect x="0" y="0" width={SVG_W} height={SVG_H} fill="none" stroke="#cbd5e1" strokeWidth="2" pointerEvents="none" />
 
           {/* ════════ LEFT DOCK: POWER & FUNCTION GENERATORS (Tactile Panel) ════════ */}
           <rect x="12" y="25" width="148" height={SVG_H - 50} rx="14" fill="url(#dockCardGrad)" stroke="#cbd5e1" strokeWidth="1.5" filter="url(#shadowHeavy)" />
@@ -1369,6 +1435,12 @@ export default function InteractiveBreadboard({
                 cy={snappedTarget ? snappedTarget.y : cursorPos.y}
                 r="7" fill="#fbbf24" stroke="#d97706" strokeWidth="1.8" opacity="0.9"
               />
+              <g transform={`translate(${snappedTarget ? snappedTarget.x : cursorPos.x}, ${(snappedTarget ? snappedTarget.y : cursorPos.y) - 16})`}>
+                <rect x="-35" y="-10" width="70" height="15" rx="3" fill="#0f172a" fillOpacity="0.85" />
+                <text x="0" y="1" textAnchor="middle" fill="#fef08a" fontSize="7" fontWeight="bold" fontFamily="monospace">
+                  ESC to leave
+                </text>
+              </g>
             </g>
           )}
 
