@@ -221,10 +221,17 @@ export default function TimeDivisionMultiplexing() {
   // Sync currentStep with circuit wiring state
   const activeStep = circuitState.calculatedStep
 
-  // Real-Time Waveform Math Engine strictly bound to actual physical wiring!
-  const { ch0Pts, ch1Pts, clkPts, tdmPts, demux0Pts, demux1Pts, recon0Pts, recon1Pts, rawCh0Pts, rawCh1Pts, rawClkPts } = useMemo(() => {
-    const numPoints = 250
+  // Real-Time Waveform Math Engine strictly bound to actual physical wiring & parameter sliders!
+  const { ch0Pts, ch1Pts, clkPts, tdmPts, demux0Pts, demux1Pts, recon0Pts, recon1Pts, rawCh0Pts, rawCh1Pts, rawClkPts, rawTdmPts, rawRecon0Pts, rawRecon1Pts, gain0, gain1 } = useMemo(() => {
+    const numPoints = 800
     const tSpan = 0.02 // 20 ms window to clearly see full 100Hz (10ms) and 300Hz cycles
+    const fc = 284.2 // 1st-order RC filter cutoff frequency (Hz): fc = 1 / (2 * pi * 5.6k * 0.1uF)
+
+    // Dynamic frequency-dependent RC filter transfer function gains
+    const g0 = 1 / Math.sqrt(1 + Math.pow(f1 / fc, 2))
+    const phase0 = -Math.atan(f1 / fc)
+    const g1 = 1 / Math.sqrt(1 + Math.pow(f2 / fc, 2))
+    const phase1 = -Math.atan(f2 / fc)
 
     const pCh0 = []
     const pCh1 = []
@@ -237,15 +244,18 @@ export default function TimeDivisionMultiplexing() {
     const pRawCh0 = []
     const pRawCh1 = []
     const pRawClk = []
+    const pRawTdm = []
+    const pRawRec0 = []
+    const pRawRec1 = []
 
     for (let i = 0; i <= numPoints; i++) {
       const t = (i / numPoints) * tSpan
 
-      // ── Step 3: Message Signal 1 (1V, 100Hz Sinusoidal Wave at Pin 13) ──
+      // ── Step 3: Message Signal 1 (Sinusoidal Wave at Pin 13) ──
       const rawY1 = amp1 * Math.sin(2 * Math.PI * f1 * t)
       const y1 = circuitState.hasCh0 ? rawY1 : 0
 
-      // ── Step 3: Message Signal 2 (1V, 300Hz Triangular Wave at Pin 14) ──
+      // ── Step 3: Message Signal 2 (Triangular Wave at Pin 14) ──
       const triPhase = (t * f2) % 1
       const rawY2 = amp2 * (triPhase < 0.5 ? 4 * triPhase - 1 : 3 - 4 * triPhase)
       const y2 = circuitState.hasCh1 ? rawY2 : 0
@@ -258,13 +268,13 @@ export default function TimeDivisionMultiplexing() {
       const yClk = circuitState.hasClkMux ? rawYClk : 0
 
       // ── Step 5 & 6: TDM Output at Pin 3 (Composite Pulse Train) ──
+      // Interleaves Channel 0 during clock LOW (0), Channel 1 during clock HIGH (1)
+      const rawYTdm = isHigh ? rawY2 : rawY1
       let yTdm = 0
       if (circuitState.isEnergized && circuitState.hasTdmProbe) {
         if (circuitState.hasClkMux) {
-          // Channel 0 (Sine) when Select A = 0; Channel 1 (Triangle) when Select A = 1
           yTdm = isHigh ? y2 : y1
         } else {
-          // Floating clock: stuck on Channel 0
           yTdm = y1
         }
       }
@@ -278,16 +288,18 @@ export default function TimeDivisionMultiplexing() {
       }
 
       // ── Step 8: Reconstructed Signals at RC Low-Pass Filter Junction ──
+      // Dynamic frequency-dependent reconstructed analog signals
+      const rawYRec0 = amp1 * g0 * Math.sin(2 * Math.PI * f1 * t + phase0)
+      const rawYRec1 = amp2 * 0.92 * g1 * (triPhase < 0.5 ? 4 * triPhase - 1 : 3 - 4 * triPhase)
+
       let yRec0 = 0
       let yRec1 = 0
       if (circuitState.isEnergized && circuitState.hasTdmBridge && circuitState.hasClkDemux) {
         if (circuitState.hasRc0Probe && circuitState.hasCh0) {
-          // Filtered smooth sine
-          yRec0 = amp1 * 0.94 * Math.sin(2 * Math.PI * f1 * (t - 0.0003))
+          yRec0 = rawYRec0
         }
         if (circuitState.hasRc1Probe && circuitState.hasCh1) {
-          // Filtered smooth triangle
-          yRec1 = amp2 * 0.88 * (triPhase < 0.5 ? 4 * triPhase - 1 : 3 - 4 * triPhase)
+          yRec1 = rawYRec1
         }
       }
 
@@ -303,6 +315,9 @@ export default function TimeDivisionMultiplexing() {
       pRawCh0.push({ x: i, y: rawY1 })
       pRawCh1.push({ x: i, y: rawY2 })
       pRawClk.push({ x: i, y: rawYClk })
+      pRawTdm.push({ x: i, y: rawYTdm })
+      pRawRec0.push({ x: i, y: rawYRec0 })
+      pRawRec1.push({ x: i, y: rawYRec1 })
     }
 
     return {
@@ -316,14 +331,19 @@ export default function TimeDivisionMultiplexing() {
       recon1Pts: pRec1,
       rawCh0Pts: pRawCh0,
       rawCh1Pts: pRawCh1,
-      rawClkPts: pRawClk
+      rawClkPts: pRawClk,
+      rawTdmPts: pRawTdm,
+      rawRecon0Pts: pRawRec0,
+      rawRecon1Pts: pRawRec1,
+      gain0: g0,
+      gain1: g1
     }
   }, [f1, f2, amp1, amp2, clkFreq, dutyCycle, circuitState])
 
   // Oscilloscope screen dimensions
   const W = 460, H = 100, pad = 16
-  const scaleX = (i) => pad + (i / 250) * (W - 2 * pad)
-  const scaleY = (v, min = -1.5, max = 1.5) => H - pad - ((v - min) / (max - min)) * (H - 2 * pad)
+  const scaleX = (i) => pad + (i / 800) * (W - 2 * pad)
+  const scaleY = (v, min = -2.2, max = 2.2) => H - pad - ((v - min) / (max - min)) * (H - 2 * pad)
   const scaleYClock = (v) => H - pad - (v / 6) * (H - 2 * pad)
 
   // Controls Panel
@@ -690,9 +710,10 @@ export default function TimeDivisionMultiplexing() {
                 <svg viewBox={`0 0 ${W} ${H + 20}`} className="w-full h-28 bg-slate-900 rounded-lg">
                   <line x1={pad} y1={(H + 20) / 2} x2={W - pad} y2={(H + 20) / 2} stroke="#334155" strokeDasharray="3,3" />
                   <polyline
-                    points={tdmPts.map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
+                    points={((circuitState.isEnergized && circuitState.hasTdmProbe ? tdmPts : rawTdmPts) || []).map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
                     fill="none" stroke="#c084fc" strokeWidth="2.5"
-                    opacity={circuitState.isEnergized && circuitState.hasTdmProbe ? 1 : 0.2}
+                    strokeDasharray={circuitState.isEnergized && circuitState.hasTdmProbe ? 'none' : '4,3'}
+                    opacity={circuitState.isEnergized && circuitState.hasTdmProbe ? 1 : 0.75}
                   />
                 </svg>
               </div>
@@ -705,18 +726,22 @@ export default function TimeDivisionMultiplexing() {
                   <span className="font-bold text-teal-400 font-mono flex items-center gap-2">
                     <span>Reconstructed Signals — Procedure Step 8 (Junction of R1/C1 and R2/C2)</span>
                     {!circuitState.isEnergized ? (
-                      <span className="text-[10px] bg-rose-950 text-rose-400 px-2 py-0.5 rounded border border-rose-800 font-bold">
-                        IC UNPOWERED
+                      <span className="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-700 font-bold">
+                        SIMULATED LPF OUTPUT
                       </span>
                     ) : !circuitState.hasTdmBridge ? (
-                      <span className="text-[10px] bg-amber-950 text-amber-400 px-2 py-0.5 rounded border border-amber-800 font-bold">
+                      <span className="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-700 font-bold">
                         DEMUX BUS OPEN (Bridge Pin 3)
                       </span>
                     ) : (!circuitState.hasRc0Probe || !circuitState.hasRc1Probe) ? (
-                      <span className="text-[10px] bg-amber-950 text-amber-400 px-2 py-0.5 rounded border border-amber-800 font-bold">
+                      <span className="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-700 font-bold">
                         CONNECT RC PROBES
                       </span>
-                    ) : null}
+                    ) : (
+                      <span className="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-700 font-bold">
+                        LIVE RECONSTRUCTED
+                      </span>
+                    )}
                   </span>
                   <span className="text-[11px] font-mono text-teal-300">fc ≈ 284 Hz</span>
                 </div>
@@ -724,20 +749,22 @@ export default function TimeDivisionMultiplexing() {
                   <line x1={pad} y1={(H + 20) / 2} x2={W - pad} y2={(H + 20) / 2} stroke="#334155" strokeDasharray="3,3" />
                   {/* Reconstructed CH0 Sine */}
                   <polyline
-                    points={recon0Pts.map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
+                    points={((circuitState.hasRc0Probe && circuitState.isEnergized ? recon0Pts : rawRecon0Pts) || []).map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
                     fill="none" stroke="#38bdf8" strokeWidth="2"
-                    opacity={circuitState.hasRc0Probe && circuitState.isEnergized ? 1 : 0.2}
+                    strokeDasharray={circuitState.hasRc0Probe && circuitState.isEnergized ? 'none' : '4,3'}
+                    opacity={circuitState.hasRc0Probe && circuitState.isEnergized ? 1 : 0.75}
                   />
                   {/* Reconstructed CH1 Triangle */}
                   <polyline
-                    points={recon1Pts.map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
+                    points={((circuitState.hasRc1Probe && circuitState.isEnergized ? recon1Pts : rawRecon1Pts) || []).map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
                     fill="none" stroke="#34d399" strokeWidth="2"
-                    opacity={circuitState.hasRc1Probe && circuitState.isEnergized ? 1 : 0.2}
+                    strokeDasharray={circuitState.hasRc1Probe && circuitState.isEnergized ? 'none' : '4,3'}
+                    opacity={circuitState.hasRc1Probe && circuitState.isEnergized ? 1 : 0.75}
                   />
                 </svg>
                 <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 px-1 font-mono">
-                  <span className="text-sky-400">● Blue: Recovered 100Hz Sine (R1 = 5.6kΩ, C1 = 0.1μF)</span>
-                  <span className="text-emerald-400">● Green: Recovered 300Hz Triangle (R2 = 5.6kΩ, C2 = 0.1μF)</span>
+                  <span className="text-sky-400">● Blue: Recovered {f1}Hz Sine (Gain: {(gain0 || 0.94).toFixed(2)})</span>
+                  <span className="text-emerald-400">● Green: Recovered {f2}Hz Triangle (Gain: {(gain1 || 0.88).toFixed(2)})</span>
                   <span>Harmonic Attenuation &gt; 38dB</span>
                 </div>
               </div>
