@@ -262,51 +262,37 @@ export default function MissionShell({
                           key={i} 
                           className={`rounded-lg p-3.5 border transition-all text-xs ${
                             isActive 
-                              ? 'bg-amber-50/40 border-amber-400/90 shadow-2xs' 
+                              ? 'bg-slate-50/90 border-slate-400 shadow-xs' 
                               : isDone 
-                                ? 'bg-slate-50/60 border-slate-200' 
-                                : 'bg-white border-slate-200/80 hover:border-slate-300'
+                                ? 'bg-slate-50/40 border-slate-200' 
+                                : 'bg-white border-slate-200/80'
                           }`}
                         >
-                          {/* Step Header */}
-                          <div className="flex items-center justify-between gap-2 mb-1.5">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-mono font-bold shrink-0 ${
-                                isActive 
-                                  ? 'bg-slate-950 text-white shadow-2xs' 
-                                  : isDone 
-                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
-                                    : 'bg-slate-100 text-slate-700 border border-slate-200'
-                              }`}>
-                                {isDone ? `✓ Step ${i + 1}` : `Step ${String(i + 1).padStart(2, '0')}`}
-                              </span>
+                          <div className="flex items-start gap-2.5">
+                            <span className={`inline-flex items-center justify-center w-5 h-5 rounded text-[11px] font-mono font-bold shrink-0 mt-0.5 ${
+                              isActive 
+                                ? 'bg-slate-900 text-white' 
+                                : isDone 
+                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                                  : 'bg-slate-100 text-slate-700 border border-slate-200'
+                            }`}>
+                              {isDone ? '✓' : i + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
                               {rawTitle && (
-                                <h3 className={`font-bold font-sans text-xs truncate ${
-                                  isActive ? 'text-slate-950' : isDone ? 'text-slate-800' : 'text-slate-700'
+                                <h3 className={`font-bold font-sans text-xs mb-1 ${
+                                  isActive ? 'text-slate-950' : 'text-slate-800'
                                 }`}>
                                   {rawTitle}
                                 </h3>
                               )}
+                              <p className={`font-sans leading-relaxed text-[11.5px] ${
+                                isActive ? 'text-slate-800 font-medium' : 'text-slate-600'
+                              }`}>
+                                {step.description || step.title}
+                              </p>
                             </div>
-
-                            {/* Status Tag */}
-                            <span className={`text-[10px] font-mono font-bold shrink-0 px-2 py-0.5 rounded ${
-                              isActive 
-                                ? 'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse' 
-                                : isDone 
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                                  : 'bg-slate-100 text-slate-500'
-                            }`}>
-                              {isActive ? 'CURRENT' : isDone ? 'COMPLETED' : 'PENDING'}
-                            </span>
                           </div>
-
-                          {/* Step Description */}
-                          <p className={`font-sans leading-relaxed text-[11px] ${
-                            isActive ? 'text-slate-800 font-medium' : isDone ? 'text-slate-600' : 'text-slate-600'
-                          }`}>
-                            {step.description || step.title}
-                          </p>
                         </div>
                       )
                     })}

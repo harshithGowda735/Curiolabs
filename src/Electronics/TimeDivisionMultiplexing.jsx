@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react'
 import MissionShell from '../components/MissionShell'
 import LabeledSlider from '../components/LabeledSlider'
 import InteractiveBreadboard, { LAB_CONNECTIONS } from '../components/Hardware/InteractiveBreadboard'
-import TDMExpectedVsObserved from './TDMExpectedVsObserved'
 import TDMVirtualLab3D from './TDMVirtualLab3D'
 import DeskCameraAR from './DeskCameraAR'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -529,31 +528,11 @@ export default function TimeDivisionMultiplexing() {
 
       {/* ── TAB 1: INTERACTIVE BREADBOARD WIRING ── */}
       {activeTab === 'breadboard' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-            <InteractiveBreadboard
-              activeProcedureStep={activeStep + 1}
-              isPowerSwitchedOn={isPowerOn}
-              onConnectionsChange={(wires) => setPlacedWires(wires)}
-            />
-          </div>
-
-          {/* Expected vs Observed Real-Time Verification Comparison */}
-          <TDMExpectedVsObserved
-            circuitState={circuitState}
-            isPowerOn={isPowerOn}
-            f1={f1}
-            f2={f2}
-            amp1={amp1}
-            amp2={amp2}
-            clkFreq={clkFreq}
-            dutyCycle={dutyCycle}
-            ch0Pts={ch0Pts}
-            ch1Pts={ch1Pts}
-            clkPts={clkPts}
-            tdmPts={tdmPts}
-            recon0Pts={recon0Pts}
-            recon1Pts={recon1Pts}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+          <InteractiveBreadboard
+            activeProcedureStep={activeStep + 1}
+            isPowerSwitchedOn={isPowerOn}
+            onConnectionsChange={(wires) => setPlacedWires(wires)}
           />
         </div>
       )}
@@ -761,24 +740,6 @@ export default function TimeDivisionMultiplexing() {
               </div>
             )}
           </div>
-
-          {/* Expected vs Observed Real-Time Verification Comparison */}
-          <TDMExpectedVsObserved
-            circuitState={circuitState}
-            isPowerOn={isPowerOn}
-            f1={f1}
-            f2={f2}
-            amp1={amp1}
-            amp2={amp2}
-            clkFreq={clkFreq}
-            dutyCycle={dutyCycle}
-            ch0Pts={ch0Pts}
-            ch1Pts={ch1Pts}
-            clkPts={clkPts}
-            tdmPts={tdmPts}
-            recon0Pts={recon0Pts}
-            recon1Pts={recon1Pts}
-          />
         </div>
       )}
 
@@ -812,12 +773,6 @@ export default function TimeDivisionMultiplexing() {
       apparatus={tdmApparatus}
       steps={steps}
       currentStep={activeStep}
-      setupStatus={circuitState.allReady ? 'complete' : 'incomplete'}
-      setupMessage={
-        circuitState.allReady
-          ? 'Circuit completely wired according to lab manual procedure! Real TDM outputs active.'
-          : `Procedure Step ${activeStep + 1} pending: ${steps[activeStep]?.title || 'Wiring in progress'}`
-      }
       controls={controls}
       visualization={visualization}
       observations={observations}
