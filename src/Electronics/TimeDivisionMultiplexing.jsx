@@ -299,7 +299,10 @@ export default function TimeDivisionMultiplexing() {
       demux0Pts: pDemux0,
       demux1Pts: pDemux1,
       recon0Pts: pRec0,
-      recon1Pts: pRec1
+      recon1Pts: pRec1,
+      rawCh0Pts: pRawCh0,
+      rawCh1Pts: pRawCh1,
+      rawClkPts: pRawClk
     }
   }, [f1, f2, amp1, amp2, clkFreq, dutyCycle, circuitState])
 
@@ -585,7 +588,7 @@ export default function TimeDivisionMultiplexing() {
                 <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24 bg-slate-900 rounded-lg">
                   <line x1={pad} y1={H / 2} x2={W - pad} y2={H / 2} stroke="#334155" strokeDasharray="3,3" />
                   <polyline
-                    points={(circuitState.hasCh0 ? ch0Pts : rawCh0Pts).map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
+                    points={((circuitState.hasCh0 ? ch0Pts : rawCh0Pts) || []).map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
                     fill="none" stroke="#38bdf8" strokeWidth="2"
                     strokeDasharray={circuitState.hasCh0 ? 'none' : '4,3'}
                     opacity={circuitState.hasCh0 ? 1 : 0.75}
@@ -615,7 +618,7 @@ export default function TimeDivisionMultiplexing() {
                 <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24 bg-slate-900 rounded-lg">
                   <line x1={pad} y1={H / 2} x2={W - pad} y2={H / 2} stroke="#334155" strokeDasharray="3,3" />
                   <polyline
-                    points={(circuitState.hasCh1 ? ch1Pts : rawCh1Pts).map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
+                    points={((circuitState.hasCh1 ? ch1Pts : rawCh1Pts) || []).map(p => `${scaleX(p.x)},${scaleY(p.y)}`).join(' ')}
                     fill="none" stroke="#34d399" strokeWidth="2"
                     strokeDasharray={circuitState.hasCh1 ? 'none' : '4,3'}
                     opacity={circuitState.hasCh1 ? 1 : 0.75}
@@ -645,7 +648,7 @@ export default function TimeDivisionMultiplexing() {
                 <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24 bg-slate-900 rounded-lg">
                   <line x1={pad} y1={H / 2} x2={W - pad} y2={H / 2} stroke="#334155" strokeDasharray="3,3" />
                   <polyline
-                    points={(circuitState.hasClkMux ? clkPts : rawClkPts).map(p => `${scaleX(p.x)},${scaleY(p.y, 8)}`).join(' ')}
+                    points={((circuitState.hasClkMux ? clkPts : rawClkPts) || []).map(p => `${scaleX(p.x)},${scaleYClock(p.y)}`).join(' ')}
                     fill="none" stroke="#60a5fa" strokeWidth="2"
                     strokeDasharray={circuitState.hasClkMux ? 'none' : '4,3'}
                     opacity={circuitState.hasClkMux ? 1 : 0.75}
