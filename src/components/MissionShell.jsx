@@ -224,60 +224,93 @@ export default function MissionShell({
                 </div>
               )}
 
-              {/* Setup Instructions Standardized Card */}
+              {/* Lab Procedure & Instructions Standardized Professional Card */}
               {steps.length > 0 && (
-                <div className="apple-card rounded-2xl p-6">
-                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-                    <h2 className="text-base font-display font-bold text-slate-950 flex items-center gap-2">
-                      <ClipboardList size={16} className="text-slate-600" />
-                      <span>{t('Lab Instructions', 'ಸೆಟಪ್ ಸೂಚನೆಗಳು')}</span>
-                    </h2>
+                <div className="bg-white rounded-xl border border-slate-300 p-5 shadow-xs text-slate-950">
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
+                    <div>
+                      <h2 className="text-xs font-extrabold uppercase tracking-wide text-slate-950 font-sans flex items-center gap-2">
+                        <span>PROCEDURE / LAB INSTRUCTIONS:</span>
+                      </h2>
+                      <p className="text-[11px] text-slate-500 font-sans mt-0.5">
+                        Step-by-step experimental execution instructions
+                      </p>
+                    </div>
 
                     <button 
                       onClick={() => toggle(stepText)}
-                      className={`p-1.5 rounded-xl transition-colors ${
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
                         isSpeaking 
-                          ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' 
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                       }`}
                       title={isSpeaking ? t('Stop reading', 'ಓದುವುದನ್ನು ನಿಲ್ಲಿಸಿ') : t('Read aloud', 'ಜೋರಾಗಿ ಓದಿ')}
                     >
-                      {isSpeaking ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                      {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                      <span className="font-mono text-[11px]">{isSpeaking ? 'Stop' : 'Listen'}</span>
                     </button>
                   </div>
 
-                  <ol className="space-y-3">
+                  <div className="space-y-3">
                     {steps.map((step, i) => {
                       const isActive = i === currentStep
                       const isDone = i < currentStep
+                      const rawTitle = step.title ? step.title.replace(/^\d+[\.\:\-\)]\s*/, '') : ''
 
                       return (
-                        <li 
+                        <div 
                           key={i} 
-                          className={`flex items-start gap-3 text-xs transition-colors p-2.5 rounded-xl ${
+                          className={`rounded-lg p-3.5 border transition-all text-xs ${
                             isActive 
-                              ? 'bg-slate-100 text-slate-950 font-semibold border border-slate-200/80 shadow-2xs' 
+                              ? 'bg-amber-50/40 border-amber-400/90 shadow-2xs' 
                               : isDone 
-                                ? 'text-slate-400 line-through' 
-                                : 'text-slate-600 hover:text-slate-900'
+                                ? 'bg-slate-50/60 border-slate-200' 
+                                : 'bg-white border-slate-200/80 hover:border-slate-300'
                           }`}
                         >
-                          <span className={`inline-flex items-center justify-center w-5 h-5 rounded-lg text-[10px] font-mono font-bold shrink-0 mt-0.5 ${
-                            isActive 
-                              ? 'bg-slate-950 text-white' 
-                              : isDone 
-                                ? 'bg-slate-200 text-slate-500' 
-                                : 'bg-slate-100 text-slate-600 border border-slate-200'
+                          {/* Step Header */}
+                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-mono font-bold shrink-0 ${
+                                isActive 
+                                  ? 'bg-slate-950 text-white shadow-2xs' 
+                                  : isDone 
+                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                                    : 'bg-slate-100 text-slate-700 border border-slate-200'
+                              }`}>
+                                {isDone ? `✓ Step ${i + 1}` : `Step ${String(i + 1).padStart(2, '0')}`}
+                              </span>
+                              {rawTitle && (
+                                <h3 className={`font-bold font-sans text-xs truncate ${
+                                  isActive ? 'text-slate-950' : isDone ? 'text-slate-800' : 'text-slate-700'
+                                }`}>
+                                  {rawTitle}
+                                </h3>
+                              )}
+                            </div>
+
+                            {/* Status Tag */}
+                            <span className={`text-[10px] font-mono font-bold shrink-0 px-2 py-0.5 rounded ${
+                              isActive 
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse' 
+                                : isDone 
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                                  : 'bg-slate-100 text-slate-500'
+                            }`}>
+                              {isActive ? 'CURRENT' : isDone ? 'COMPLETED' : 'PENDING'}
+                            </span>
+                          </div>
+
+                          {/* Step Description */}
+                          <p className={`font-sans leading-relaxed text-[11px] ${
+                            isActive ? 'text-slate-800 font-medium' : isDone ? 'text-slate-600' : 'text-slate-600'
                           }`}>
-                            {i + 1}
-                          </span>
-                          <span className="leading-relaxed">
                             {step.description || step.title}
-                          </span>
-                        </li>
+                          </p>
+                        </div>
                       )
                     })}
-                  </ol>
+                  </div>
                 </div>
               )}
 
