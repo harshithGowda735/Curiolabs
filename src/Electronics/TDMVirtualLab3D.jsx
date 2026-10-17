@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { Maximize2, RotateCcw, Eye, Zap, Sparkles, Smartphone, Volume2, Power, Camera } from 'lucide-react'
+import { Maximize2, RotateCcw, Eye, Zap, Sparkles, Smartphone, Volume2, Power, Camera, Sliders, Radio } from 'lucide-react'
 import DeskCameraAR from './DeskCameraAR'
 import { createRealisticBreadboardMesh } from '../components/Hardware/createRealisticBreadboardMesh'
 
@@ -55,127 +55,159 @@ export default function TDMVirtualLab3D({
 
     // 1. Scene & Camera
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color('#0c1017')
-    scene.fog = new THREE.FogExp2('#0c1017', 0.012)
+    scene.background = new THREE.Color('#10141b')
+    scene.fog = new THREE.FogExp2('#10141b', 0.01)
 
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
-    camera.position.set(0, 19, 27)
+    const camera = new THREE.PerspectiveCamera(44, width / height, 0.1, 100)
+    camera.position.set(0, 18, 26)
     cameraRef.current = camera
 
-    // 2. Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    // 2. High-Performance WebGL Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    renderer.toneMapping = THREE.ACESFilmicToneMapping
+    renderer.toneMappingExposure = 1.15
     container.appendChild(renderer.domElement)
 
     // 3. Orbit Controls
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
-    controls.dampingFactor = 0.05
-    controls.maxPolarAngle = Math.PI / 2 - 0.04
+    controls.dampingFactor = 0.06
+    controls.maxPolarAngle = Math.PI / 2 - 0.03
     controls.minDistance = 4
-    controls.maxDistance = 50
-    controls.target.set(0, 2.5, 0)
+    controls.maxDistance = 45
+    controls.target.set(0, 2.2, 0)
     controlsRef.current = controls
 
-    // 4. Studio Lighting
-    const ambientLight = new THREE.AmbientLight('#ffffff', 0.85)
+    // 4. University Laboratory Studio Lighting
+    const ambientLight = new THREE.AmbientLight('#faf5eb', 0.8)
     scene.add(ambientLight)
 
-    const mainSpot = new THREE.SpotLight('#ffffff', 2.5, 60, Math.PI / 3.5, 0.4, 1)
-    mainSpot.position.set(10, 30, 20)
+    // Warm overhead laboratory key spotlight
+    const mainSpot = new THREE.SpotLight('#fffbeb', 3.0, 70, Math.PI / 3.2, 0.35, 1.2)
+    mainSpot.position.set(8, 28, 18)
     mainSpot.castShadow = true
     mainSpot.shadow.mapSize.width = 2048
     mainSpot.shadow.mapSize.height = 2048
+    mainSpot.shadow.bias = -0.0001
     scene.add(mainSpot)
 
-    const fillBlue = new THREE.DirectionalLight('#38bdf8', 0.6)
-    fillBlue.position.set(-18, 12, -8)
-    scene.add(fillBlue)
+    // Cool fill light from front-left
+    const fillLight = new THREE.DirectionalLight('#bae6fd', 0.7)
+    fillLight.position.set(-16, 14, 10)
+    scene.add(fillLight)
 
-    const rimLight = new THREE.DirectionalLight('#a855f7', 0.4)
-    rimLight.position.set(15, 8, -15)
+    // Warm rim light from back-right
+    const rimLight = new THREE.DirectionalLight('#fef08a', 0.45)
+    rimLight.position.set(16, 10, -18)
     scene.add(rimLight)
 
-    // 5. Wooden Laboratory Workbench
-    const benchGeo = new THREE.BoxGeometry(46, 1.2, 28)
+    // Overhead bench desk lamp over the breadboard area
+    const benchLamp = new THREE.PointLight('#fef3c7', 1.4, 18)
+    benchLamp.position.set(0, 12, 4)
+    scene.add(benchLamp)
+
+    // 5. Solid Wood Laboratory Workbench & Anti-Static ESD Bench Mat
+    // Polished teak lab bench tabletop
+    const benchGeo = new THREE.BoxGeometry(48, 1.4, 30)
     const benchMat = new THREE.MeshStandardMaterial({
-      color: '#1a1f2c',
-      roughness: 0.5,
-      metalness: 0.15
+      color: '#261a14',
+      roughness: 0.38,
+      metalness: 0.05
     })
     const bench = new THREE.Mesh(benchGeo, benchMat)
-    bench.position.y = -0.6
+    bench.position.y = -0.7
     bench.receiveShadow = true
     scene.add(bench)
 
-    // Workbench grid markings
-    const benchGrid = new THREE.GridHelper(42, 42, '#334155', '#1e293b')
-    benchGrid.position.y = 0.01
-    scene.add(benchGrid)
+    // ESD Anti-Static High-Precision Bench Mat under the breadboard and instruments
+    const matGeo = new THREE.BoxGeometry(38, 0.06, 22)
+    const esdMat = new THREE.MeshStandardMaterial({
+      color: '#152536',
+      roughness: 0.6,
+      metalness: 0.08
+    })
+    const esdMesh = new THREE.Mesh(matGeo, esdMat)
+    esdMesh.position.set(0, 0.02, 1)
+    esdMesh.receiveShadow = true
+    scene.add(esdMesh)
+
+    // ESD Mat subtle border bevel
+    const esdBorderGeo = new THREE.BoxGeometry(38.4, 0.04, 22.4)
+    const esdBorderMat = new THREE.MeshStandardMaterial({ color: '#0c1622', roughness: 0.8 })
+    const esdBorder = new THREE.Mesh(esdBorderGeo, esdBorderMat)
+    esdBorder.position.set(0, 0.01, 1)
+    scene.add(esdBorder)
 
     // Reset interactive objects array
     interactiveObjectsRef.current = []
 
     // ════════════════════════════════════════════════════════
-    // 6. CATHODE RAY OSCILLOSCOPE (CRO / DSO)
+    // 6. CATHODE RAY / DIGITAL STORAGE OSCILLOSCOPE (DSO)
     // ════════════════════════════════════════════════════════
     const croGroup = new THREE.Group()
-    croGroup.position.set(0, 4.2, -6.5)
+    croGroup.position.set(0, 4.3, -6.5)
 
     // CRO Main Metal Case
     const croBody = new THREE.Mesh(
-      new THREE.BoxGeometry(16, 7.5, 6),
-      new THREE.MeshStandardMaterial({ color: '#2b313d', roughness: 0.4, metalness: 0.3 })
+      new THREE.BoxGeometry(16.5, 7.8, 6.2),
+      new THREE.MeshStandardMaterial({ color: '#272c36', roughness: 0.35, metalness: 0.25 })
     )
     croBody.castShadow = true
     croGroup.add(croBody)
 
-    // Top Handle
-    const handleGeo = new THREE.TorusGeometry(2, 0.15, 8, 24, Math.PI)
-    const handleMat = new THREE.MeshStandardMaterial({ color: '#64748b', metalness: 0.8 })
+    // Top Sturdy Carry Handle
+    const handleGeo = new THREE.TorusGeometry(2.1, 0.16, 12, 32, Math.PI)
+    const handleMat = new THREE.MeshStandardMaterial({ color: '#64748b', metalness: 0.85, roughness: 0.2 })
     const handle = new THREE.Mesh(handleGeo, handleMat)
-    handle.position.set(0, 3.8, 0)
+    handle.position.set(0, 3.95, 0)
     croGroup.add(handle)
 
-    // Screen Bezel
+    // Front Beveled Screen Bezel
     const screenBezel = new THREE.Mesh(
-      new THREE.BoxGeometry(9.4, 5.8, 0.3),
-      new THREE.MeshStandardMaterial({ color: '#090d16', roughness: 0.8 })
+      new THREE.BoxGeometry(9.6, 6.0, 0.35),
+      new THREE.MeshStandardMaterial({ color: '#090d16', roughness: 0.75 })
     )
-    screenBezel.position.set(-2.6, 0.2, 3.02)
+    screenBezel.position.set(-2.6, 0.2, 3.12)
     croGroup.add(screenBezel)
 
-    // Live CRT Dynamic Screen Canvas
+    // ── HIGH-RESOLUTION 1024x640 DSO PHOSPHOR DISPLAY CANVAS ──
     const screenCanvas = document.createElement('canvas')
-    screenCanvas.width = 512
-    screenCanvas.height = 320
+    screenCanvas.width = 1024
+    screenCanvas.height = 640
     screenCanvasRef.current = screenCanvas
     const screenTexture = new THREE.CanvasTexture(screenCanvas)
+    screenTexture.anisotropy = 16
     screenTextureRef.current = screenTexture
 
     const screenMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(9.0, 5.4),
+      new THREE.PlaneGeometry(9.2, 5.6),
       new THREE.MeshBasicMaterial({ map: screenTexture })
     )
-    screenMesh.position.set(-2.6, 0.2, 3.18)
+    screenMesh.position.set(-2.6, 0.2, 3.32)
     croGroup.add(screenMesh)
 
     // Screen Glow Light (casts green/purple ambient illumination)
-    const croLight = new THREE.PointLight(croPower ? '#38bdf8' : '#000000', 1.2, 10)
-    croLight.position.set(-2.6, 0.2, 3.8)
+    const croLight = new THREE.PointLight(croPower ? '#38bdf8' : '#000000', 1.4, 12)
+    croLight.position.set(-2.6, 0.2, 4.0)
     croGroup.add(croLight)
 
     // ── CRO Interactive Front Panel Controls ──
-    const btnGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.2, 16)
+    const btnGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.22, 18)
     btnGeo.rotateX(Math.PI / 2)
 
     // CRO Power Button
-    const pwrBtnMat = new THREE.MeshStandardMaterial({ color: croPower ? '#22c55e' : '#ef4444', roughness: 0.3 })
+    const pwrBtnMat = new THREE.MeshStandardMaterial({
+      color: croPower ? '#22c55e' : '#ef4444',
+      roughness: 0.2,
+      emissive: croPower ? '#22c55e' : '#7f1d1d',
+      emissiveIntensity: 0.5
+    })
     const croPwrBtn = new THREE.Mesh(btnGeo, pwrBtnMat)
-    croPwrBtn.position.set(6.4, 2.6, 3.1)
+    croPwrBtn.position.set(6.4, 2.7, 3.2)
     croPwrBtn.userData = { id: 'cro_power', label: 'CRO Power Switch' }
     croGroup.add(croPwrBtn)
     interactiveObjectsRef.current.push(croPwrBtn)
@@ -187,127 +219,144 @@ export default function TDMVirtualLab3D({
       const isChActive = croChannel === chId
       const chBtnMat = new THREE.MeshStandardMaterial({
         color: isChActive ? '#38bdf8' : '#475569',
-        roughness: 0.4
+        emissive: isChActive ? '#38bdf8' : '#000000',
+        emissiveIntensity: isChActive ? 0.4 : 0,
+        roughness: 0.35
       })
       const chBtn = new THREE.Mesh(btnGeo, chBtnMat)
-      chBtn.position.set(3.2 + idx * 0.75, 1.4, 3.1)
+      chBtn.position.set(3.2 + idx * 0.75, 1.4, 3.2)
       chBtn.userData = { id: `cro_ch_${chId}`, label: `Select ${chLabels[idx]} Channel` }
       croGroup.add(chBtn)
       interactiveObjectsRef.current.push(chBtn)
     })
 
     // Rotary Knobs (Volts/Div & Time/Div)
-    const knobGeo = new THREE.CylinderGeometry(0.42, 0.46, 0.35, 20)
+    const knobGeo = new THREE.CylinderGeometry(0.44, 0.48, 0.38, 24)
     knobGeo.rotateX(Math.PI / 2)
-    const knobMat = new THREE.MeshStandardMaterial({ color: '#94a3b8', metalness: 0.6, roughness: 0.3 })
+    const knobMat = new THREE.MeshStandardMaterial({ color: '#94a3b8', metalness: 0.7, roughness: 0.25 })
 
     const voltsKnob = new THREE.Mesh(knobGeo, knobMat)
-    voltsKnob.position.set(3.6, -0.6, 3.15)
+    voltsKnob.position.set(3.6, -0.6, 3.25)
     voltsKnob.userData = { id: 'cro_volts_div', label: `Volts/Div Knob (${voltsDiv}V/div)` }
     croGroup.add(voltsKnob)
     interactiveObjectsRef.current.push(voltsKnob)
 
     const timeKnob = new THREE.Mesh(knobGeo, knobMat)
-    timeKnob.position.set(5.4, -0.6, 3.15)
+    timeKnob.position.set(5.5, -0.6, 3.25)
     timeKnob.userData = { id: 'cro_time_div', label: `Time/Div Knob (${timeDiv}ms/div)` }
     croGroup.add(timeKnob)
     interactiveObjectsRef.current.push(timeKnob)
 
     // BNC Input Ports on CRO
-    const bncPortGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.4, 16)
+    const bncPortGeo = new THREE.CylinderGeometry(0.26, 0.26, 0.45, 18)
     bncPortGeo.rotateX(Math.PI / 2)
-    const bncMat = new THREE.MeshStandardMaterial({ color: '#e2e8f0', metalness: 0.9, roughness: 0.1 })
+    const bncMat = new THREE.MeshStandardMaterial({ color: '#f1f5f9', metalness: 0.95, roughness: 0.1 })
     for (let i = 0; i < 3; i++) {
       const bnc = new THREE.Mesh(bncPortGeo, bncMat)
-      bnc.position.set(3.4 + i * 1.3, -2.4, 3.1)
+      bnc.position.set(3.4 + i * 1.35, -2.4, 3.2)
       croGroup.add(bnc)
     }
 
     scene.add(croGroup)
 
     // ════════════════════════════════════════════════════════
-    // 7. DUAL BENCHTOP FUNCTION GENERATORS
+    // 7. DUAL BENCHTOP FUNCTION GENERATORS (FG1 & FG2)
     // ════════════════════════════════════════════════════════
-    const makeBenchFG = (xPos, title, freqStr, unit, waveType, mainColor) => {
+    const makeBenchFG = (xPos, title, freqStr, waveType, mainColor) => {
       const fgGroup = new THREE.Group()
       fgGroup.position.set(xPos, 2.5, -4.5)
 
-      // Main box
+      // Main casing
       const box = new THREE.Mesh(
-        new THREE.BoxGeometry(7.2, 4.4, 6.5),
-        new THREE.MeshStandardMaterial({ color: '#1f2430', roughness: 0.4, metalness: 0.2 })
+        new THREE.BoxGeometry(7.4, 4.5, 6.5),
+        new THREE.MeshStandardMaterial({ color: '#1e2430', roughness: 0.35, metalness: 0.2 })
       )
       box.castShadow = true
       fgGroup.add(box)
 
       // Bezel
       const bezel = new THREE.Mesh(
-        new THREE.BoxGeometry(6.6, 3.8, 0.2),
-        new THREE.MeshStandardMaterial({ color: '#11141c', roughness: 0.8 })
+        new THREE.BoxGeometry(6.8, 3.9, 0.22),
+        new THREE.MeshStandardMaterial({ color: '#0f131a', roughness: 0.75 })
       )
-      bezel.position.set(0, 0, 3.26)
+      bezel.position.set(0, 0, 3.28)
       fgGroup.add(bezel)
 
-      // Digital 7-Segment Screen Texture
+      // Digital 7-Segment Screen Texture (512x256 High-DPI)
       const fgCanvas = document.createElement('canvas')
-      fgCanvas.width = 256
-      fgCanvas.height = 128
+      fgCanvas.width = 512
+      fgCanvas.height = 256
       const fgCtx = fgCanvas.getContext('2d')
-      fgCtx.fillStyle = '#05070a'
-      fgCtx.fillRect(0, 0, 256, 128)
+      fgCtx.fillStyle = '#060a0f'
+      fgCtx.fillRect(0, 0, 512, 256)
+
+      // Header
+      fgCtx.fillStyle = '#64748b'
+      fgCtx.font = 'bold 24px monospace'
+      fgCtx.fillText(`${title} • ARBITRARY FUNCTION GENERATOR`, 24, 42)
+
+      // Digital readout with glow
       fgCtx.fillStyle = mainColor
-      fgCtx.font = 'bold 36px monospace'
-      fgCtx.fillText(freqStr, 20, 60)
-      fgCtx.font = 'bold 18px monospace'
-      fgCtx.fillText(waveType, 20, 100)
+      fgCtx.shadowColor = mainColor
+      fgCtx.shadowBlur = 12
+      fgCtx.font = 'bold 64px monospace'
+      fgCtx.fillText(freqStr, 24, 120)
+
+      fgCtx.shadowBlur = 0
+      fgCtx.fillStyle = '#f8fafc'
+      fgCtx.font = 'bold 28px monospace'
+      fgCtx.fillText(waveType, 24, 180)
+      fgCtx.fillStyle = '#94a3b8'
+      fgCtx.font = 'bold 22px monospace'
+      fgCtx.fillText('OUTPUT: 50Ω LOAD • ON', 24, 222)
 
       const fgTexture = new THREE.CanvasTexture(fgCanvas)
       const fgDisp = new THREE.Mesh(
-        new THREE.PlaneGeometry(3.6, 1.8),
+        new THREE.PlaneGeometry(3.8, 2.0),
         new THREE.MeshBasicMaterial({ map: fgTexture })
       )
-      fgDisp.position.set(-1.2, 0.6, 3.38)
+      fgDisp.position.set(-1.2, 0.6, 3.42)
       fgGroup.add(fgDisp)
 
       // Frequency + / - Buttons
       const plusBtn = new THREE.Mesh(btnGeo, new THREE.MeshStandardMaterial({ color: '#38bdf8' }))
-      plusBtn.position.set(1.5, 1.1, 3.38)
+      plusBtn.position.set(1.6, 1.1, 3.42)
       plusBtn.userData = { id: `fg_plus_${title}`, label: `${title} Freq +` }
       fgGroup.add(plusBtn)
       interactiveObjectsRef.current.push(plusBtn)
 
       const minusBtn = new THREE.Mesh(btnGeo, new THREE.MeshStandardMaterial({ color: '#64748b' }))
-      minusBtn.position.set(1.5, 0.3, 3.38)
+      minusBtn.position.set(1.6, 0.3, 3.42)
       minusBtn.userData = { id: `fg_minus_${title}`, label: `${title} Freq -` }
       fgGroup.add(minusBtn)
       interactiveObjectsRef.current.push(minusBtn)
 
       // Output BNC port
       const bnc = new THREE.Mesh(bncPortGeo, bncMat)
-      bnc.position.set(1.8, -1.0, 3.38)
+      bnc.position.set(1.8, -1.0, 3.42)
       fgGroup.add(bnc)
 
       return fgGroup
     }
 
-    const fg1 = makeBenchFG(-13.5, 'FG1', `${activeF1} Hz`, 'Hz', 'SINE 1.0V', '#38bdf8')
-    const fg2 = makeBenchFG(13.5, 'FG2', `${activeF2} Hz`, 'Hz', 'TRIANGLE 1.0V', '#34d399')
+    const fg1 = makeBenchFG(-13.5, 'FG1', `${activeF1} Hz`, 'SINE 1.00Vpp', '#38bdf8')
+    const fg2 = makeBenchFG(13.5, 'FG2', `${activeF2} Hz`, 'TRIANGLE 1.00Vpp', '#34d399')
     scene.add(fg1)
     scene.add(fg2)
 
     // ════════════════════════════════════════════════════════
-    // 8. 3D DUAL-IC SOLDERLESS BREADBOARD (Identical to Main Page)
+    // 8. 3D DUAL-IC SOLDERLESS BREADBOARD ASSEMBLY
     // ════════════════════════════════════════════════════════
     const bbGroup = createRealisticBreadboardMesh({
       isCircuitPowered: isPowered,
       clkFreq
     })
-    bbGroup.position.set(0, 0.45, 3.8)
+    bbGroup.position.set(0, 0.48, 3.8)
     bbGroup.scale.set(1.7, 1.7, 1.7)
     scene.add(bbGroup)
 
     // ════════════════════════════════════════════════════════
-    // 9. ANIMATION & LIVE REAL-TIME OSCILLOSCOPE DRAWING
+    // 9. ANIMATION & LIVE RAZOR-SHARP DSO TRACE RENDERING
     // ════════════════════════════════════════════════════════
     let animId
     let time = 0
@@ -319,35 +368,65 @@ export default function TDMVirtualLab3D({
       const W = cvs.width
       const H = cvs.height
 
-      // Screen Phosphor Dark Background
-      ctx.fillStyle = '#060d14'
+      // ── Deep Cathode Phosphor Background ──
+      ctx.fillStyle = '#04090e'
       ctx.fillRect(0, 0, W, H)
 
-      // Oscilloscope Phosphor Grid (10 divisions X, 8 divisions Y)
-      ctx.strokeStyle = '#0e2b3d'
-      ctx.lineWidth = 1
+      // ── Oscilloscope Phosphor Graticule (10 cols x 8 rows) ──
+      ctx.strokeStyle = '#0a2333'
+      ctx.lineWidth = 1.5
       for (let x = 0; x <= W; x += W / 10) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, H)
+        ctx.stroke()
       }
       for (let y = 0; y <= H; y += H / 8) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(W, y)
+        ctx.stroke()
+      }
+
+      // Micro-subdivision ticks on center axes (5 ticks per division)
+      ctx.strokeStyle = '#103952'
+      ctx.lineWidth = 1.0
+      const tickW = 5
+      for (let x = 0; x <= W; x += W / 50) {
+        ctx.beginPath()
+        ctx.moveTo(x, H / 2 - tickW)
+        ctx.lineTo(x, H / 2 + tickW)
+        ctx.stroke()
+      }
+      for (let y = 0; y <= H; y += H / 40) {
+        ctx.beginPath()
+        ctx.moveTo(W / 2 - tickW, y)
+        ctx.lineTo(W / 2 + tickW, y)
+        ctx.stroke()
       }
 
       // Center crosshairs
-      ctx.strokeStyle = '#1a4f6e'
-      ctx.setLineDash([2, 4])
-      ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke()
-      ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke()
+      ctx.strokeStyle = '#18547a'
+      ctx.lineWidth = 1.8
+      ctx.setLineDash([4, 6])
+      ctx.beginPath()
+      ctx.moveTo(W / 2, 0)
+      ctx.lineTo(W / 2, H)
+      ctx.moveTo(0, H / 2)
+      ctx.lineTo(W, H / 2)
+      ctx.stroke()
       ctx.setLineDash([])
 
       if (croPower && isPowered) {
-        const fClock = clkFreq * 12
-        const vScale = 65 / voltsDiv
+        const fClock = clkFreq * 14
+        const vScale = 140 / voltsDiv
 
-        // 1. CH1 Sine Wave Trace (Sky Blue)
+        // ── 1. CH1 Sine Wave Trace (Sky Blue Phosphor Glow) ──
         if (croChannel === 'ch1' || croChannel === 'dual') {
+          ctx.shadowColor = '#38bdf8'
+          ctx.shadowBlur = 12
           ctx.strokeStyle = '#38bdf8'
-          ctx.lineWidth = 2.2
+          ctx.lineWidth = 3.5
           ctx.beginPath()
           for (let x = 0; x < W; x++) {
             const t = time * 0.05 + (x / W) * 8 * (timeDiv / 0.2)
@@ -357,10 +436,12 @@ export default function TDMVirtualLab3D({
           ctx.stroke()
         }
 
-        // 2. CH2 Triangle Wave Trace (Emerald Green)
+        // ── 2. CH2 Triangle Wave Trace (Emerald Green Phosphor Glow) ──
         if (croChannel === 'ch2' || croChannel === 'dual') {
+          ctx.shadowColor = '#34d399'
+          ctx.shadowBlur = 12
           ctx.strokeStyle = '#34d399'
-          ctx.lineWidth = 2.2
+          ctx.lineWidth = 3.5
           ctx.beginPath()
           for (let x = 0; x < W; x++) {
             const t = time * 0.05 + (x / W) * 8 * (timeDiv / 0.2)
@@ -371,10 +452,12 @@ export default function TDMVirtualLab3D({
           ctx.stroke()
         }
 
-        // 3. TDM Composite Interleaved Pulse Train (Neon Purple)
+        // ── 3. TDM Composite Interleaved Pulse Train (Neon Magenta Phosphor Glow) ──
         if (croChannel === 'tdm') {
-          ctx.strokeStyle = '#c084fc'
-          ctx.lineWidth = 2.6
+          ctx.shadowColor = '#d946ef'
+          ctx.shadowBlur = 14
+          ctx.strokeStyle = '#e879f9'
+          ctx.lineWidth = 4.0
           ctx.beginPath()
           for (let x = 0; x < W; x++) {
             const t = time * 0.05 + (x / W) * 8 * (timeDiv / 0.2)
@@ -388,33 +471,76 @@ export default function TDMVirtualLab3D({
           ctx.stroke()
         }
 
-        // 4. Reconstructed Filtered Signals (Teal & Sky Blue)
+        // ── 4. Reconstructed Filtered Output Signals (Cyan Phosphor Glow) ──
         if (croChannel === 'recon') {
-          ctx.strokeStyle = '#2dd4bf'
-          ctx.lineWidth = 2.4
+          ctx.shadowColor = '#22d3ee'
+          ctx.shadowBlur = 12
+          ctx.strokeStyle = '#22d3ee'
+          ctx.lineWidth = 3.5
           ctx.beginPath()
           for (let x = 0; x < W; x++) {
             const t = time * 0.05 + (x / W) * 8 * (timeDiv / 0.2)
-            const y = (H / 2) - Math.sin(t * 1.5 - 0.2) * vScale * 0.95
+            const y = (H / 2) - Math.sin(t * 1.5 - 0.25) * vScale * 0.94
             if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
           }
           ctx.stroke()
         }
 
-        // Screen HUD Text
-        ctx.fillStyle = '#f8fafc'
-        ctx.font = 'bold 13px monospace'
-        ctx.fillText(`CURIOLABS CRO-3000 • ${croChannel.toUpperCase()} MODE`, 16, 26)
+        // Reset shadow blur for crisp text overlay
+        ctx.shadowBlur = 0
+
+        // ── Professional DSO On-Screen Telemetry Overlay ──
+        // Top status bar
+        ctx.fillStyle = 'rgba(6, 15, 24, 0.75)'
+        ctx.fillRect(0, 0, W, 48)
+
         ctx.fillStyle = '#38bdf8'
-        ctx.fillText(`${voltsDiv}V/DIV`, 16, H - 16)
-        ctx.fillStyle = '#e2e8f0'
-        ctx.fillText(`${timeDiv}ms/DIV`, 120, H - 16)
+        ctx.font = 'bold 20px monospace'
+        ctx.textAlign = 'left'
+        ctx.fillText('● TRIG\'D', 24, 32)
+
+        ctx.fillStyle = '#f8fafc'
+        ctx.fillText(`CURIOLABS DSO-4051 • MODE: ${croChannel.toUpperCase()} MULTIPLEXED`, 150, 32)
+
+        ctx.textAlign = 'right'
+        ctx.fillStyle = '#22c55e'
+        ctx.fillText('AUTO 2.50GSa/s', W - 24, 32)
+
+        // Bottom measurement telemetry badges
+        ctx.fillStyle = 'rgba(6, 15, 24, 0.75)'
+        ctx.fillRect(0, H - 52, W, 52)
+
+        ctx.textAlign = 'left'
+        ctx.font = 'bold 18px monospace'
+
+        // CH1 indicator
+        ctx.fillStyle = '#38bdf8'
+        ctx.fillText(`1: ${voltsDiv}V/div`, 24, H - 20)
+
+        // CH2 indicator
+        ctx.fillStyle = '#34d399'
+        ctx.fillText(`2: ${voltsDiv}V/div`, 180, H - 20)
+
+        // Timebase
+        ctx.fillStyle = '#f8fafc'
+        ctx.fillText(`TIME: ${timeDiv}ms/div`, 340, H - 20)
+
+        // Master Clock
         ctx.fillStyle = '#c084fc'
-        ctx.fillText(`CLK: ${clkFreq}kHz`, 220, H - 16)
+        ctx.fillText(`CLK: ${clkFreq}kHz (5V)`, 540, H - 20)
+
+        // Real-time Measurements
+        ctx.textAlign = 'right'
+        ctx.fillStyle = '#fde047'
+        ctx.fillText(`Vpp = ${(2.0 / voltsDiv).toFixed(2)}V  |  Freq = ${f1}.0Hz`, W - 24, H - 20)
       } else {
+        // Standby Screen
         ctx.fillStyle = '#475569'
-        ctx.font = 'bold 15px monospace'
-        ctx.fillText('STANDBY — PRESS POWER BUTTON ON CRO', 70, H / 2)
+        ctx.font = 'bold 28px monospace'
+        ctx.textAlign = 'center'
+        ctx.fillText('STANDBY — INSTRUMENT POWER OFF', W / 2, H / 2 - 10)
+        ctx.font = '20px monospace'
+        ctx.fillText('Press "CRO ON" button on the front panel or bottom toolbar', W / 2, H / 2 + 30)
       }
 
       if (screenTextureRef.current) {
@@ -516,16 +642,16 @@ export default function TDMVirtualLab3D({
     if (!camera || !controls) return
 
     if (mode === 'bench') {
-      camera.position.set(0, 19, 27)
-      controls.target.set(0, 2.5, 0)
+      camera.position.set(0, 18, 26)
+      controls.target.set(0, 2.2, 0)
     } else if (mode === 'cro') {
-      camera.position.set(-1.5, 5.0, 1.5)
-      controls.target.set(-2.0, 4.2, -6.5)
+      camera.position.set(-1.5, 4.8, 1.2)
+      controls.target.set(-2.6, 4.3, -6.5)
     } else if (mode === 'breadboard') {
-      camera.position.set(0, 10, 8.5)
-      controls.target.set(0, 1, 3.8)
+      camera.position.set(0, 9.5, 8.2)
+      controls.target.set(0, 1.2, 3.8)
     } else if (mode === 'fg') {
-      camera.position.set(-11, 4.5, 1)
+      camera.position.set(-11, 4.2, 1.2)
       controls.target.set(-13.5, 2.5, -4.5)
     }
   }
@@ -533,44 +659,52 @@ export default function TDMVirtualLab3D({
   return (
     <div className="space-y-3">
       {/* 3D View Container */}
-      <div className="relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl">
+      <div className="relative rounded-2xl overflow-hidden bg-[#10141b] border-2 border-[#221611]/20 shadow-2xl">
         {/* Three.js Canvas Mount */}
         <div ref={mountRef} className="w-full h-[520px] block" />
 
         {/* 3D Top Floating HUD Toolbar */}
         <div className="absolute top-4 left-4 right-4 flex flex-wrap items-center justify-between pointer-events-none gap-2">
-          <div className="bg-slate-900/90 backdrop-blur border border-slate-700/80 px-3.5 py-1.5 rounded-xl shadow-lg pointer-events-auto flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs font-bold text-slate-100">Interactive 3D Virtual Electronics Laboratory</span>
-            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-mono px-2 py-0.5 rounded border border-emerald-500/30">
-              WebGL Clickable Controls
+          <div className="bg-[#221611]/90 backdrop-blur border border-[#FAF5EB]/15 px-3.5 py-1.5 rounded-xl shadow-xl pointer-events-auto flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#A4C93B]" />
+            <span className="text-xs font-bold text-[#FAF5EB]">Photorealistic 3D Virtual Electronics Bench</span>
+            <span className="text-[10px] bg-[#A4C93B]/20 text-[#A4C93B] font-mono px-2 py-0.5 rounded border border-[#A4C93B]/40 font-bold">
+              WebGL Direct Interactive
             </span>
           </div>
 
           <div className="flex items-center gap-2 pointer-events-auto">
             {/* Camera View Switcher */}
-            <div className="bg-slate-900/90 backdrop-blur border border-slate-700/80 p-1 rounded-xl shadow-lg flex items-center gap-1">
+            <div className="bg-[#221611]/90 backdrop-blur border border-[#FAF5EB]/15 p-1 rounded-xl shadow-xl flex items-center gap-1">
               <button
                 onClick={() => switchCameraView('bench')}
-                className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-all ${cameraMode === 'bench' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                className={`text-xs px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  cameraMode === 'bench' ? 'bg-[#A4C93B] text-[#221611] shadow' : 'text-[#FAF5EB]/70 hover:text-[#FAF5EB]'
+                }`}
               >
                 Overview
               </button>
               <button
                 onClick={() => switchCameraView('cro')}
-                className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-all ${cameraMode === 'cro' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                className={`text-xs px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  cameraMode === 'cro' ? 'bg-[#A4C93B] text-[#221611] shadow' : 'text-[#FAF5EB]/70 hover:text-[#FAF5EB]'
+                }`}
               >
                 CRO Scope Screen
               </button>
               <button
                 onClick={() => switchCameraView('breadboard')}
-                className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-all ${cameraMode === 'breadboard' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                className={`text-xs px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  cameraMode === 'breadboard' ? 'bg-[#A4C93B] text-[#221611] shadow' : 'text-[#FAF5EB]/70 hover:text-[#FAF5EB]'
+                }`}
               >
                 Breadboard ICs
               </button>
               <button
                 onClick={() => switchCameraView('fg')}
-                className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-all ${cameraMode === 'fg' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                className={`text-xs px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  cameraMode === 'fg' ? 'bg-[#A4C93B] text-[#221611] shadow' : 'text-[#FAF5EB]/70 hover:text-[#FAF5EB]'
+                }`}
               >
                 Function Gen
               </button>
@@ -579,7 +713,7 @@ export default function TDMVirtualLab3D({
             {/* Mobile AR Mode Toggle */}
             <button
               onClick={() => setShowARCard(prev => !prev)}
-              className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-1.5 transition-all"
+              className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold px-3 py-1.5 rounded-xl shadow-xl flex items-center gap-1.5 transition-all"
             >
               <Smartphone className="w-3.5 h-3.5" />
               <span>{showARCard ? 'Close AR Mode' : 'View in Mobile AR'}</span>
@@ -589,19 +723,19 @@ export default function TDMVirtualLab3D({
 
         {/* 3D Raycasting Hover Tooltip */}
         {hoveredObject && (
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 font-mono font-bold text-xs px-3 py-1 rounded-full shadow-lg pointer-events-none animate-bounce">
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-[#A4C93B] text-[#221611] font-mono font-bold text-xs px-3.5 py-1 rounded-full shadow-2xl pointer-events-none animate-bounce border border-[#221611]/30">
             👉 {hoveredObject} (Click to interact in 3D)
           </div>
         )}
 
         {/* Bottom Interactive Quick Dials Bar */}
-        <div className="absolute bottom-3 left-4 right-4 flex flex-wrap items-center justify-between pointer-events-none text-xs text-slate-300 bg-slate-900/85 backdrop-blur px-3.5 py-2 rounded-xl border border-slate-800 gap-2">
+        <div className="absolute bottom-3 left-4 right-4 flex flex-wrap items-center justify-between pointer-events-none text-xs text-[#FAF5EB] bg-[#221611]/90 backdrop-blur px-3.5 py-2 rounded-xl border border-[#FAF5EB]/15 gap-2 shadow-2xl">
           <div className="pointer-events-auto flex items-center gap-2">
-            <span className="text-[11px] font-mono text-slate-400">CRO Controls:</span>
+            <span className="text-[11px] font-mono text-[#FAF5EB]/70 font-bold">DSO Scope:</span>
             <button
               onClick={() => setCroPower(p => !p)}
-              className={`text-xs px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 ${
-                croPower ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'
+              className={`text-xs px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-all ${
+                croPower ? 'bg-[#A4C93B] text-[#221611]' : 'bg-[#332219] text-[#FAF5EB]/50 border border-[#FAF5EB]/20'
               }`}
             >
               <Power className="w-3 h-3" />
@@ -611,8 +745,8 @@ export default function TDMVirtualLab3D({
               <button
                 key={ch}
                 onClick={() => setCroChannel(ch)}
-                className={`text-[11px] px-2 py-0.5 rounded-md font-mono font-bold uppercase transition-all ${
-                  croChannel === ch ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                className={`text-[11px] px-2.5 py-1 rounded-lg font-mono font-bold uppercase transition-all ${
+                  croChannel === ch ? 'bg-purple-600 text-white shadow' : 'bg-[#332219] text-[#FAF5EB]/70 hover:text-white'
                 }`}
               >
                 {ch}
@@ -620,7 +754,7 @@ export default function TDMVirtualLab3D({
             ))}
           </div>
 
-          <div className="text-[11px] text-slate-400 font-mono">
+          <div className="text-[11px] text-[#FAF5EB]/70 font-mono">
             3D Raycasting Active: Click buttons and knobs on instruments directly!
           </div>
         </div>
@@ -637,25 +771,25 @@ export default function TDMVirtualLab3D({
 
       {/* ── MOBILE AR DESK SELECTION CARD ── */}
       {showARCard && (
-        <div className="bg-white rounded-2xl p-5 border border-purple-200 shadow-xl space-y-4">
+        <div className="bg-[#FAF5EB] rounded-2xl p-5 border-2 border-[#221611]/20 shadow-xl space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="p-2.5 bg-purple-100 text-purple-700 rounded-2xl text-xl">📱</span>
+              <span className="p-2.5 bg-[#221611] text-[#FAF5EB] rounded-2xl text-xl">📱</span>
               <div>
-                <h4 className="font-bold text-sm text-slate-900">Mobile Augmented Reality (AR) Tabletop Projection</h4>
-                <p className="text-xs text-slate-500">Project the dual-IC TDM circuit directly onto your physical desk in 1:1 scale</p>
+                <h4 className="font-bold text-sm text-[#221611]">Mobile Augmented Reality (AR) Tabletop Projection</h4>
+                <p className="text-xs text-[#221611]/70">Project the dual-IC TDM circuit directly onto your physical desk in 1:1 scale</p>
               </div>
             </div>
             <button
               onClick={() => setShowARCard(false)}
-              className="text-xs text-slate-400 hover:text-slate-600 font-bold px-2 py-1"
+              className="text-xs text-[#221611]/60 hover:text-[#221611] font-bold px-2 py-1"
             >
               ✕
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {/* Option A: Live Camera WebAR (100% device compatibility with camera permission prompt) */}
+            {/* Option A: Live Camera WebAR */}
             <div className="p-4 rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-b from-emerald-50/50 to-emerald-50/10 flex flex-col justify-between space-y-3">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
@@ -682,7 +816,7 @@ export default function TDMVirtualLab3D({
             </div>
 
             {/* Option B: Native Device QuickLook / SceneViewer */}
-            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col justify-between space-y-3">
+            <div className="p-4 rounded-2xl border border-slate-200 bg-white/70 flex flex-col justify-between space-y-3">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">

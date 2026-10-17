@@ -152,6 +152,30 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const loginDemoUser = (role = 'student', name = '', email = '') => {
+    const demoEmail = email || (role === 'faculty' ? 'faculty.demo@curiolabs.edu' : 'student.demo@curiolabs.edu')
+    const demoName = name || (role === 'faculty' ? 'Prof. R. K. Sharma (ECE)' : 'Harshith Gowda (Student)')
+    const userObj = {
+      uid: 'demo-' + role + '-' + Date.now(),
+      email: demoEmail,
+      displayName: demoName
+    }
+    const profObj = {
+      name: demoName,
+      email: demoEmail,
+      role: role === 'teacher' ? 'faculty' : role,
+      branch: role === 'faculty' || role === 'teacher' ? 'Electronics & Communication' : 'ECE B.Tech 3rd Year',
+      department: 'Electronics & Communication'
+    }
+    setCurrentUser(userObj)
+    setProfile(profObj)
+    try {
+      localStorage.setItem('curiolabs_auth_user', JSON.stringify(userObj))
+      localStorage.setItem('curiolabs_auth_profile', JSON.stringify(profObj))
+    } catch (e) {}
+    return userObj
+  }
+
   const userRole = profile?.role || 'student'
 
   const value = useMemo(() => ({
@@ -164,6 +188,7 @@ export function AuthProvider({ children }) {
     signInWithEmail,
     register,
     signUpWithEmail: (email, password) => register({ email, password, name: email.split('@')[0], role: 'student' }),
+    loginDemoUser,
     signOut,
     createProfile,
     isAdmin: userRole === 'admin',

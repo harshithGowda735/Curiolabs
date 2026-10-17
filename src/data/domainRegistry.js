@@ -18,13 +18,13 @@ export const EDUCATION_LEVELS = [
   {
     id: 'engineering',
     title: 'Undergraduate Engineering (B.Tech / B.E)',
-    shortTitle: 'Engineering Faculty',
+    shortTitle: 'Engineering (B.Tech)',
     description: 'Specialized advanced engineering labs with WebAR hardware simulation',
     icon: '⚡',
     badge: 'Undergraduate B.Tech / B.E',
     gradient: 'from-purple-600 to-indigo-700',
-    domainsCount: 7,
-    experimentsCount: 35
+    domainsCount: 6,
+    experimentsCount: 36
   }
 ]
 
@@ -228,5 +228,23 @@ export const DOMAIN_REGISTRY = [
       { slug: 'cpu-scheduling', title: 'Reinforcement Task Scheduler', path: '/cs/cpu-scheduling', icon: '⏱️' }
     ]
   },
-
+  {
+    id: 'computer-science',
+    slug: 'computer-science',
+    level: 'engineering',
+    title: 'Computer Science & Cloud',
+    titleKn: 'ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ಮತ್ತು ಕ್ಲೌಡ್',
+    description: 'Distributed microservices, containerization orchestration & high-throughput networks',
+    icon: '💻',
+    gradient: 'from-blue-600 to-indigo-700',
+    path: '/cs',
+    experimentsCount: 6,
+    tags: ['Distributed Systems', 'Cloud Architecture', 'Databases', 'Algorithms'],
+    experiments: [
+      { slug: 'sorting', title: 'High-Concurrency Sorting & Thread Pool Scaling', path: '/cs/sorting', icon: '📊' },
+      { slug: 'dijkstra', title: 'Distributed Graph Routing & Shortest Path', path: '/cs/dijkstra', icon: '🗺️' },
+      { slug: 'cache', title: 'Multi-Level Cache Coherence & Memory Hierarchy', path: '/cs/cache', icon: '💾' },
+      { slug: 'bst', title: 'Balanced Search Trees & B-Tree Storage Engines', path: '/cs/bst', icon: '🌲' }
+    ]
+  }
 ]

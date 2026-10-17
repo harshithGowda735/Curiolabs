@@ -1,9 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Outfit', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Paytone One', 'Outfit', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-chunky: 'Paytone One', 'Outfit', sans-serif;
   
+  --color-cocoa-dark: #221611;
+  --color-cocoa-medium: #302019;
+  --color-cocoa-warm: #754f40;
+  --color-cream-bg: #FAF5EB;
+  --color-cream-card: #F2EBDE;
+  --color-lime-highlight: #C2DE6B;
+  --color-pink-accent: #E03588;
+  --color-blue-accent: #1D54DB;
+  --color-orange-accent: #FF9B00;
+
   --color-brand-50: #ecfdf5;
   --color-brand-100: #d1fae5;
   --color-brand-200: #a7f3d0;
@@ -15,10 +26,10 @@
   --color-brand-800: #065f46;
   --color-brand-900: #064e3b;
 
-  --color-surface: #f8fafc;
+  --color-surface: #FAF5EB;
   --color-surface-card: #ffffff;
-  --color-surface-dark: #0f172a;
-  --color-surface-darker: #020617;
+  --color-surface-dark: #221611;
+  --color-surface-darker: #150d0a;
 }
 
 /* Safe area insets for mobile */
@@ -50,8 +61,8 @@ button, input[type="range"], [role="button"], a {
   touch-action: manipulation;
 }
 
-/* Smooth transitions globally */
-* {
+/* Smooth transitions when Lenis is not active */
+html:not(.lenis) {
   scroll-behavior: smooth;
 }
 
@@ -128,6 +139,21 @@ input[type="range"]::-moz-range-thumb {
   animation: float 3s ease-in-out infinite;
 }
 
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 /* Drag and drop styles */
 .drop-zone {
   border: 2px dashed #cbd5e1;
@@ -181,4 +207,169 @@ model-viewer {
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.02);
   transform: translateY(-2px);
 }
+
+/* Butter-Smooth Lenis Momentum Scrolling */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* Cream Dripping Droplet Animations */
+@keyframes dripFall {
+  0% {
+    transform: translateY(0) scale(0.9, 0.9);
+    opacity: 0.95;
+  }
+  50% {
+    transform: translateY(10px) scale(0.85, 1.25);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(22px) scale(0.6, 1.4);
+    opacity: 0;
+  }
+}
+
+.animate-drip-1 {
+  animation: dripFall 2.4s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+.animate-drip-2 {
+  animation: dripFall 3s infinite 0.9s cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+.animate-drip-3 {
+  animation: dripFall 2.7s infinite 1.6s cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* ════════════════════════════════════════════════════════════
+   AWWWARDS-TIER SCROLL-DRIVEN ANIMATIONS ("OUTSIDE TO INSIDE")
+   ════════════════════════════════════════════════════════════ */
+
+[data-reveal] {
+  will-change: transform, opacity;
+  transition-property: transform, opacity;
+  transition-duration: 0.45s;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Left outside to inside */
+[data-reveal="left"] {
+  opacity: 0;
+  transform: translate3d(-50px, 0, 0) rotate(-2deg) scale(0.97);
+}
+
+/* Right outside to inside */
+[data-reveal="right"] {
+  opacity: 0;
+  transform: translate3d(50px, 0, 0) rotate(2deg) scale(0.97);
+}
+
+/* Bottom outside to inside */
+[data-reveal="bottom"] {
+  opacity: 0;
+  transform: translate3d(0, 40px, 0) scale(0.96);
+}
+
+/* Top outside to inside */
+[data-reveal="top"] {
+  opacity: 0;
+  transform: translate3d(0, -35px, 0) scale(0.97);
+}
+
+/* Center zoom in with subtle rotation */
+[data-reveal="scale"] {
+  opacity: 0;
+  transform: scale(0.94);
+}
+
+/* Melting card coming from outside right with natural tilt */
+[data-reveal="tilt-card"] {
+  opacity: 0;
+  transform: translate3d(50px, -8px, 0) rotate(5deg) scale(0.94);
+}
+
+/* When revealed into natural position */
+[data-reveal].revealed {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) rotate(0deg) scale(1) !important;
+  will-change: auto !important;
+}
+
+/* Special revealed state for the tilted about card */
+[data-reveal="tilt-card"].revealed {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) rotate(-2deg) scale(1) !important;
+  will-change: auto !important;
+}
+
+/* 3D Micro-Physics Card Hover */
+.card-hover-3d {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+  will-change: transform, box-shadow;
+}
+
+.card-hover-3d:hover {
+  transform: translateY(-8px) scale(1.015);
+}
+
+/* Card micro-animations & ambient glow pulses */
+@keyframes floatMedallion {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(2deg);
+  }
+}
+
+@keyframes pulseGlowSlow {
+  0%, 100% {
+    opacity: 0.18;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes radarPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+
+.animate-float-medallion {
+  animation: floatMedallion 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlowSlow 5s ease-in-out infinite;
+}
+
+.animate-radar-ring {
+  animation: radarPulse 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
 

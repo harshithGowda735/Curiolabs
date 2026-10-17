@@ -1,17 +1,20 @@
 import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Search, Sparkles, ArrowRight, Smartphone, Filter } from 'lucide-react'
+import { Search, ArrowRight, Smartphone, FlaskConical } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import Breadcrumbs from '../components/Breadcrumbs'
+import DomainIcon from '../components/DomainIcon'
 import { DOMAIN_REGISTRY, EDUCATION_LEVELS } from '../data/domainRegistry'
+import useScrollReveal from '../hooks/useScrollReveal'
 
 export default function DomainCatalog() {
   const { level = 'engineering' } = useParams()
   const { t } = useLanguage()
   const [searchTerm, setSearchTerm] = useState('')
   const [activeTag, setActiveTag] = useState('ALL')
+
+  useScrollReveal([level, activeTag, searchTerm])
 
   const currentLevelInfo = EDUCATION_LEVELS.find(l => l.id === level) || EDUCATION_LEVELS[1]
 
@@ -37,44 +40,41 @@ export default function DomainCatalog() {
     })
   }, [levelDomains, searchTerm, activeTag])
 
-  const breadcrumbItems = [
-    { label: t('Academic Tracks', 'ಶೈಕ್ಷಣಿಕ ಹಂತ'), path: '/level-select' },
-    { label: currentLevelInfo.shortTitle }
-  ]
-
   return (
-    <div className="min-h-[100dvh] bg-slate-50 flex flex-col justify-between">
+    <div className="min-h-[100dvh] bg-[#FAF5EB] text-[#221611] flex flex-col justify-between selection:bg-[#221611] selection:text-[#FAF5EB]">
       <div>
         <Navbar />
-        <Breadcrumbs items={breadcrumbItems} />
 
-        {/* Hero Header */}
-        <div className={`bg-gradient-to-r ${currentLevelInfo.gradient} text-white px-4 py-10 shadow-inner`}>
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Clean Header & Track Switcher without any weird gradient banners */}
+        <div className="max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-14 pt-8 pb-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#E2D7C5]">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur text-white text-xs font-semibold mb-2">
-                <span>{currentLevelInfo.icon}</span>
-                <span>{currentLevelInfo.badge}</span>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAE0CD] text-[#221611] text-[11px] font-mono font-bold uppercase tracking-wider mb-2">
+                <DomainIcon id={level} size={14} className="text-[#221611]" />
+                <span>{level === 'puc' ? 'Grades 11-12' : 'B.Tech / B.E'}</span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight">
-                {currentLevelInfo.title}
+              <h1 className="text-3xl sm:text-5xl font-display font-black uppercase text-[#221611] tracking-tight">
+                {level === 'puc' ? 'PUC (+2) Sciences' : 'Undergraduate Engineering'}
               </h1>
-              <p className="text-white/80 text-sm mt-1 max-w-xl">
+              <p className="text-[#6B564A] text-xs sm:text-base mt-1.5 max-w-2xl font-medium leading-relaxed">
                 {currentLevelInfo.description}
               </p>
             </div>
 
-            {/* Track Switcher */}
-            <div className="flex bg-white/10 backdrop-blur p-1 rounded-xl border border-white/20 self-start md:self-auto">
+            {/* Clean Pill Track Switcher */}
+            <div className="flex items-center gap-2 self-start md:self-auto">
               {EDUCATION_LEVELS.map(lvl => (
                 <Link
                   key={lvl.id}
                   to={`/catalog/${lvl.id}`}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    level === lvl.id ? 'bg-white text-slate-900 shadow-sm' : 'text-white/80 hover:text-white'
+                  className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-200 inline-flex items-center gap-1.5 ${
+                    level === lvl.id 
+                      ? 'bg-[#221611] text-[#FAF5EB] shadow-md scale-105' 
+                      : 'bg-white hover:bg-[#221611]/10 text-[#221611] border-2 border-[#221611]'
                   }`}
                 >
-                  {lvl.shortTitle}
+                  <DomainIcon id={lvl.id} size={14} className={level === lvl.id ? 'text-[#A4C93B]' : 'text-[#221611]'} />
+                  <span>{lvl.id === 'puc' ? 'PUC (+2)' : 'Engineering'}</span>
                 </Link>
               ))}
             </div>
@@ -82,17 +82,17 @@ export default function DomainCatalog() {
         </div>
 
         {/* Search & Tag Filter Bar */}
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-14 py-4">
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
             {/* Search Input */}
             <div className="relative w-full sm:w-80">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8C7667]" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 placeholder={t('Search experiments, domains, tags...', 'ಹುಡುಕಿ...')}
-                className="w-full pl-9 pr-4 py-2 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                className="w-full pl-9 pr-4 py-2 bg-white rounded-full border border-[#D5C7B2] text-xs text-[#221611] placeholder:text-[#8C7667] focus:outline-none focus:ring-2 focus:ring-[#221611]/20 focus:border-[#221611] transition-all shadow-2xs font-medium"
               />
             </div>
 
@@ -102,10 +102,10 @@ export default function DomainCatalog() {
                 <button
                   key={tg}
                   onClick={() => setActiveTag(tg)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
                     activeTag === tg
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                      ? 'bg-[#221611] text-white shadow-xs'
+                      : 'bg-white text-[#6B564A] hover:bg-[#FAF5EB] border border-[#D5C7B2]'
                   }`}
                 >
                   {tg}
@@ -115,50 +115,55 @@ export default function DomainCatalog() {
           </div>
 
           {/* Domain Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
-            {filteredDomains.map(domain => (
-              <div
-                key={domain.id}
-                className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between group"
-              >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            {filteredDomains.map((domain, idx) => {
+              const colType = idx % 3 === 0 ? 'left' : idx % 3 === 2 ? 'right' : 'bottom'
+              const delay = (idx % 3) * 100
+              return (
+                <div
+                  key={domain.id}
+                  data-reveal={colType}
+                  data-delay={delay}
+                  className="bg-white rounded-3xl border border-[#D5C7B2] shadow-sm hover:shadow-md transition-all p-6 flex flex-col justify-between group card-hover-3d"
+                >
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-3xl p-2 bg-slate-50 rounded-xl group-hover:scale-105 transition-transform">
-                      {domain.icon}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="p-2.5 bg-[#FAF5EB] rounded-2xl group-hover:scale-105 transition-transform border border-[#E2D7C5] text-[#221611] flex items-center justify-center">
+                      <DomainIcon id={domain.id} size={24} className="text-[#221611]" />
                     </span>
                     <div className="flex items-center gap-1.5">
                       {domain.hasAR && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#E8DAFF] text-[#5B1EB8] border border-[#5B1EB8]/20 font-mono">
                           <Smartphone size={10} />
                           WebAR
                         </span>
                       )}
-                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold">
+                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FAF5EB] text-[#423126] font-bold border border-[#E2D7C5] font-mono">
                         {domain.experimentsCount} Labs
                       </span>
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-display font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                  <h3 className="text-xl font-display font-black uppercase text-[#221611] group-hover:text-[#754F40] transition-colors">
                     {t(domain.title, domain.titleKn || domain.title)}
                   </h3>
-                  <p className="text-slate-500 text-xs mt-1 leading-relaxed line-clamp-2">
+                  <p className="text-[#6B564A] text-xs mt-1.5 leading-relaxed line-clamp-2 font-medium">
                     {domain.description}
                   </p>
 
-                  {/* Experiments List Preview */}
-                  <div className="mt-4 pt-3 border-t border-slate-100 space-y-1.5">
-                    {(domain.experiments || []).slice(0, 3).map((exp, idx) => (
+                  {/* Experiments List Preview - Exactly 2 experiments */}
+                  <div className="mt-5 pt-3.5 border-t border-[#E8DFC8] space-y-1.5">
+                    {(domain.experiments || []).slice(0, 2).map((exp, idx) => (
                       <Link
                         key={idx}
                         to={exp.path}
-                        className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 text-xs text-slate-700 transition-colors group/exp"
+                        className="flex items-center justify-between p-2 rounded-xl hover:bg-[#FAF5EB] text-xs text-[#221611] font-bold transition-all duration-200 group/exp hover:translate-x-1"
                       >
-                        <span className="flex items-center gap-1.5 truncate">
-                          <span>{exp.icon || '🔬'}</span>
+                        <span className="flex items-center gap-2 truncate">
+                          <FlaskConical size={13} className="text-[#754F40] shrink-0" />
                           <span className="truncate">{exp.title}</span>
                         </span>
-                        <ArrowRight size={12} className="text-slate-400 group-hover/exp:translate-x-0.5 transition-transform flex-shrink-0" />
+                        <ArrowRight size={12} className="text-[#8C7667] group-hover/exp:translate-x-0.5 transition-transform flex-shrink-0" />
                       </Link>
                     ))}
                   </div>
@@ -166,20 +171,21 @@ export default function DomainCatalog() {
 
                 <Link
                   to={domain.path}
-                  className="w-full mt-4 py-2 text-center text-xs font-bold rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-800 hover:text-indigo-700 border border-slate-200 hover:border-indigo-200 transition-all flex items-center justify-center gap-1"
+                  className="w-full mt-5 py-2.5 text-center text-xs font-black uppercase tracking-wider rounded-full bg-[#FAF5EB] hover:bg-[#221611] text-[#221611] hover:text-[#FAF5EB] border border-[#D5C7B2] hover:border-[#221611] transition-all flex items-center justify-center gap-1.5 shadow-2xs"
                 >
-                  <span>{t('View All Experiments', 'ಎಲ್ಲಾ ಪ್ರಯೋಗಗಳನ್ನು ನೋಡಿ')}</span>
+                  <span>{t('Launch Lab Workstation', 'ಪ್ರಾರಂಭಿಸಿ')}</span>
                   <ArrowRight size={13} />
                 </Link>
               </div>
-            ))}
+            )
+          })}
           </div>
 
           {filteredDomains.length === 0 && (
-            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 mt-6">
-              <span className="text-3xl block mb-2">🔍</span>
-              <p className="text-slate-700 font-semibold text-sm">No domains match your search query</p>
-              <p className="text-slate-400 text-xs mt-1">Try searching for different keywords or clear filters</p>
+            <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-[#D5C7B2] mt-6">
+              <Search size={32} className="mx-auto text-[#8C7667] mb-2" />
+              <p className="text-[#221611] font-bold text-sm">No domains match your search query</p>
+              <p className="text-[#8C7667] text-xs mt-1">Try searching for different keywords or clear filters</p>
             </div>
           )}
         </div>

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { 
-  Users, Award, BarChart3, Search, Plus, Radio, CheckCircle, 
+  Users, Award, BarChart3, Search, Plus, Radio, CheckCircle2, 
   FileText, Download, Eye, Sparkles, Filter, ChevronRight, Inbox,
-  AlertCircle
+  AlertCircle, KeyRound, Copy, Check, Send, Play, RefreshCw, Mail,
+  Zap, Clock, ShieldCheck
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -10,563 +11,526 @@ import Navbar from '../components/Navbar'
 import CourseCertificateModal from '../components/CourseCertificateModal'
 import Footer from '../components/Footer'
 import Breadcrumbs from '../components/Breadcrumbs'
-import { DOMAIN_REGISTRY } from '../data/domainRegistry'
-import { createExperiment, subscribeToFacultyRecords } from '../services/labService'
+import { 
+  ASSIGNABLE_LABS, 
+  getRegisteredExams, 
+  registerNewExam, 
+  getExamRoster, 
+  inviteStudentsToExam,
+  submitStudentExamOutput,
+  subscribeToExamSync 
+} from '../services/examService'
 
 export default function TeacherDashboard() {
-  const { currentUser } = useAuth()
+  const { currentUser, profile } = useAuth()
   const { t } = useLanguage()
-  const [activeTab, setActiveTab] = useState('monitor') // 'monitor' | 'create' | 'assign' | 'evaluate' | 'reports'
+  const [activeTab, setActiveTab] = useState('exam_manager') // 'exam_manager' | 'monitor' | 'create' | 'reports'
   const [search, setSearch] = useState('')
-  const [selectedStudent, setSelectedStudent] = useState(null)
-  const [showCert, setShowCert] = useState(false)
-  const [publishError, setPublishError] = useState('')
+  const [copiedCode, setCopiedCode] = useState(false)
+  const [inviteEmailInput, setInviteEmailInput] = useState('')
+  const [inviteSuccess, setInviteSuccess] = useState('')
 
-  // Real live student session telemetry (empty by default, no demo data)
-  const [students, setStudents] = useState(() => {
-    try {
-      const saved = localStorage.getItem('curiolabs_teacher_students')
-      return saved ? JSON.parse(saved) : []
-    } catch {
-      return []
-    }
+  // Active Exams & Selected Exam Code
+  const [exams, setExams] = useState(() => getRegisteredExams())
+  const [selectedExamCode, setSelectedExamCode] = useState(() => {
+    const list = getRegisteredExams()
+    return list[0]?.code || 'TDM-4051'
   })
 
+  // Live Student Roster for Selected Exam
+  const [examRoster, setExamRoster] = useState(() => getExamRoster(selectedExamCode))
+
+  // New Exam Registration Form State
+  const [newExamLabId, setNewExamLabId] = useState('tdm')
+  const [newExamTitle, setNewExamTitle] = useState('ECE 302: TDM & Demultiplexing Practical Exam')
+  const [newExamDuration, setNewExamDuration] = useState('45')
+  const [newExamCustomCode, setNewExamCustomCode] = useState('')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+
+  // Live real-time subscription across tabs/windows
   useEffect(() => {
-    if (!currentUser || currentUser.uid === 'demo-user') return
-    try {
-      return subscribeToFacultyRecords((snapshot) => {
-        const liveStudents = snapshot.docs.map((item) => {
-          const record = item.data()
-          return {
-            id: item.id,
-            name: record.studentName || record.studentId?.slice(0, 8) || 'Student',
-            class: record.branch || 'Unassigned',
-            lab: record.experimentTitle || record.experimentId,
-            progress: record.completionStatus === 'completed' ? 100 : 50,
-            score: record.score || 0,
-            status: record.completionStatus === 'completed' ? 'Submitted' : 'Active In Lab',
-            lastActive: 'Live'
-          }
-        })
-        if (liveStudents.length) setStudents(liveStudents)
-      })
-    } catch (err) {
-      console.warn('Faculty records subscription note:', err)
+    const refreshData = () => {
+      const currentExams = getRegisteredExams()
+      setExams(currentExams)
+      setExamRoster(getExamRoster(selectedExamCode))
     }
-  }, [currentUser])
 
-  // Lab creator form state
-  const [newLab, setNewLab] = useState({
-    title: '',
-    domain: 'robotics',
-    level: 'engineering',
-    instructions: '',
-    minTolerance: '2.5%'
-  })
+    refreshData()
+    const unsubscribe = subscribeToExamSync(() => {
+      refreshData()
+    })
+    return () => unsubscribe()
+  }, [selectedExamCode])
 
-  const [createdLabs, setCreatedLabs] = useState(() => {
-    try {
-      const saved = localStorage.getItem('curiolabs_teacher_labs')
-      return saved ? JSON.parse(saved) : []
-    } catch {
-      return []
+  const selectedExam = exams.find(e => e.code === selectedExamCode) || exams[0]
+
+  // Copy code to clipboard
+  const handleCopyCode = () => {
+    const fullLink = `${window.location.origin}${selectedExam?.labRoute || '/electronics/tdm'}?exam=${selectedExamCode}`
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(`${selectedExamCode} (Link: ${fullLink})`)
     }
-  })
+    setCopiedCode(true)
+    setTimeout(() => setCopiedCode(false), 2000)
+  }
 
-  // Persist created labs to local storage
-  useEffect(() => {
-    try {
-      localStorage.setItem('curiolabs_teacher_labs', JSON.stringify(createdLabs))
-    } catch (e) {
-      console.error(e)
+  // Handle Inviting Students via Email
+  const handleSendInvites = (e) => {
+    e.preventDefault()
+    if (!inviteEmailInput.trim()) return
+
+    const emails = inviteEmailInput.split(/[,;\s]+/).filter(Boolean)
+    const updated = inviteStudentsToExam(selectedExamCode, emails)
+    if (updated) {
+      setExamRoster(updated)
+      setInviteEmailInput('')
+      setInviteSuccess(`Successfully invited ${emails.length} student(s) to ${selectedExamCode}`)
+      setTimeout(() => setInviteSuccess(''), 3000)
     }
-  }, [createdLabs])
+  }
 
-  // Persist students to local storage
-  useEffect(() => {
-    try {
-      localStorage.setItem('curiolabs_teacher_students', JSON.stringify(students))
-    } catch (e) {
-      console.error(e)
-    }
-  }, [students])
+  // Handle Creating a New Exam Session
+  const handleRegisterExam = (e) => {
+    e.preventDefault()
+    const lab = ASSIGNABLE_LABS.find(l => l.id === newExamLabId)
+    const created = registerNewExam({
+      title: newExamTitle || `${lab?.title} Practical Exam`,
+      labId: newExamLabId,
+      durationMinutes: newExamDuration,
+      customCode: newExamCustomCode
+    })
 
-  const filtered = students.filter(s =>
-    s?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    s?.class?.toLowerCase().includes(search.toLowerCase()) ||
-    s?.lab?.toLowerCase().includes(search.toLowerCase())
+    const allExams = getRegisteredExams()
+    setExams(allExams)
+    setSelectedExamCode(created.code)
+    setExamRoster(getExamRoster(created.code))
+    setShowCreateModal(false)
+    setNewExamCustomCode('')
+  }
+
+  // Instant simulator to verify that students turn GREEN DONE in real time
+  const handleSimulateDone = (studentEmail) => {
+    submitStudentExamOutput(selectedExamCode, studentEmail, 'Circuit Output Verified: 2kHz TDM Multiplexed Waveform')
+    setExamRoster(getExamRoster(selectedExamCode))
+  }
+
+  // Filtered roster for search
+  const filteredRoster = examRoster.filter(s =>
+    s.studentName?.toLowerCase().includes(search.toLowerCase()) ||
+    s.email?.toLowerCase().includes(search.toLowerCase()) ||
+    s.rollNo?.toLowerCase().includes(search.toLowerCase())
   )
 
-  // Dynamic telemetry calculations
-  const activeCount = students.filter(s => s.status === 'Active In Lab').length
-  const completedCount = students.filter(s => s.status === 'Submitted').length
-  const avgScore = students.length > 0 
-    ? (students.reduce((acc, s) => acc + (Number(s.score) || 0), 0) / students.length).toFixed(1) + '%'
-    : '0%'
-  const flaggedCount = students.filter(s => s.status === 'Needs Guidance').length
-
-  const handleCreateLab = async (e) => {
-    e.preventDefault()
-    if (!newLab.title) return
-    const newEntry = {
-      id: Date.now(),
-      title: newLab.title,
-      domain: newLab.domain,
-      level: newLab.level,
-      assignedTo: 'Pending Assignment',
-      due: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
-    }
-    try {
-      setPublishError('')
-      if (currentUser && currentUser.uid !== 'demo-user') {
-        await createExperiment({
-          title: newLab.title,
-          category: newLab.domain,
-          branch: newLab.level,
-          difficulty: 'intermediate',
-          duration: 45,
-          instructions: newLab.instructions,
-          minTolerance: newLab.minTolerance,
-          createdBy: currentUser?.uid
-        })
-      }
-    } catch (error) {
-      console.warn('Firebase publish note:', error)
-      setPublishError(error.message || 'Unable to publish the lab to cloud registry.')
-    }
-    setCreatedLabs(prev => [newEntry, ...prev])
-    setNewLab({ title: '', domain: 'robotics', level: 'engineering', instructions: '', minTolerance: '2.5%' })
-    setActiveTab('assign')
-  }
-
-  const handleExportAccreditation = () => {
-    if (students.length === 0) {
-      alert('No active student telemetry data available yet to export.')
-      return
-    }
-    alert('Generating NAAC / ABET Outcome Assessment Report (PDF)...')
-  }
+  const completedCount = examRoster.filter(s => s.status === 'Completed').length
+  const inProgressCount = examRoster.filter(s => s.status === 'In Progress').length
+  const pendingCount = examRoster.filter(s => s.status === 'Pending').length
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 flex flex-col justify-between">
+    <div className="min-h-[100dvh] bg-[#FAF5EB] text-[#221611] flex flex-col justify-between selection:bg-[#221611] selection:text-[#FAF5EB]">
       <div>
         <Navbar />
-        <Breadcrumbs items={[{ label: 'Faculty Console' }, { label: 'Command Dashboard' }]} />
 
-        {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white px-4 py-8 shadow-inner">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* ── FACULTY COMMAND HEADER ── */}
+        <div className="bg-[#221611] text-[#FAF5EB] px-4 sm:px-8 py-8 border-b-2 border-[#221611] shadow-md">
+          <div className="max-w-[1720px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold mb-2 border border-indigo-400/30">
-                <Sparkles size={12} />
-                <span>Faculty Virtual Engineering Hub</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#A4C93B] text-[#221611] text-xs font-black uppercase tracking-wider mb-2 shadow-xs">
+                <ShieldCheck size={14} className="text-[#221611]" />
+                <span>Verified Faculty Console • Practical Examination Authority</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-display font-bold">
-                {t('Faculty Command Console', 'ಶಿಕ್ಷಕರ ಕಮಾಂಡ್ ಕನ್ಸೋಲ್')}
+              <h1 className="text-2xl sm:text-3xl font-display font-black uppercase tracking-tight text-[#FAF5EB]">
+                Teacher Command & Exam Management Console
               </h1>
-              <p className="text-slate-400 text-xs mt-1">
-                Monitor live student simulation telemetry, configure custom lab rubrics & audit AI evaluations.
+              <p className="text-xs sm:text-sm text-[#FAF5EB]/70 font-medium mt-1">
+                Register practical lab tests, generate student test codes, invite cohort email rosters, and monitor live circuit output verification.
               </p>
             </div>
 
-            {/* Top Quick Actions */}
-            <div className="flex gap-2">
+            {/* Quick Action Button */}
+            <div className="flex items-center gap-2.5">
               <button
-                onClick={() => setActiveTab('create')}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+                onClick={() => setShowCreateModal(true)}
+                className="bg-[#A4C93B] hover:bg-[#93b533] text-[#221611] font-black text-xs uppercase px-4 py-3 rounded-2xl border-2 border-[#221611] shadow-[3px_3px_0px_#FAF5EB] hover:shadow-[1px_1px_0px_#FAF5EB] hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center gap-2 cursor-pointer"
               >
-                <Plus size={15} />
-                <span>Create Lab</span>
-              </button>
-              <button
-                onClick={handleExportAccreditation}
-                className="bg-white/10 hover:bg-white/20 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-all border border-white/10 flex items-center gap-1.5"
-              >
-                <Download size={15} />
-                <span>ABET / NAAC Report</span>
+                <Plus size={16} />
+                <span>Register New Lab Exam</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Main Section */}
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          {/* Navigation Tabs */}
-          <div className="flex bg-slate-200/70 p-1 rounded-xl mb-6 overflow-x-auto">
-            {[
-              { id: 'monitor', label: 'Live Student Monitor', icon: Radio },
-              { id: 'create', label: 'Create New Lab', icon: Plus },
-              { id: 'assign', label: 'Assign Experiments', icon: FileText },
-              { id: 'evaluate', label: 'AI Evaluation Audit', icon: CheckCircle },
-              { id: 'attendance', label: 'Attendance', icon: Users },
-              { id: 'reports', label: 'Accreditation Reports', icon: BarChart3 },
-            ].map(tab => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex-1 justify-center ${
-                    isActive ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <Icon size={14} className={isActive ? 'text-indigo-600' : ''} />
-                  <span>{tab.label}</span>
-                </button>
-              )
-            })}
+        {/* ── MAIN WORKSPACE ── */}
+        <div className="max-w-[1720px] mx-auto px-4 sm:px-8 py-8 space-y-6">
+          
+          {/* Top Quick Status Metric Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-2xl border-2 border-[#221611] shadow-[3px_3px_0px_#221611]">
+              <span className="text-xs font-mono font-bold text-[#221611]/60 uppercase block">Active Test Session</span>
+              <span className="text-xl sm:text-2xl font-black text-[#221611] block mt-1 font-mono">
+                {selectedExamCode}
+              </span>
+              <span className="text-[11px] text-[#A4C93B] bg-[#221611] px-2 py-0.5 rounded-full inline-block mt-2 font-bold">
+                ● BROADCAST ACTIVE
+              </span>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border-2 border-[#221611] shadow-[3px_3px_0px_#221611]">
+              <span className="text-xs font-mono font-bold text-[#221611]/60 uppercase block">Outputs Verified (Done)</span>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-3xl font-black text-emerald-600">{completedCount}</span>
+                <span className="text-xs font-mono text-[#221611]/60 font-bold">/ {examRoster.length} Candidates</span>
+              </div>
+              <span className="text-[11px] text-emerald-800 font-bold block mt-2">
+                Green Done Status Verified
+              </span>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border-2 border-[#221611] shadow-[3px_3px_0px_#221611]">
+              <span className="text-xs font-mono font-bold text-[#221611]/60 uppercase block">In Progress at Testbench</span>
+              <span className="text-3xl font-black text-amber-600 block mt-1">{inProgressCount}</span>
+              <span className="text-[11px] text-amber-800 font-bold block mt-2">
+                Circuit Wires Active
+              </span>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border-2 border-[#221611] shadow-[3px_3px_0px_#221611]">
+              <span className="text-xs font-mono font-bold text-[#221611]/60 uppercase block">Awaiting Student Login</span>
+              <span className="text-3xl font-black text-slate-500 block mt-1">{pendingCount}</span>
+              <span className="text-[11px] text-slate-600 font-bold block mt-2">
+                Invited Candidates
+              </span>
+            </div>
           </div>
 
-          {/* TAB 1: LIVE MONITOR */}
-          {activeTab === 'monitor' && (
-            <div className="space-y-6">
-              {/* Stat Cards - Computed Dynamically */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: 'Active Students in Lab', val: activeCount, icon: Users, color: 'text-emerald-600 bg-emerald-50' },
-                  { label: 'Completed Today', val: completedCount, icon: CheckCircle, color: 'text-blue-600 bg-blue-50' },
-                  { label: 'Average AI Viva Score', val: avgScore, icon: Award, color: 'text-indigo-600 bg-indigo-50' },
-                  { label: 'Flagged for Assistance', val: flaggedCount, icon: Radio, color: 'text-amber-600 bg-amber-50' },
-                ].map((st, i) => (
-                  <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-slate-500 font-medium">{st.label}</span>
-                      <div className={`p-2 rounded-lg ${st.color}`}>
-                        <st.icon size={14} />
-                      </div>
-                    </div>
-                    <p className="text-2xl font-display font-bold text-slate-900">{st.val}</p>
-                  </div>
-                ))}
+          {/* ── ACTIVE EXAM CONTROL BAR & SHAREABLE CODE ── */}
+          <div className="bg-white rounded-3xl border-2 border-[#221611] p-6 shadow-[4px_4px_0px_#221611] space-y-5">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b-2 border-[#221611]/15 pb-5">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-xs font-mono font-black uppercase text-[#221611] bg-[#A4C93B] px-3 py-0.5 rounded-full border border-[#221611]">
+                    Allotted Practical Lab
+                  </span>
+                  <span className="text-xs font-mono font-bold text-[#221611]/60">
+                    Duration: {selectedExam?.durationMinutes || 45} mins
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-[#221611] uppercase tracking-tight">
+                  {selectedExam?.title}
+                </h2>
+                <p className="text-xs font-mono font-bold text-[#221611]/70 mt-1">
+                  Lab Workbench: <strong className="text-[#221611]">{selectedExam?.labTitle}</strong> ({selectedExam?.labRoute})
+                </p>
               </div>
 
-              {/* Live Session Roster */}
-              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 items-center justify-between">
-                  <h3 className="font-display font-bold text-slate-900 text-sm">
-                    Active Student Telemetry Stream ({filtered.length})
-                  </h3>
-                  <div className="relative w-full sm:w-64">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search student, class, lab..."
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
-                      <tr>
-                        <th className="py-3 px-4">Student</th>
-                        <th className="py-3 px-4">Class / Cohort</th>
-                        <th className="py-3 px-4">Experiment</th>
-                        <th className="py-3 px-4">Progress</th>
-                        <th className="py-3 px-4">Status</th>
-                        <th className="py-3 px-4">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {filtered.length === 0 ? (
-                        <tr>
-                          <td colSpan="6" className="py-12 text-center text-slate-400">
-                            <div className="flex flex-col items-center justify-center gap-2">
-                              <Inbox className="w-8 h-8 text-slate-300" />
-                              <span className="font-semibold text-slate-600">No active student telemetry stream</span>
-                              <span className="text-[11px] text-slate-400">
-                                Real-time student progress will automatically appear here when learners launch virtual labs.
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : (
-                        filtered.map(st => (
-                          <tr key={st.id} className="hover:bg-slate-50/70 transition-colors">
-                            <td className="py-3 px-4 font-semibold text-slate-900">{st.name}</td>
-                            <td className="py-3 px-4 text-slate-600 font-mono text-[11px]">{st.class}</td>
-                            <td className="py-3 px-4 text-slate-800 font-medium">{st.lab}</td>
-                            <td className="py-3 px-4">
-                              <div className="flex items-center gap-2">
-                                <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                  <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${st.progress}%` }} />
-                                </div>
-                                <span className="font-mono text-[10px] text-slate-500">{st.progress}%</span>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                st.status === 'Submitted' ? 'bg-emerald-100 text-emerald-800' :
-                                st.status === 'Active In Lab' ? 'bg-blue-100 text-blue-800 animate-pulse' :
-                                'bg-amber-100 text-amber-800'
-                              }`}>
-                                {st.status}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <button
-                                onClick={() => {
-                                  setSelectedStudent(st)
-                                  setShowCert(true)
-                                }}
-                                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 p-1 rounded hover:bg-indigo-50 flex items-center gap-1"
-                              >
-                                <Eye size={13} />
-                                <span>Audit</span>
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: CREATE LAB WIZARD */}
-          {activeTab === 'create' && (
-            <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
-              <h3 className="font-display font-bold text-slate-900 text-lg mb-1">
-                Virtual Laboratory Authoring Wizard
-              </h3>
-              <p className="text-slate-500 text-xs mb-6">
-                Configure experiment parameters, tolerance bounds, and customized apparatus checklists for your course syllabus.
-              </p>
-
-              <form onSubmit={handleCreateLab} className="space-y-4 text-xs">
-                {publishError && <p className="rounded-lg bg-red-50 p-3 text-red-700">{publishError}</p>}
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Experiment Title</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Higher-Order Butterworth Filter Tuning"
-                    value={newLab.title}
-                    onChange={e => setNewLab({ ...newLab, title: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="font-semibold text-slate-700 block mb-1">Academic Tier</label>
-                    <select
-                      value={newLab.level}
-                      onChange={e => setNewLab({ ...newLab, level: e.target.value })}
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                    >
-                      <option value="engineering">Undergraduate Engineering</option>
-                      <option value="puc">PUC Foundation (+2)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="font-semibold text-slate-700 block mb-1">Target Engineering Domain</label>
-                    <select
-                      value={newLab.domain}
-                      onChange={e => setNewLab({ ...newLab, domain: e.target.value })}
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                    >
-                      {DOMAIN_REGISTRY.map(d => (
-                        <option key={d.id} value={d.id}>{d.title}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Pass / Error Tolerance Threshold</label>
-                  <input
-                    type="text"
-                    value={newLab.minTolerance}
-                    onChange={e => setNewLab({ ...newLab, minTolerance: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                  />
+              {/* Shareable Exam Code Pill */}
+              <div className="flex flex-wrap items-center gap-3 bg-[#FAF5EB] p-3 rounded-2xl border-2 border-[#221611]">
+                <div className="text-left">
+                  <span className="text-[10px] font-mono font-bold text-[#221611]/60 uppercase block">
+                    Share Code to Students
+                  </span>
+                  <span className="text-2xl font-mono font-black text-[#221611] tracking-wider">
+                    {selectedExamCode}
+                  </span>
                 </div>
 
                 <button
-                  type="submit"
-                  className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-md"
+                  onClick={handleCopyCode}
+                  className="bg-[#221611] hover:bg-[#332219] text-[#FAF5EB] px-4 py-2.5 rounded-xl font-bold text-xs uppercase flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
                 >
-                  Publish Lab to Department Registry
+                  {copiedCode ? <Check size={14} className="text-[#A4C93B]" /> : <Copy size={14} />}
+                  <span>{copiedCode ? 'Code Copied!' : 'Copy Code & Link'}</span>
                 </button>
-              </form>
-            </div>
-          )}
 
-          {/* TAB 3: ASSIGN EXPERIMENTS */}
-          {activeTab === 'assign' && (
-            <div className="space-y-4">
-              <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-display font-bold text-slate-900 text-sm">
-                    Active Department Lab Assignments
-                  </h3>
-                  <button
-                    onClick={() => setActiveTab('create')}
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1 transition-colors"
-                  >
-                    <Plus size={13} />
-                    <span>New Assignment</span>
-                  </button>
-                </div>
-
-                {createdLabs.length === 0 ? (
-                  <div className="p-8 text-center text-slate-400 flex flex-col items-center justify-center gap-2 border border-dashed border-slate-200 rounded-xl">
-                    <FileText className="w-8 h-8 text-slate-300" />
-                    <span className="font-semibold text-slate-600">No custom lab assignments published yet</span>
-                    <p className="text-xs text-slate-400 max-w-sm">
-                      Use the "Create New Lab" wizard to configure custom experiment parameters and assign them to your student cohorts.
-                    </p>
-                    <button
-                      onClick={() => setActiveTab('create')}
-                      className="mt-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-xl transition-colors"
-                    >
-                      Open Authoring Wizard
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {createdLabs.map((lab, i) => (
-                      <div key={lab.id || i} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
-                        <div>
-                          <span className="font-bold text-slate-900 text-sm block">{lab.title}</span>
-                          <span className="text-slate-500">{lab.domain} • Assigned Cohort: <span className="font-mono text-indigo-600 font-semibold">{lab.assignedTo}</span></span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-slate-400 text-[11px]">Due: {lab.due}</span>
-                          <button className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold rounded-lg transition-colors">
-                            Modify Rubric
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {/* Direct Launch Preview for Teacher */}
+                <a
+                  href={`${selectedExam?.labRoute}?exam=${selectedExamCode}&candidate=Instructor+Preview`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-white hover:bg-[#FAF5EB] text-[#221611] border-2 border-[#221611] px-3.5 py-2 rounded-xl font-bold text-xs uppercase flex items-center gap-1.5 transition-all"
+                  title="Test Exam View as Student (Blind mode: no instructions, no AI)"
+                >
+                  <Eye size={14} />
+                  <span>Test Student View</span>
+                </a>
               </div>
             </div>
-          )}
 
-          {/* TAB 4: AI EVALUATION AUDIT */}
-          {activeTab === 'evaluate' && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-4">
-              <h3 className="font-display font-bold text-slate-900 text-sm">
-                AI Evaluation Auditing & Grade Overrides
-              </h3>
-              <p className="text-xs text-slate-500">
-                Review automated student viva scores, accuracy curves, and telemetry logs before final institutional credential issuance.
-              </p>
-
-              {students.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 flex flex-col items-center justify-center gap-2 border border-dashed border-slate-200 rounded-xl">
-                  <CheckCircle className="w-8 h-8 text-slate-300" />
-                  <span className="font-semibold text-slate-600">No evaluations pending audit</span>
-                  <span className="text-xs text-slate-400">
-                    Student evaluations and AI viva audit logs will appear here once learners submit their lab reports.
-                  </span>
-                </div>
-              ) : (
-                <div className="space-y-2 text-xs">
-                  {students.map(st => (
-                    <div key={st.id} className="p-3 rounded-xl border border-slate-100 flex items-center justify-between">
-                      <div>
-                        <span className="font-semibold text-slate-900 block">{st.name} ({st.class})</span>
-                        <span className="text-slate-500">{st.lab}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-emerald-600 text-sm font-display">Score: {st.score}/100</span>
-                        <button
-                          onClick={() => {
-                            setSelectedStudent(st)
-                            setShowCert(true)
-                          }}
-                          className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg"
-                        >
-                          Review Viva Telemetry
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'attendance' && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
-              <h3 className="font-display font-bold text-slate-900 text-sm">Live laboratory attendance</h3>
-              <p className="text-xs text-slate-500 mt-1">Attendance is derived from authenticated lab-record activity and updates in real time.</p>
-              <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {students.map(student => <div key={student.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3 flex justify-between items-center text-xs"><div><b className="text-slate-900 block">{student.name}</b><span className="text-slate-500">{student.class}</span></div><span className={`rounded-full px-2 py-1 font-bold ${student.status === 'Submitted' || student.status === 'Active In Lab' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>{student.status === 'Submitted' || student.status === 'Active In Lab' ? 'Present' : 'Absent'}</span></div>)}
+            {/* Email Invitation Bar */}
+            <form onSubmit={handleSendInvites} className="flex flex-col sm:flex-row gap-2.5 items-center">
+              <div className="relative flex-1 w-full">
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#221611]/50" />
+                <input
+                  type="text"
+                  value={inviteEmailInput}
+                  onChange={(e) => setInviteEmailInput(e.target.value)}
+                  placeholder="Invite students by email IDs (e.g. harshith@college.edu, aditi@college.edu)"
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#FAF5EB] border-2 border-[#221611] rounded-xl text-xs font-bold text-[#221611] placeholder:text-[#221611]/40 outline-none focus:ring-2 focus:ring-[#A4C93B]"
+                />
               </div>
-            </div>
-          )}
-
-          {/* TAB 5: ACCREDITATION REPORTS */}
-          {activeTab === 'reports' && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm max-w-2xl mx-auto space-y-5 text-xs">
-              <h3 className="font-display font-bold text-slate-900 text-base">
-                ABET & NAAC Accreditation Compliance Reports
-              </h3>
-              <p className="text-slate-500 leading-relaxed">
-                Automated generation of Course Outcomes (CO) and Program Outcomes (PO) attainment matrices directly from virtual lab student telemetry.
-              </p>
-
-              {students.length === 0 ? (
-                <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-1">
-                  <span className="font-semibold text-slate-700 block">No Student Telemetry Recorded Yet</span>
-                  <p className="text-[11px] text-slate-400">
-                    Attainment matrices will compute dynamically as students complete lab sessions and AI evaluations.
-                  </p>
-                </div>
-              ) : (
-                <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2">
-                  <div className="flex justify-between font-semibold text-indigo-950">
-                    <span>CO1: Application of Engineering Physics Fundamentals</span>
-                    <span>{avgScore} Attainment</span>
-                  </div>
-                  <div className="flex justify-between font-semibold text-indigo-950">
-                    <span>CO2: Modern Tool Usage (WebAR Circuitry & Simulators)</span>
-                    <span>{avgScore} Attainment</span>
-                  </div>
-                  <div className="flex justify-between font-semibold text-indigo-950">
-                    <span>CO3: Conduct Experiments & Synthesize Valid Conclusions</span>
-                    <span>{avgScore} Attainment</span>
-                  </div>
-                </div>
-              )}
-
               <button
-                onClick={handleExportAccreditation}
-                disabled={students.length === 0}
-                className={`w-full py-3 rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2 ${
-                  students.length === 0
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    : 'bg-slate-900 hover:bg-black text-white'
-                }`}
+                type="submit"
+                className="w-full sm:w-auto bg-[#221611] hover:bg-[#332219] text-[#FAF5EB] font-black px-5 py-2.5 rounded-xl text-xs uppercase flex items-center justify-center gap-2 border-2 border-[#221611] shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                <Download size={15} />
-                <span>Export Accreditation Data (CSV + Signed PDF)</span>
+                <Send size={13} className="text-[#A4C93B]" />
+                <span>Invite Students to Exam</span>
               </button>
+            </form>
+
+            {inviteSuccess && (
+              <p className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 p-2 rounded-lg">
+                ✓ {inviteSuccess}
+              </p>
+            )}
+          </div>
+
+          {/* ── LIVE STUDENT TELEMETRY ROSTER (Requested: Student shows GREEN DONE when output completed) ── */}
+          <div className="bg-white rounded-3xl border-2 border-[#221611] shadow-[4px_4px_0px_#221611] overflow-hidden">
+            <div className="p-5 border-b-2 border-[#221611] flex flex-col sm:flex-row gap-3 items-center justify-between bg-[#FAF5EB]">
+              <div>
+                <h3 className="font-display font-black text-sm text-[#221611] uppercase tracking-wide flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Live Student Test Roster ({filteredRoster.length} Candidates Enrolled)</span>
+                </h3>
+                <p className="text-xs text-[#221611]/70 font-medium">
+                  Status automatically changes to <strong className="text-emerald-700">GREEN DONE</strong> when student verifies circuit output.
+                </p>
+              </div>
+
+              <div className="relative w-full sm:w-72">
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#221611]/40" />
+                <input
+                  type="text"
+                  placeholder="Search student name or roll..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-white border-2 border-[#221611] rounded-xl text-xs font-bold text-[#221611] placeholder:text-[#221611]/40 outline-none focus:ring-2 focus:ring-[#A4C93B]"
+                />
+              </div>
             </div>
-          )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-[#221611] text-[#FAF5EB] font-mono font-bold uppercase text-[11px] border-b-2 border-[#221611]">
+                  <tr>
+                    <th className="py-3 px-4">Candidate Name</th>
+                    <th className="py-3 px-4">Roll / Email</th>
+                    <th className="py-3 px-4">Allotted Lab</th>
+                    <th className="py-3 px-4">Examination Status</th>
+                    <th className="py-3 px-4">Output Telemetry</th>
+                    <th className="py-3 px-4 text-center">Score / Grade</th>
+                    <th className="py-3 px-4 text-center">Simulate Output</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#221611]/10 font-sans">
+                  {filteredRoster.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="py-12 text-center text-[#221611]/50">
+                        <Inbox className="w-8 h-8 text-[#221611]/30 mx-auto mb-2" />
+                        <span className="font-bold text-sm block">No students found for this test code</span>
+                        <span className="text-xs">Invite candidates above or share code <strong>{selectedExamCode}</strong>.</span>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRoster.map(st => {
+                      const isDone = st.status === 'Completed' || st.outputVerified
+                      const isInProgress = st.status === 'In Progress'
+
+                      return (
+                        <tr
+                          key={st.id}
+                          className={`transition-colors ${
+                            isDone ? 'bg-emerald-50/70 hover:bg-emerald-100/50' : 'hover:bg-[#FAF5EB]/50'
+                          }`}
+                        >
+                          <td className="py-3.5 px-4 font-bold text-sm text-[#221611]">
+                            {st.studentName}
+                          </td>
+                          <td className="py-3.5 px-4 font-mono text-[#221611]/70">
+                            <div>{st.rollNo}</div>
+                            <div className="text-[11px] opacity-70">{st.email}</div>
+                          </td>
+                          <td className="py-3.5 px-4 font-bold text-[#221611]">
+                            {selectedExam?.labTitle}
+                          </td>
+
+                          {/* ── REAL-TIME STATUS BADGE (GREEN DONE AS REQUESTED) ── */}
+                          <td className="py-3.5 px-4">
+                            {isDone ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white font-black font-mono text-[11px] border-2 border-emerald-700 shadow-xs">
+                                <CheckCircle2 size={13} className="text-white fill-emerald-800" />
+                                <span>DONE / OUTPUT VERIFIED</span>
+                              </span>
+                            ) : isInProgress ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 font-bold font-mono text-[11px] border border-amber-300">
+                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                                <span>IN PROGRESS</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 font-bold font-mono text-[11px] border border-slate-300">
+                                <span>○ PENDING LOGIN</span>
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="py-3.5 px-4 text-xs font-mono font-medium text-[#221611]">
+                            {isDone ? (
+                              <div className="text-emerald-900 font-bold">
+                                <div>✓ {st.outputDetails}</div>
+                                <div className="text-[10px] text-[#221611]/60">Verified at: {st.completedAt || 'Just now'}</div>
+                              </div>
+                            ) : isInProgress ? (
+                              <span className="text-amber-800">Wiring breadboard & tuning frequency</span>
+                            ) : (
+                              <span className="text-slate-400">Waiting for candidate</span>
+                            )}
+                          </td>
+
+                          <td className="py-3.5 px-4 text-center font-mono font-black text-sm">
+                            {isDone ? (
+                              <span className="text-emerald-700 bg-white border-2 border-emerald-600 px-2.5 py-0.5 rounded-lg">
+                                100 / 100 (A+)
+                              </span>
+                            ) : (
+                              <span className="text-[#221611]/40">-</span>
+                            )}
+                          </td>
+
+                          {/* Quick Teacher Simulation Button */}
+                          <td className="py-3.5 px-4 text-center">
+                            {!isDone ? (
+                              <button
+                                onClick={() => handleSimulateDone(st.email)}
+                                className="px-2.5 py-1 rounded-lg bg-[#FAF5EB] hover:bg-[#A4C93B] text-[#221611] font-bold text-[10px] uppercase border border-[#221611] transition-all cursor-pointer"
+                                title="Click to test marking this student as DONE in real-time"
+                              >
+                                Mark Done
+                              </button>
+                            ) : (
+                              <span className="text-emerald-600 text-xs font-black font-mono">
+                                ✓ RECORDED
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
-      {showCert && selectedStudent && (
-        <CourseCertificateModal
-          isOpen={showCert}
-          onClose={() => setShowCert(false)}
-          courseName={selectedStudent.lab}
-          domainName={selectedStudent.class}
-          studentName={selectedStudent.name}
-        />
+      {/* ── MODAL: REGISTER NEW LAB EXAM SESSION ── */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#221611]/75 backdrop-blur-md animate-fadeIn">
+          <div className="bg-[#FAF5EB] rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border-2 border-[#221611] p-6 space-y-4">
+            <div className="flex items-center justify-between border-b-2 border-[#221611] pb-3">
+              <div className="flex items-center gap-2">
+                <span className="p-2 bg-[#221611] text-[#A4C93B] rounded-xl">
+                  <Plus size={18} />
+                </span>
+                <h3 className="text-lg font-display font-black text-[#221611] uppercase tracking-tight">
+                  Register Practical Lab Exam
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-xs font-bold bg-white text-[#221611] border-2 border-[#221611] px-2 py-1 rounded-lg hover:bg-slate-100"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleRegisterExam} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-black uppercase text-[#221611] mb-1">
+                  Select Lab Experiment to Allot:
+                </label>
+                <select
+                  value={newExamLabId}
+                  onChange={(e) => {
+                    setNewExamLabId(e.target.value)
+                    const chosen = ASSIGNABLE_LABS.find(l => l.id === e.target.value)
+                    if (chosen) setNewExamTitle(`${chosen.title} Practical Examination`)
+                  }}
+                  className="w-full bg-white border-2 border-[#221611] rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#221611] outline-none"
+                >
+                  {ASSIGNABLE_LABS.map(lab => (
+                    <option key={lab.id} value={lab.id}>
+                      [{lab.subject.toUpperCase()}] {lab.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-[#221611] mb-1">
+                  Examination Title / Heading:
+                </label>
+                <input
+                  type="text"
+                  value={newExamTitle}
+                  onChange={(e) => setNewExamTitle(e.target.value)}
+                  placeholder="e.g. ECE 302 Mid-Term Practical Exam"
+                  className="w-full bg-white border-2 border-[#221611] rounded-xl px-3.5 py-2 text-xs font-bold text-[#221611] outline-none"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-black uppercase text-[#221611] mb-1">
+                    Duration (Minutes):
+                  </label>
+                  <input
+                    type="number"
+                    value={newExamDuration}
+                    onChange={(e) => setNewExamDuration(e.target.value)}
+                    min="15"
+                    max="180"
+                    className="w-full bg-white border-2 border-[#221611] rounded-xl px-3.5 py-2 text-xs font-bold text-[#221611] outline-none font-mono"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase text-[#221611] mb-1">
+                    Custom Code (Optional):
+                  </label>
+                  <input
+                    type="text"
+                    value={newExamCustomCode}
+                    onChange={(e) => setNewExamCustomCode(e.target.value.toUpperCase())}
+                    placeholder="Auto (e.g. TDM-8401)"
+                    className="w-full bg-white border-2 border-[#221611] rounded-xl px-3.5 py-2 text-xs font-bold text-[#221611] outline-none font-mono uppercase"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-white rounded-xl border border-[#221611]/20 text-[11px] text-[#221611]/70 leading-relaxed font-medium">
+                🔒 <strong>Strict Exam Mode Note:</strong> When candidates enter this practical exam with the allotted code, all step-by-step instructions and AI evaluations are automatically concealed. Only the hardware circuit board and measurement probes are active.
+              </div>
+
+              <div className="pt-2 flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 bg-white text-[#221611] border-2 border-[#221611] font-bold py-2.5 rounded-xl text-xs uppercase"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-[#A4C93B] hover:bg-[#93b533] text-[#221611] border-2 border-[#221611] font-black py-2.5 rounded-xl text-xs uppercase shadow-[2px_2px_0px_#221611] cursor-pointer"
+                >
+                  Register & Generate Code
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       <Footer />
