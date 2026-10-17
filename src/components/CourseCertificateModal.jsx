@@ -22,7 +22,6 @@ export default function CourseCertificateModal({
   if (!isOpen) return null
 
   const handleDownload = () => {
-    // Create a simple text certificate for download
     const certText = `
 ═══════════════════════════════════════════
        CERTIFICATE OF COMPLETION
@@ -54,48 +53,54 @@ Reference: ${referenceCode}
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#221611]/75 backdrop-blur-md animate-fadeIn">
+      <div className="bg-[#FAF5EB] rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border-2 border-[#221611]">
         {/* Close button */}
-        <div className="flex justify-end p-3">
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-            <X size={20} className="text-gray-500" />
+        <div className="flex justify-between items-center p-4 bg-[#221611] text-[#FAF5EB] border-b-2 border-[#221611]">
+          <span className="text-xs font-mono font-bold tracking-wider uppercase text-[#A4C93B]">
+            Official Credential Record
+          </span>
+          <button
+            onClick={onClose}
+            className="p-1.5 bg-[#332219] hover:bg-[#442c20] text-[#FAF5EB]/70 hover:text-white rounded-xl border border-[#FAF5EB]/20 transition-colors"
+          >
+            <X size={18} />
           </button>
         </div>
 
         {/* Certificate body */}
-        <div className="px-8 pb-8">
+        <div className="p-6 sm:p-8">
           {/* Ornate border container */}
-          <div className="border-4 border-double border-amber-400 rounded-xl p-6 text-center relative">
+          <div className="bg-white border-2 border-[#221611] rounded-2xl p-6 text-center relative shadow-[3px_3px_0px_#221611]">
             {/* Corner decorations */}
-            <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-amber-500"></div>
-            <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-amber-500"></div>
-            <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-amber-500"></div>
-            <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-amber-500"></div>
+            <div className="absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 border-[#221611]"></div>
+            <div className="absolute top-2 right-2 w-3.5 h-3.5 border-t-2 border-r-2 border-[#221611]"></div>
+            <div className="absolute bottom-2 left-2 w-3.5 h-3.5 border-b-2 border-l-2 border-[#221611]"></div>
+            <div className="absolute bottom-2 right-2 w-3.5 h-3.5 border-b-2 border-r-2 border-[#221611]"></div>
 
             {/* Seal icon */}
             <div className="flex justify-center mb-3">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
-                <Award size={32} className="text-white" />
+              <div className="w-16 h-16 rounded-full bg-[#221611] border-2 border-[#A4C93B] flex items-center justify-center shadow-lg">
+                <Award size={32} className="text-[#A4C93B]" />
               </div>
             </div>
 
-            <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">
+            <p className="text-xs uppercase tracking-widest text-[#221611]/60 font-mono font-bold mb-1">
               {t('Certificate of Completion', 'ಪೂರ್ಣಗೊಳಿಸಿದ ಪ್ರಮಾಣಪತ್ರ')}
             </p>
-            <h2 className="text-2xl font-display font-bold text-gray-800 mb-1">CurioLabs</h2>
+            <h2 className="text-2xl font-black text-[#221611] mb-1 tracking-tight uppercase">CurioLabs</h2>
             
-            <div className="my-4 border-t border-amber-200"></div>
+            <div className="my-3 border-t-2 border-[#221611]/15"></div>
 
-            <p className="text-sm text-gray-600 mb-1">{t('This certifies that', 'ಇದು ಪ್ರಮಾಣೀಕರಿಸುತ್ತದೆ')}</p>
-            <p className="text-xl font-display font-bold text-teal-600 mb-1">{studentName}</p>
-            <p className="text-sm text-gray-600 mb-1">{t('has successfully completed', 'ಯಶಸ್ವಿಯಾಗಿ ಪೂರ್ಣಗೊಳಿಸಿದ್ದಾರೆ')}</p>
-            <p className="text-lg font-bold text-gray-800 mb-1">{courseName}</p>
-            <p className="text-sm text-gray-500">{t('in', 'ವಿಭಾಗ')} {domainName}</p>
+            <p className="text-xs text-[#221611]/70 font-medium mb-1">{t('This certifies that', 'ಇದು ಪ್ರಮಾಣೀಕರಿಸುತ್ತದೆ')}</p>
+            <p className="text-xl font-black text-[#221611] mb-1 underline decoration-[#A4C93B] decoration-4 underline-offset-4">{studentName}</p>
+            <p className="text-xs text-[#221611]/70 font-medium mb-1 mt-2">{t('has successfully completed', 'ಯಶಸ್ವಿಯಾಗಿ ಪೂರ್ಣಗೊಳಿಸಿದ್ದಾರೆ')}</p>
+            <p className="text-base font-extrabold text-[#221611] mb-1">{courseName}</p>
+            <p className="text-xs font-mono font-bold text-[#221611]/60">{t('in', 'ವಿಭಾಗ')} {domainName}</p>
 
-            <div className="my-4 border-t border-amber-200"></div>
+            <div className="my-3 border-t-2 border-[#221611]/15"></div>
 
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-[11px] font-mono font-bold text-[#221611]/60">
               <span>{t('Date', 'ದಿನಾಂಕ')}: {completedDate}</span>
               <span>{t('Ref', 'ಉಲ್ಲೇಖ')}: {referenceCode}</span>
             </div>
@@ -105,10 +110,10 @@ Reference: ${referenceCode}
           <div className="flex gap-3 mt-5 justify-center">
             <button 
               onClick={handleDownload}
-              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+              className="flex-1 flex items-center justify-center gap-2 bg-[#A4C93B] hover:bg-[#93b533] text-[#221611] font-black px-4 py-2.5 rounded-xl border-2 border-[#221611] shadow-[2px_2px_0px_#221611] hover:shadow-[1px_1px_0px_#221611] hover:translate-x-[1px] hover:translate-y-[1px] transition-all text-xs"
             >
               <Download size={16} />
-              {t('Download', 'ಡೌನ್‌ಲೋಡ್')}
+              <span>{t('Download', 'ಡೌನ್‌ಲೋಡ್')}</span>
             </button>
             <button 
               onClick={() => {
@@ -116,10 +121,10 @@ Reference: ${referenceCode}
                   navigator.share({ title: 'CurioLabs Certificate', text: `I completed ${courseName}!` })
                 }
               }}
-              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+              className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-[#FAF5EB] text-[#221611] font-bold px-4 py-2.5 rounded-xl border-2 border-[#221611] shadow-[2px_2px_0px_#221611] transition-all text-xs"
             >
               <Share2 size={16} />
-              {t('Share', 'ಹಂಚಿಕೊಳ್ಳಿ')}
+              <span>{t('Share', 'ಹಂಚಿಕೊಳ್ಳಿ')}</span>
             </button>
           </div>
         </div>

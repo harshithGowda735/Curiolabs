@@ -5,7 +5,7 @@ import InteractiveBreadboard, { LAB_CONNECTIONS } from '../components/Hardware/I
 import TDMVirtualLab3D from './TDMVirtualLab3D'
 import DeskCameraAR from './DeskCameraAR'
 import { useLanguage } from '../contexts/LanguageContext'
-import { CheckCircle2, AlertTriangle, XCircle, Zap, RefreshCw, Sparkles, Box, Activity, Layers, Power, ArrowRight, Camera, Smartphone } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, XCircle, Zap, RefreshCw, Sparkles, Box, Activity, Layers, Power, ArrowRight, Camera, Smartphone, Sliders } from 'lucide-react'
 
 /* ════════════════════════════════════════════════════════════
    AIM & APPARATUS (EXACT LAB MANUAL STANDARD)
@@ -348,146 +348,175 @@ export default function TimeDivisionMultiplexing() {
 
   // Controls Panel
   const controls = (
-    <div className="space-y-4">
-      {/* Procedure Step 5: Master Power Supply Control */}
-      <div className="bg-white border-2 border-emerald-500/30 rounded-xl p-4 shadow-sm">
-        <div className="flex items-center justify-between">
+    <div className="bg-white rounded-2xl border-2 border-[#221611]/15 p-4 sm:p-5 shadow-sm text-[#221611]">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4 border-b border-[#221611]/10 pb-3">
+        <div className="flex items-center gap-2">
+          <Sliders size={16} className="text-[#A4C93B]" />
+          <h3 className="font-display font-black text-xs sm:text-sm text-[#221611] uppercase tracking-wider">
+            Hardware Testbench Instruments (Power Supply & Signal Generators)
+          </h3>
+        </div>
+        <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#FAF5EB] text-[#754F40] border border-[#221611]/15">
+          Horizontal Testbench Console
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+        {/* Procedure Step 5: Master Power Supply Control */}
+        <div className="bg-[#FAF5EB]/60 border-2 border-[#221611]/15 rounded-xl p-4 shadow-2xs flex flex-col justify-between">
           <div>
-            <span className="font-bold text-slate-900 text-xs block">Procedure Step 5: DC Power Supply</span>
-            <span className="text-slate-500 text-[11px] font-mono">5.00 V DC Rail (Pin 16 VDD)</span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-display font-black text-[#221611] text-xs uppercase tracking-wider">Step 5: DC Power</span>
+              <span className="text-[#754F40] text-[10px] font-mono">5.00V DC Rail</span>
+            </div>
+            <p className="text-[11px] text-[#754F40] font-sans mb-3">Master IC 4051 VDD/VSS supply power rail</p>
           </div>
-          <button
-            onClick={() => setIsPowerOn(p => !p)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
-              isPowerOn
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                : 'bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300'
-            }`}
-          >
-            <Power size={13} className={isPowerOn ? 'animate-pulse' : ''} />
-            <span>{isPowerOn ? '5V SUPPLY ON' : 'POWER OFF'}</span>
-          </button>
+          <div>
+            <button
+              onClick={() => setIsPowerOn(p => !p)}
+              className={`w-full py-2.5 rounded-xl text-xs font-display font-black flex items-center justify-center gap-2 transition-all cursor-pointer border-2 ${
+                isPowerOn
+                  ? 'bg-[#A4C93B] border-[#221611] text-[#221611] shadow-[0_2px_0_#221611]'
+                  : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-300'
+              }`}
+            >
+              <Power size={14} className={isPowerOn ? 'animate-pulse text-[#221611]' : ''} />
+              <span>{isPowerOn ? '5V SUPPLY ON' : 'POWER OFF'}</span>
+            </button>
+            <div className="mt-3 text-[11px] text-[#754F40] flex items-center justify-between pt-2 border-t border-[#221611]/10 font-mono">
+              <span>{isPowerOn ? '5.00V Active' : '0.00V (Off)'}</span>
+              <span className={circuitState.isEnergized ? 'text-emerald-700 font-bold' : 'text-amber-700 font-semibold'}>
+                {circuitState.isEnergized ? 'IC Energized' : 'Unpowered'}
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="mt-2 text-[11px] text-slate-500 flex items-center justify-between pt-2 border-t border-slate-100 font-mono">
-          <span>Supply: {isPowerOn ? '5.00 V Active' : '0.00 V (Standby)'}</span>
-          <span className={circuitState.isEnergized ? 'text-emerald-600 font-bold' : 'text-amber-600 font-semibold'}>
-            {circuitState.isEnergized ? 'IC Energized' : 'IC Unpowered'}
-          </span>
-        </div>
-      </div>
 
-      {/* Function Generator 1: Sinusoidal Message Waveform (Step 3) */}
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-            <span className={`w-2.5 h-2.5 rounded-full ${circuitState.hasCh0 ? 'bg-sky-500' : 'bg-slate-300'}`} />
-            <span>FG 1: CH0 Input (Pin 13)</span>
-          </h3>
-          <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
-            circuitState.hasCh0 ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-slate-100 text-slate-400'
-          }`}>
-            {circuitState.hasCh0 ? '1V, 100Hz Sine' : 'OPEN WIRE'}
-          </span>
+        {/* Function Generator 1: Sinusoidal Message Waveform (Step 3) */}
+        <div className="bg-[#FAF5EB]/60 rounded-xl shadow-2xs border-2 border-[#221611]/15 p-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-display font-black text-[#221611] text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${circuitState.hasCh0 ? 'bg-sky-500' : 'bg-slate-300'}`} />
+                <span>FG 1: CH0 (Pin 13)</span>
+              </h3>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${
+                circuitState.hasCh0 ? 'bg-sky-50 text-sky-800 border-sky-300' : 'bg-slate-100 text-slate-500 border-slate-200'
+              }`}>
+                {circuitState.hasCh0 ? '1V, 100Hz Sine' : 'OPEN WIRE'}
+              </span>
+            </div>
+            <div className="space-y-2.5">
+              <LabeledSlider
+                label="Sine Freq (f1)"
+                value={f1}
+                onChange={setF1}
+                min={50}
+                max={500}
+                step={10}
+                unit=" Hz"
+                accentColor="#0284c7"
+              />
+              <LabeledSlider
+                label="Sine Amplitude"
+                value={amp1}
+                onChange={setAmp1}
+                min={0.2}
+                max={2.0}
+                step={0.1}
+                unit=" V"
+                accentColor="#0284c7"
+              />
+            </div>
+          </div>
+          <div className="pt-2">
+            <WaveSparkline type="sine" freq={f1} amp={amp1} color="#38bdf8" />
+          </div>
         </div>
-        <LabeledSlider
-          label="Sine Frequency (f1)"
-          value={f1}
-          onChange={setF1}
-          min={50}
-          max={500}
-          step={10}
-          unit=" Hz"
-          accentColor="#0284c7"
-        />
-        <div className="mt-3">
-          <LabeledSlider
-            label="Sine Amplitude"
-            value={amp1}
-            onChange={setAmp1}
-            min={0.2}
-            max={2.0}
-            step={0.1}
-            unit=" V"
-            accentColor="#0284c7"
-          />
-        </div>
-        <WaveSparkline type="sine" freq={f1} amp={amp1} color="#38bdf8" />
-      </div>
 
-      {/* Function Generator 2: Triangular Message Waveform (Step 3) */}
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-            <span className={`w-2.5 h-2.5 rounded-full ${circuitState.hasCh1 ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-            <span>FG 2: CH1 Input (Pin 14)</span>
-          </h3>
-          <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
-            circuitState.hasCh1 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-400'
-          }`}>
-            {circuitState.hasCh1 ? '1V, 300Hz Triangle' : 'OPEN WIRE'}
-          </span>
+        {/* Function Generator 2: Triangular Message Waveform (Step 3) */}
+        <div className="bg-[#FAF5EB]/60 rounded-xl shadow-2xs border-2 border-[#221611]/15 p-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-display font-black text-[#221611] text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${circuitState.hasCh1 ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <span>FG 2: CH1 (Pin 14)</span>
+              </h3>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${
+                circuitState.hasCh1 ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-500 border-slate-200'
+              }`}>
+                {circuitState.hasCh1 ? '1V, 300Hz Tri' : 'OPEN WIRE'}
+              </span>
+            </div>
+            <div className="space-y-2.5">
+              <LabeledSlider
+                label="Triangle Freq (f2)"
+                value={f2}
+                onChange={setF2}
+                min={100}
+                max={800}
+                step={20}
+                unit=" Hz"
+                accentColor="#059669"
+              />
+              <LabeledSlider
+                label="Triangle Amplitude"
+                value={amp2}
+                onChange={setAmp2}
+                min={0.2}
+                max={2.0}
+                step={0.1}
+                unit=" V"
+                accentColor="#059669"
+              />
+            </div>
+          </div>
+          <div className="pt-2">
+            <WaveSparkline type="triangle" freq={f2} amp={amp2} color="#34d399" />
+          </div>
         </div>
-        <LabeledSlider
-          label="Triangle Frequency (f2)"
-          value={f2}
-          onChange={setF2}
-          min={100}
-          max={800}
-          step={20}
-          unit=" Hz"
-          accentColor="#059669"
-        />
-        <div className="mt-3">
-          <LabeledSlider
-            label="Triangle Amplitude"
-            value={amp2}
-            onChange={setAmp2}
-            min={0.2}
-            max={2.0}
-            step={0.1}
-            unit=" V"
-            accentColor="#059669"
-          />
-        </div>
-        <WaveSparkline type="triangle" freq={f2} amp={amp2} color="#34d399" />
-      </div>
 
-      {/* Control Switching Clock (Step 4) */}
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-            <span className={`w-2.5 h-2.5 rounded-full ${circuitState.hasClkMux ? 'bg-blue-600' : 'bg-slate-300'}`} />
-            <span>Control Clock: Pin 11 (Select A)</span>
-          </h3>
-          <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
-            circuitState.hasClkMux ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 text-slate-400'
-          }`}>
-            {circuitState.hasClkMux ? '5V Square' : 'OPEN WIRE'}
-          </span>
+        {/* Control Switching Clock (Step 4) */}
+        <div className="bg-[#FAF5EB]/60 rounded-xl shadow-2xs border-2 border-[#221611]/15 p-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-display font-black text-[#221611] text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${circuitState.hasClkMux ? 'bg-blue-600' : 'bg-slate-300'}`} />
+                <span>Clock: Pin 11 (Select A)</span>
+              </h3>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${
+                circuitState.hasClkMux ? 'bg-blue-50 text-blue-800 border-blue-300' : 'bg-slate-100 text-slate-500 border-slate-200'
+              }`}>
+                {circuitState.hasClkMux ? '5V Square' : 'OPEN WIRE'}
+              </span>
+            </div>
+            <div className="space-y-2.5">
+              <LabeledSlider
+                label="Clock Freq (f_clk)"
+                value={clkFreq}
+                onChange={setClkFreq}
+                min={1.0}
+                max={10.0}
+                step={0.5}
+                unit=" kHz"
+                accentColor="#2563eb"
+              />
+              <LabeledSlider
+                label="Clock Duty Cycle"
+                value={dutyCycle}
+                onChange={setDutyCycle}
+                min={20}
+                max={80}
+                step={5}
+                unit=" %"
+                accentColor="#2563eb"
+              />
+            </div>
+          </div>
+          <div className="pt-2">
+            <WaveSparkline type="clock" freq={clkFreq} amp={5.0} duty={dutyCycle} color="#60a5fa" />
+          </div>
         </div>
-        <LabeledSlider
-          label="Clock Frequency (f_clk)"
-          value={clkFreq}
-          onChange={setClkFreq}
-          min={1.0}
-          max={10.0}
-          step={0.5}
-          unit=" kHz"
-          accentColor="#2563eb"
-        />
-        <div className="mt-3">
-          <LabeledSlider
-            label="Clock Duty Cycle"
-            value={dutyCycle}
-            onChange={setDutyCycle}
-            min={20}
-            max={80}
-            step={5}
-            unit=" %"
-            accentColor="#2563eb"
-          />
-        </div>
-        <WaveSparkline type="clock" freq={clkFreq} amp={5.0} duty={dutyCycle} color="#60a5fa" />
       </div>
     </div>
   )
@@ -496,61 +525,61 @@ export default function TimeDivisionMultiplexing() {
   const visualization = (
     <div className="space-y-4">
       {/* Laboratory Workstation Tab Header Bar */}
-      <div className="bg-[#85a7e6] p-1.5 rounded-md border-2 border-[#6e93db] flex flex-wrap items-center justify-between gap-2 shadow-xs">
-        <div className="flex items-center gap-1 flex-wrap">
+      <div className="bg-[#FAF5EB] p-2 rounded-2xl border-2 border-[#221611]/15 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => setActiveTab('breadboard')}
-            className={`px-3.5 py-1.5 rounded text-xs font-bold font-sans flex items-center gap-1.5 transition-all border ${
+            className={`px-4 py-2 rounded-xl text-xs font-display font-black flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'breadboard' 
-                ? 'bg-[#0e1d4a] text-white border-[#0e1d4a] shadow-xs' 
-                : 'bg-white/70 hover:bg-white text-[#0e1d4a] border-transparent hover:border-slate-300'
+                ? 'bg-[#221611] text-[#A4C93B] shadow-[0_2px_0_#221611]' 
+                : 'bg-white hover:bg-[#FAF5EB] text-[#221611] border-2 border-[#221611]/15 hover:border-[#221611]/40'
             }`}
           >
-            <Layers size={13} />
+            <Layers size={14} />
             <span>Interactive Breadboard</span>
           </button>
           <button
             onClick={() => setActiveTab('dso')}
-            className={`px-3.5 py-1.5 rounded text-xs font-bold font-sans flex items-center gap-1.5 transition-all border ${
+            className={`px-4 py-2 rounded-xl text-xs font-display font-black flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'dso' 
-                ? 'bg-[#0e1d4a] text-white border-[#0e1d4a] shadow-xs' 
-                : 'bg-white/70 hover:bg-white text-[#0e1d4a] border-transparent hover:border-slate-300'
+                ? 'bg-[#221611] text-[#A4C93B] shadow-[0_2px_0_#221611]' 
+                : 'bg-white hover:bg-[#FAF5EB] text-[#221611] border-2 border-[#221611]/15 hover:border-[#221611]/40'
             }`}
           >
-            <Activity size={13} />
+            <Activity size={14} />
             <span>Lab Waveforms (DSO)</span>
           </button>
           <button
             onClick={() => setActiveTab('3d')}
-            className={`px-3.5 py-1.5 rounded text-xs font-bold font-sans flex items-center gap-1.5 transition-all border ${
+            className={`px-4 py-2 rounded-xl text-xs font-display font-black flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === '3d' 
-                ? 'bg-[#0e1d4a] text-white border-[#0e1d4a] shadow-xs' 
-                : 'bg-white/70 hover:bg-white text-[#0e1d4a] border-transparent hover:border-slate-300'
+                ? 'bg-[#221611] text-[#A4C93B] shadow-[0_2px_0_#221611]' 
+                : 'bg-white hover:bg-[#FAF5EB] text-[#221611] border-2 border-[#221611]/15 hover:border-[#221611]/40'
             }`}
           >
-            <Box size={13} />
+            <Box size={14} />
             <span>3D Virtual Lab Bench</span>
           </button>
           <button
             onClick={() => setShowDirectDeskAR(true)}
-            className="px-3.5 py-1.5 rounded text-xs font-bold font-sans flex items-center gap-1.5 bg-white/70 hover:bg-white text-[#0e1d4a] border border-transparent hover:border-slate-300 transition-all"
+            className="px-4 py-2 rounded-xl text-xs font-display font-black flex items-center gap-2 bg-white hover:bg-[#FAF5EB] text-[#221611] border-2 border-[#221611]/15 hover:border-[#221611]/40 transition-all cursor-pointer"
             title="Open camera to project circuit on your physical desk"
           >
-            <Camera size={13} />
+            <Camera size={14} />
             <span>Desk AR (Camera)</span>
           </button>
         </div>
 
         {circuitState.allReady && (
-          <span className="text-[11px] font-bold font-mono px-2.5 py-1 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
-            ✓ Complete
+          <span className="text-[11px] font-display font-black px-3 py-1 rounded-full bg-[#A4C93B] text-[#221611] border-2 border-[#221611] shadow-2xs">
+            ✓ Circuit Verified
           </span>
         )}
       </div>
 
       {/* ── TAB 1: INTERACTIVE BREADBOARD WIRING ── */}
       {activeTab === 'breadboard' && (
-        <div className="bg-white rounded-md border-2 border-[#7ea4e7] p-3 sm:p-4 shadow-xs">
+        <div className="bg-white rounded-2xl border-2 border-[#221611]/15 p-4 sm:p-5 shadow-sm">
           <InteractiveBreadboard
             activeProcedureStep={activeStep + 1}
             isPowerSwitchedOn={isPowerOn}
@@ -561,37 +590,38 @@ export default function TimeDivisionMultiplexing() {
 
       {/* ── TAB 2: DIGITAL STORAGE OSCILLOSCOPE (DSO) REAL HARDWARE SIGNALS ── */}
       {activeTab === 'dso' && (
-        <div className="bg-white rounded-md border-2 border-[#7ea4e7] overflow-hidden shadow-xs">
-          <div className="bg-[#85a7e6] py-2 px-4 border-b border-[#6e93db] flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h3 className="font-serif font-bold text-xs sm:text-sm tracking-wide text-[#0e1d4a] uppercase">
+        <div className="bg-white rounded-2xl border-2 border-[#221611]/15 overflow-hidden shadow-sm">
+          <div className="bg-[#221611] py-3 px-5 border-b border-[#3A2820] flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#A4C93B] shadow-xs inline-block animate-pulse" />
+              <h3 className="font-display font-black text-xs sm:text-sm tracking-wider text-[#FAF5EB] uppercase">
                 DIGITAL STORAGE OSCILLOSCOPE (DSO) — WAVEFORMS
               </h3>
             </div>
 
             {/* Filter Buttons */}
-            <div className="flex items-center gap-1 bg-white/70 p-0.5 rounded text-xs border border-[#6e93db]">
+            <div className="flex items-center gap-1 bg-white/10 p-1 rounded-xl border border-white/15">
               <button
                 onClick={() => setDsoChannel('all')}
-                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${dsoChannel === 'all' ? 'bg-[#0e1d4a] text-white' : 'text-[#0e1d4a] hover:bg-white'}`}
+                className={`px-3 py-1 rounded-lg text-xs font-display font-black transition-all cursor-pointer ${dsoChannel === 'all' ? 'bg-[#A4C93B] text-[#221611]' : 'text-[#FAF5EB] hover:bg-white/10'}`}
               >
                 All Channels
               </button>
               <button
                 onClick={() => setDsoChannel('inputs')}
-                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${dsoChannel === 'inputs' ? 'bg-[#0e1d4a] text-white' : 'text-[#0e1d4a] hover:bg-white'}`}
+                className={`px-3 py-1 rounded-lg text-xs font-display font-black transition-all cursor-pointer ${dsoChannel === 'inputs' ? 'bg-[#A4C93B] text-[#221611]' : 'text-[#FAF5EB] hover:bg-white/10'}`}
               >
                 Step 3 Inputs
               </button>
               <button
                 onClick={() => setDsoChannel('tdm')}
-                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${dsoChannel === 'tdm' ? 'bg-[#0e1d4a] text-white' : 'text-[#0e1d4a] hover:bg-white'}`}
+                className={`px-3 py-1 rounded-lg text-xs font-display font-black transition-all cursor-pointer ${dsoChannel === 'tdm' ? 'bg-[#A4C93B] text-[#221611]' : 'text-[#FAF5EB] hover:bg-white/10'}`}
               >
                 Step 6 Pin 3
               </button>
               <button
                 onClick={() => setDsoChannel('recon')}
-                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${dsoChannel === 'recon' ? 'bg-[#0e1d4a] text-white' : 'text-[#0e1d4a] hover:bg-white'}`}
+                className={`px-3 py-1 rounded-lg text-xs font-display font-black transition-all cursor-pointer ${dsoChannel === 'recon' ? 'bg-[#A4C93B] text-[#221611]' : 'text-[#FAF5EB] hover:bg-white/10'}`}
               >
                 Step 8 Reconstructed
               </button>
@@ -804,6 +834,7 @@ export default function TimeDivisionMultiplexing() {
       steps={steps}
       currentStep={activeStep}
       controls={controls}
+      horizontalControls={true}
       visualization={visualization}
       observations={observations}
     />

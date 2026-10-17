@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import Lenis from 'lenis'
 import { AuthProvider } from './contexts/AuthContext'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { OfflineAccessProvider } from './contexts/OfflineAccessContext'
@@ -8,9 +10,9 @@ import OfflineModeBanner from './components/OfflineModeBanner'
 // Pages
 import Landing from './pages/Landing'
 import Login from './pages/Login'
-import LevelSelection from './pages/LevelSelection'
 import DomainCatalog from './pages/DomainCatalog'
 import NotFound from './pages/NotFound'
+import ExamPortal from './pages/ExamPortal'
 
 // Teacher
 import TeacherDashboard from './Teacher/TeacherDashboard'
@@ -73,20 +75,46 @@ import ThrustAltitude from './Thales/ThrustAltitude'
 import StallRecovery from './Thales/StallRecovery'
 
 export default function App() {
+  useEffect(() => {
+    // Ultra-smooth responsive momentum scroll
+    const lenis = new Lenis({
+      duration: 0.85,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.0,
+      infinite: false,
+    })
+
+    function raf(time) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
+
+    const animId = requestAnimationFrame(raf)
+
+    return () => {
+      cancelAnimationFrame(animId)
+      lenis.destroy()
+    }
+  }, [])
+
   return (
     <AuthProvider>
       <LanguageProvider>
         <OfflineAccessProvider>
           <OfflineModeBanner />
           <Routes>
-            {/* Public Pages */}
+            {/* Public Pages & Practical Examination Entrance */}
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/exam" element={<ExamPortal />} />
+            <Route path="/exam/:examCode" element={<ExamPortal />} />
             <Route path="/role-selection" element={<Navigate to="/catalog" replace />} />
             <Route path="/roles" element={<Navigate to="/catalog" replace />} />
 
-            {/* Education Level & Domain Catalog Flow */}
-            <Route path="/level-select" element={<LevelSelection />} />
+            {/* Domain Catalog Flow */}
+            <Route path="/level-select" element={<Navigate to="/catalog" replace />} />
             <Route path="/catalog" element={<DomainCatalog />} />
             <Route path="/catalog/:level" element={<DomainCatalog />} />
 

@@ -675,35 +675,35 @@ export default function InteractiveBreadboard({
 
   return (
     <div className="w-full select-none space-y-3">
-      {/* ── Top Bar with Status and Quick Actions (Virtual Labs Header Format) ── */}
-      <div className="bg-white rounded-md border-2 border-[#7ea4e7] overflow-hidden shadow-xs">
-        {/* Blue Header Title Bar */}
-        <div className="bg-[#85a7e6] py-2 px-4 border-b border-[#6e93db] flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-xs inline-block" />
-            <h3 className="font-serif font-bold text-xs sm:text-sm tracking-wide text-[#0e1d4a] uppercase">
+      {/* ── Top Bar with Status and Quick Actions (CurioLabs Editorial Format) ── */}
+      <div className="bg-white rounded-2xl border-2 border-[#221611]/15 overflow-hidden shadow-sm">
+        {/* Deep Espresso Header Title Bar */}
+        <div className="bg-[#221611] py-2.5 px-4 sm:px-5 flex flex-wrap items-center justify-between gap-2 border-b border-[#3A2820]">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#A4C93B] shadow-xs inline-block animate-pulse" />
+            <h3 className="font-display font-black text-xs sm:text-sm tracking-wider text-[#FAF5EB] uppercase">
               SOLDERLESS BREADBOARD SIMULATOR (CD4051 DUAL-IC)
             </h3>
           </div>
           <div className="flex items-center gap-2">
             {justConnected && (
-              <span className="text-[11px] text-[#0e1d4a] bg-white/80 border border-[#6e93db] px-2 py-0.5 rounded font-mono font-bold">
+              <span className="text-[11px] text-[#A4C93B] bg-white/10 border border-[#A4C93B]/40 px-2.5 py-0.5 rounded-full font-mono font-bold animate-in fade-in">
                 ✓ {justConnected}
               </span>
             )}
-            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-[#0e1d4a] text-white">
+            <span className="text-xs font-mono font-black px-3 py-1 rounded-full bg-[#A4C93B] text-[#221611] shadow-2xs">
               {connectedCount}/{LAB_CONNECTIONS.length} Wired
             </span>
           </div>
         </div>
 
         {/* Toolbar Controls */}
-        <div className="p-3 bg-white flex flex-wrap items-center justify-between gap-3 border-b border-slate-200">
-          <p className="text-[11.5px] font-sans font-medium text-slate-700 flex-1 min-w-[240px]">
+        <div className="p-3 sm:p-3.5 bg-[#FAF5EB]/60 flex flex-wrap items-center justify-between gap-3 border-t border-[#221611]/10">
+          <p className="text-[12px] font-sans font-medium text-[#221611] flex-1 min-w-[240px]">
             {activeWire ? (
-              <span className="text-amber-900 font-bold flex items-center gap-2 flex-wrap">
-                <span>⚡ Selected: {activeWire.label} — Click breadboard hole to connect</span>
-                <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded">
+              <span className="text-[#221611] font-bold flex items-center gap-2 flex-wrap">
+                <span className="text-amber-800">⚡ Selected: {activeWire.label} — Click breadboard hole to connect</span>
+                <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-950 border border-amber-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded">
                   Press <kbd className="font-bold underline">ESC</kbd> to cancel
                 </span>
                 <button
@@ -718,37 +718,37 @@ export default function InteractiveBreadboard({
             )}
           </p>
 
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={guideNextPending}
-              className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 font-bold px-3 py-1.5 rounded transition-all active:scale-95 flex items-center gap-1.5"
+              className="text-xs bg-[#FAF5EB] hover:bg-[#221611] text-[#221611] hover:text-[#A4C93B] border-2 border-[#221611] font-display font-black px-3.5 py-1.5 rounded-xl transition-all shadow-[0_2px_0_#221611] active:translate-y-0.5 active:shadow-none flex items-center gap-1.5 cursor-pointer"
               title="Highlight the next required connection pin on the breadboard"
             >
-              <Sparkles size={12} className="text-amber-700" />
+              <Sparkles size={13} className="text-amber-600" />
               <span>Guide Next Wire</span>
             </button>
             <button
               onClick={undoLastWire}
               disabled={wires.length === 0}
-              className={`text-xs font-bold px-2.5 py-1.5 rounded border transition-colors flex items-center gap-1 ${
+              className={`text-xs font-display font-bold px-3 py-1.5 rounded-xl border-2 transition-all flex items-center gap-1.5 ${
                 wires.length === 0
                   ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 active:scale-95'
+                  : 'bg-white hover:bg-[#FAF5EB] text-[#221611] border-[#221611]/30 active:scale-95 cursor-pointer shadow-2xs'
               }`}
               title="Undo last connected wire"
             >
-              <Undo2 size={12} />
+              <Undo2 size={13} />
               <span>Undo</span>
             </button>
             <button
               onClick={autoWireCircuit}
-              className="text-xs bg-[#0e1d4a] hover:bg-[#1a2f6c] text-white font-bold px-3 py-1.5 rounded transition-all active:scale-95"
+              className="text-xs bg-[#221611] hover:bg-[#3A2820] text-[#A4C93B] font-display font-black px-3.5 py-1.5 rounded-xl border-2 border-[#221611] transition-all shadow-[0_2px_0_#221611] active:translate-y-0.5 active:shadow-none cursor-pointer flex items-center gap-1.5"
             >
-              Auto-Wire (All)
+              <span>Auto-Wire (All)</span>
             </button>
             <button
               onClick={resetAll}
-              className="text-xs bg-slate-100 hover:bg-rose-100 hover:text-rose-800 text-slate-700 font-bold px-2.5 py-1.5 rounded border border-slate-300 transition-colors"
+              className="text-xs bg-white hover:bg-rose-50 hover:text-rose-700 text-[#754F40] font-display font-bold px-3 py-1.5 rounded-xl border-2 border-[#221611]/20 hover:border-rose-300 transition-colors cursor-pointer"
             >
               Clear Board
             </button>
@@ -1635,12 +1635,16 @@ export default function InteractiveBreadboard({
         </svg>
       </div>
 
-      {/* ── Modern Sleek Wiring Guide Console ── */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+      {/* ── Modern Sleek Wiring Guide Console (CurioLabs Editorial) ── */}
+      <div className="bg-white rounded-2xl border-2 border-[#221611]/15 shadow-sm p-5 text-[#221611]">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
-            <h4 className="text-sm font-bold text-slate-900">Procedure Wiring Console</h4>
-            <p className="text-xs text-slate-500">Connect jumper wires for each step to unlock live oscilloscope and 3D outputs</p>
+            <h4 className="font-display font-black text-sm text-[#221611] uppercase tracking-wider">
+              Procedure Wiring Console
+            </h4>
+            <p className="text-xs text-[#754F40] font-sans mt-0.5">
+              Connect jumper wires for each step to unlock live oscilloscope and 3D outputs
+            </p>
           </div>
 
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -1651,10 +1655,10 @@ export default function InteractiveBreadboard({
                 <button
                   key={stepNum}
                   onClick={() => wireStep(stepNum)}
-                  className={`text-xs px-3 py-1.5 rounded-xl font-medium border transition-all ${
+                  className={`text-xs px-3 py-1.5 rounded-xl font-display font-bold border-2 transition-all cursor-pointer ${
                     isStepDone
-                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700 font-bold'
-                      : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-amber-50 hover:border-amber-300 active:scale-95'
+                      ? 'bg-[#A4C93B] border-[#221611] text-[#221611] shadow-[0_2px_0_#221611]'
+                      : 'bg-[#FAF5EB] border-[#221611]/25 text-[#221611] hover:border-[#221611] hover:bg-white active:scale-95'
                   }`}
                   title={`Connect all wires for Step ${stepNum}`}
                 >
@@ -1665,28 +1669,28 @@ export default function InteractiveBreadboard({
           </div>
         </div>
 
-        {/* Clean Modern Connection Pills */}
+        {/* Clean Editorial Connection Pills */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
           {connectionStatus.map((c) => (
             <div
               key={c.id}
-              className={`flex items-center justify-between p-2.5 rounded-xl border text-xs transition-all ${
+              className={`flex items-center justify-between p-3 rounded-xl border-2 text-xs transition-all ${
                 c.connected
-                  ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-                  : 'bg-slate-50/80 border-slate-200 text-slate-700 hover:border-slate-300'
+                  ? 'bg-[#FAF5EB] border-[#221611] text-[#221611] shadow-2xs'
+                  : 'bg-white border-[#221611]/15 text-[#3A2820] hover:border-[#221611]/40'
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs" style={{ backgroundColor: c.connected ? '#10b981' : c.wireColor }} />
+                <span className="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs border border-black/20" style={{ backgroundColor: c.connected ? '#A4C93B' : c.wireColor }} />
                 <div className="min-w-0">
-                  <div className="font-semibold text-xs truncate text-slate-900">{c.label}</div>
-                  <div className="text-[11px] text-slate-500 font-sans truncate">{c.desc}</div>
+                  <div className="font-display font-bold text-xs truncate text-[#221611]">{c.label}</div>
+                  <div className="text-[11px] text-[#754F40] font-sans truncate">{c.desc}</div>
                 </div>
               </div>
-              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md shrink-0 ${
-                c.connected ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-200 text-slate-500'
+              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                c.connected ? 'bg-[#A4C93B] text-[#221611] border border-[#221611]' : 'bg-[#FAF5EB] text-[#754F40] border border-[#221611]/20'
               }`}>
-                {c.connected ? 'CONNECTED' : 'OPEN'}
+                {c.connected ? 'WIRED' : 'OPEN'}
               </span>
             </div>
           ))}

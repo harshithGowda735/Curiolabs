@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Menu, X, LogOut, User, Globe, FlaskConical } from 'lucide-react'
+import { Menu, X, LogOut, User, Globe, Search, ArrowRight } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useLanguage } from '../contexts/LanguageContext'
 
@@ -19,55 +19,69 @@ export default function Navbar() {
   const isTeacher = ['faculty', 'admin', 'teacher'].includes(userRole)
 
   return (
-    <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-40 safe-top">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-14">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 font-display font-black text-slate-950 tracking-tight text-base group">
-            <div className="w-7 h-7 rounded-lg bg-slate-950 text-white flex items-center justify-center transition-transform group-hover:scale-105">
-              <FlaskConical size={15} />
-            </div>
-            <span className="text-slate-950 font-bold tracking-tight text-sm">
-              CurioLabs <span className="text-[10px] font-mono font-normal text-slate-400 ml-1">OS</span>
+    <div className="sticky top-0 sm:top-2.5 z-50 px-2 sm:px-6 max-w-7xl mx-auto w-full">
+      <nav className="bg-[#221611] text-white rounded-2xl sm:rounded-3xl shadow-xl px-5 sm:px-7 py-3 sm:py-3.5 border-2 border-[#3A2820]">
+        <div className="flex items-center justify-between">
+          {/* Brand Logo - Theobroma editorial typography style */}
+          <Link to="/" className="flex flex-col group select-none">
+            <span className="font-display tracking-[0.18em] font-black text-base sm:text-xl uppercase text-white leading-none transition-transform group-hover:scale-[1.01]">
+              CURIOLABS
+            </span>
+            <span className="tracking-[0.38em] text-[8px] sm:text-[9px] uppercase text-[#D2C5B5] font-mono mt-1 opacity-90">
+              v i r t u a l &nbsp; l a b s
             </span>
           </Link>
 
-          {/* Desktop Nav - Clean Apple-style navigation */}
-          <div className="hidden md:flex items-center gap-1 bg-slate-100/60 p-1 rounded-full border border-slate-200/60 text-xs font-medium">
+          {/* Desktop Nav Links - Chunky bold uppercase matching reference */}
+          <div className="hidden lg:flex items-center gap-6 text-[11px] font-black tracking-wider uppercase text-[#E7DEC8]">
             <Link
-              to="/level-select"
-              className={`px-3.5 py-1 rounded-full transition-all ${
-                location.pathname.startsWith('/catalog') || location.pathname === '/level-select'
-                  ? 'bg-white text-slate-950 shadow-2xs font-semibold'
-                  : 'text-slate-600 hover:text-slate-950'
+              to="/catalog"
+              className={`hover:text-white transition-colors pb-0.5 ${
+                location.pathname === '/catalog' ? 'text-white border-b-2 border-[#C2DE6B]' : ''
               }`}
             >
-              <span>{t('Academic Tracks', 'ಶೈಕ್ಷಣಿಕ ಹಂತಗಳು')}</span>
+              {t('All Labs', 'ಎಲ್ಲಾ ಲ್ಯಾಬ್‌ಗಳು')}
+            </Link>
+
+            <Link
+              to="/catalog/puc"
+              className={`hover:text-white transition-colors pb-0.5 ${
+                location.pathname === '/catalog/puc' ? 'text-white border-b-2 border-[#C2DE6B]' : ''
+              }`}
+            >
+              {t('PUC (+2)', 'PUC (+2)')}
+            </Link>
+
+            <Link
+              to="/catalog/engineering"
+              className={`hover:text-white transition-colors pb-0.5 ${
+                location.pathname === '/catalog/engineering' ? 'text-white border-b-2 border-[#C2DE6B]' : ''
+              }`}
+            >
+              {t('Engineering', 'ಎಂಜಿನಿಯರಿಂಗ್')}
             </Link>
 
             {currentUser && isTeacher && (
               <Link
                 to="/faculty"
-                className={`px-3.5 py-1 rounded-full transition-all ${
-                  location.pathname === '/faculty'
-                    ? 'bg-white text-slate-950 shadow-2xs font-semibold'
-                    : 'text-slate-600 hover:text-slate-950'
+                className={`hover:text-[#C2DE6B] transition-colors pb-0.5 ${
+                  location.pathname.startsWith('/faculty') ? 'text-[#C2DE6B] border-b-2 border-[#C2DE6B]' : ''
                 }`}
               >
-                <span>{t('Faculty Console', 'ಶಿಕ್ಷಕರ ಕನ್ಸೋಲ್')}</span>
+                {t('Faculty Console', 'ಶಿಕ್ಷಕರ ಕನ್ಸೋಲ್')}
               </Link>
             )}
           </div>
 
-          {/* Right side controls */}
-          <div className="flex items-center gap-2">
+          {/* Right Controls */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Language Toggle in retro uppercase */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium text-slate-600 hover:text-slate-950 hover:bg-slate-100 transition-colors border border-slate-200/60"
+              className="text-[11px] font-black tracking-widest uppercase text-[#D8CEBC] hover:text-white px-2 py-1 transition-colors"
               title={t('Switch language', 'ಭಾಷೆ ಬದಲಿಸಿ')}
             >
-              <Globe size={13} className="text-slate-400" />
-              <span>{lang === 'en' ? 'KN' : 'EN'}</span>
+              {lang === 'en' ? 'KN' : 'EN'}
             </button>
 
             {currentUser ? (
@@ -75,33 +89,40 @@ export default function Navbar() {
                 {isTeacher ? (
                   <Link
                     to="/faculty"
-                    className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200/80 rounded-full transition-colors text-xs font-mono text-slate-700"
+                    className="flex items-center gap-1.5 px-3 py-1 bg-[#3A2820] text-[#C2DE6B] rounded-full text-xs font-black uppercase tracking-wider border border-[#4D362B]"
                   >
-                    <User size={12} className="text-slate-500" />
-                    <span className="max-w-[100px] truncate">{currentUser.displayName || currentUser.email?.split('@')[0] || 'Faculty'}</span>
+                    <span>{currentUser.displayName || 'Teacher'}</span>
                   </Link>
                 ) : (
-                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-700">
-                    <User size={12} className="text-slate-500" />
-                    <span className="max-w-[100px] truncate">{currentUser.displayName || currentUser.email?.split('@')[0] || 'Student'}</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-[#3A2820] text-white rounded-full text-xs font-black uppercase tracking-wider border border-[#4D362B]">
+                    <span>{currentUser.displayName || 'Student'}</span>
                   </div>
                 )}
 
                 <button
                   onClick={handleSignOut}
-                  className="p-1.5 text-slate-400 hover:text-slate-950 rounded-full hover:bg-slate-100 transition-colors"
+                  className="p-1.5 text-[#D8CEBC] hover:text-[#C2DE6B] transition-colors"
                   title={t('Sign out', 'ಸೈನ್ ಔಟ್')}
                 >
-                  <LogOut size={15} />
+                  <LogOut size={16} />
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2">
+                {/* Outlined Pill Button (Like CART button in reference) */}
                 <Link
-                  to="/login"
-                  className="bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-1.5 rounded-full transition-all shadow-2xs"
+                  to="/login?role=student"
+                  className="px-3.5 py-1.5 rounded-full border border-white/80 text-white hover:bg-white hover:text-[#221611] text-[11px] font-black tracking-widest uppercase transition-all duration-200"
                 >
-                  {t('Sign In', 'ಸೈನ್ ಇನ್')}
+                  {t('Student Login', 'ವಿದ್ಯಾರ್ಥಿ')}
+                </Link>
+
+                {/* Solid Pill Button (Like CART filled button) */}
+                <Link
+                  to="/login?role=faculty"
+                  className="px-3.5 py-1.5 rounded-full bg-[#FAF5EB] text-[#221611] hover:bg-[#C2DE6B] hover:text-[#221611] text-[11px] font-black tracking-widest uppercase transition-all duration-200 shadow-sm"
+                >
+                  {t('Teacher Login', 'ಶಿಕ್ಷಕ')}
                 </Link>
               </div>
             )}
@@ -109,47 +130,71 @@ export default function Navbar() {
             {/* Mobile menu toggle */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg"
+              className="lg:hidden p-1.5 text-[#D8CEBC] hover:text-white rounded-lg transition-colors"
+              aria-label="Toggle navigation"
             >
-              {isOpen ? <X size={18} /> : <Menu size={18} />}
+              {isOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile dropdown */}
         {isOpen && (
-          <div className="md:hidden py-3 border-t border-slate-100 space-y-1">
-            <Link
-              to="/level-select"
-              onClick={() => setIsOpen(false)}
-              className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              🎓 {t('Academic Tracks (PUC & Engineering)', 'ಶೈಕ್ಷಣಿಕ ಹಂತಗಳು')}
-            </Link>
-            {currentUser ? (
-              <>
-                {isTeacher && (
-                  <Link
-                    to="/faculty"
-                    onClick={() => setIsOpen(false)}
-                    className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-950 bg-slate-100"
-                  >
-                    📊 Faculty Console
-                  </Link>
-                )}
-              </>
-            ) : (
+          <div className="lg:hidden mt-3 pt-3 border-t border-[#3A2820] space-y-2 animate-in fade-in duration-200">
+            <div className="grid grid-cols-2 gap-2 text-xs font-black uppercase tracking-wider">
               <Link
-                to="/login"
+                to="/catalog"
                 onClick={() => setIsOpen(false)}
-                className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                className="px-3 py-2 bg-[#2D1D16] hover:bg-[#3A2820] rounded-xl text-center text-[#E7DEC8]"
               >
-                🔐 {t('Sign In / Register', 'ಸೈನ್ ಇನ್')}
+                {t('All Labs', 'ಎಲ್ಲಾ ಲ್ಯಾಬ್‌ಗಳು')}
               </Link>
+              <Link
+                to="/catalog/puc"
+                onClick={() => setIsOpen(false)}
+                className="px-3 py-2 bg-[#2D1D16] hover:bg-[#3A2820] rounded-xl text-center text-[#E7DEC8]"
+              >
+                {t('PUC (+2)', 'PUC (+2)')}
+              </Link>
+              <Link
+                to="/catalog/engineering"
+                onClick={() => setIsOpen(false)}
+                className="px-3 py-2 bg-[#2D1D16] hover:bg-[#3A2820] rounded-xl text-center text-[#E7DEC8]"
+              >
+                {t('Engineering', 'ಎಂಜಿನಿಯರಿಂಗ್')}
+              </Link>
+              {currentUser && isTeacher && (
+                <Link
+                  to="/faculty"
+                  onClick={() => setIsOpen(false)}
+                  className="px-3 py-2 bg-[#C2DE6B] text-[#221611] rounded-xl text-center font-black"
+                >
+                  {t('Console', 'ಕನ್ಸೋಲ್')}
+                </Link>
+              )}
+            </div>
+
+            {!currentUser && (
+              <div className="pt-2 border-t border-[#3A2820] flex gap-2">
+                <Link
+                  to="/login?role=student"
+                  onClick={() => setIsOpen(false)}
+                  className="flex-1 py-2 text-center rounded-full border border-white/80 text-white text-[11px] font-black uppercase tracking-wider"
+                >
+                  {t('Student Login', 'ವಿದ್ಯಾರ್ಥಿ')}
+                </Link>
+                <Link
+                  to="/login?role=faculty"
+                  onClick={() => setIsOpen(false)}
+                  className="flex-1 py-2 text-center rounded-full bg-[#FAF5EB] text-[#221611] text-[11px] font-black uppercase tracking-wider font-bold"
+                >
+                  {t('Teacher Login', 'ಶಿಕ್ಷಕ')}
+                </Link>
+              </div>
             )}
           </div>
         )}
-      </div>
-    </nav>
+      </nav>
+    </div>
   )
 }
